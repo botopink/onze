@@ -105,3 +105,27 @@ cd repository/onze && botopink test    # runs test/onze_test.bp through #[mock] 
 ```
 
 `examples/mock_synthesis.bp` is a standalone `from "onze"` usage sample.
+
+## CI
+
+`.github/workflows/test.yml` runs `zig build test-libs -- --lib onze
+--target <t>` across the four viable targets on linux + macos, plus
+`commonJS` on windows. `BOTOPINK_LANG_REF` repo variable pins a specific
+botopink-lang ref (default `main`).
+
+Bootstrap: check out this lib + `botopink/botopink-lang`, place this
+lib under `botopink-lang/repository/onze/`, then `zig build install &&
+zig build test-libs`.
+
+## Tagging (auto)
+
+`.github/workflows/tag.yml` reads `version` from `botopink.json` and
+tags every push to `feat`/`master`/`main`:
+
+- **feat** → moving `<version>-feat` tag (force-pushed).
+- **master** / **main** → immutable `<version>` tag (no-op on the same
+  SHA; hard error if `version` wasn't bumped — bump it in `botopink.json`
+  to publish a new release).
+
+Set `requires.onze = "feat"` in a consumer's `botopink.json` and run
+`bpmp sync` to preview unreleased work.

@@ -1,5 +1,7 @@
 # onze
 
+[![CI](https://github.com/botopink/onze/actions/workflows/test.yml/badge.svg?branch=feat)](https://github.com/botopink/onze/actions/workflows/test.yml)
+
 > Mockito-style mocking + verification library for botopink unit tests.
 
 `onze` is botopink's test-double layer. Create a **mock** of an interface,
