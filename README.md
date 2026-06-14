@@ -25,7 +25,7 @@ required when this repo lives under a workspace that also has
 
 ```bp
 interface Greeter {
-    fn hello(name: String) -> String
+    fn hello(name: string) -> string
 }
 
 test "greeter is greeted by name" {

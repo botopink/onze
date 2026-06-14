@@ -60,11 +60,14 @@ cells resolve through that exported module.
 
 | Area | State |
 |---|---|
-| Runtime: record/stub/verify/matchers/thenThrow | **done** — 7 tests green under `botopink test` |
+| Runtime: record/stub/verify/matchers/thenThrow | **done** — green under `botopink test` |
 | `from "onze"` resolution (generic loader) | **done** — bare-imported fns bind |
 | `#[mock]` synthesis (`@Decl` → `@emit`) | **done** — reflects the interface, emits `record MockXxx implement Xxx` + `mockXxx()`; `test/onze_test.bp` drives the suite through `#[mock]` under `botopink test` |
 
-This needed two **core** fixes (in this branch — pure-lib onze couldn't do them):
+The `#[mock]` path depends on two core fixes that landed alongside onze in
+v0.beta.8 (compiler-core commit `671b089`); they are upstream now and do
+not need re-applying when onze is rebased:
+
 1. **Decorators run before body inference** — `@emit`ed decls are spliced before a
    body that references them (a `test {}` calling `mockXxx()`) is type-checked.
    Previously decorators ran after bodies, so the reference failed as unbound and
