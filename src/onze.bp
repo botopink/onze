@@ -26,28 +26,28 @@
 // source. `pub` so a test/example module compiled with onze can reference them
 // from a synthesized (or hand-written) mock body.
 
-#[@external(node, "../../src/onze.mjs", "newMock")]
+#[@External.Node("../../src/onze.mjs", "newMock")]
 pub declare fn onzeNewMock() -> string;
 
-#[@external(node, "../../src/onze.mjs", "key")]
+#[@External.Node("../../src/onze.mjs", "key")]
 pub declare fn onzeKey<T>(v: T) -> string;
 
-#[@external(node, "../../src/onze.mjs", "pushMatcher")]
+#[@External.Node("../../src/onze.mjs", "pushMatcher")]
 pub declare fn onzePushMatcher(kind: string, k: string) -> i32;
 
-#[@external(node, "../../src/onze.mjs", "invoke")]
+#[@External.Node("../../src/onze.mjs", "invoke")]
 pub declare fn onzeInvoke<T>(id: string, method: string, keys: Array<string>, def: T) -> T;
 
-#[@external(node, "../../src/onze.mjs", "beginVerify")]
+#[@External.Node("../../src/onze.mjs", "beginVerify")]
 pub declare fn onzeBeginVerify(spec: i32) -> i32;
 
-#[@external(node, "../../src/onze.mjs", "when")]
+#[@External.Node("../../src/onze.mjs", "when")]
 pub declare fn onzeWhen() -> i32;
 
-#[@external(node, "../../src/onze.mjs", "thenReturn")]
+#[@External.Node("../../src/onze.mjs", "thenReturn")]
 pub declare fn onzeThenReturn<T>(v: T) -> i32;
 
-#[@external(node, "../../src/onze.mjs", "thenThrow")]
+#[@External.Node("../../src/onze.mjs", "thenThrow")]
 pub declare fn onzeThenThrow(msg: string) -> i32;
 
 // ── argument matchers ───────────────────────────────────────────────────────────

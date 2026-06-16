@@ -103,7 +103,7 @@ parameters.
   only provides the protocol (recognise → reflect → run the body); every rule lives
   in `src/onze.bp`.
 - **Host-bound state.** The call log, stub table and matcher stack are the one
-  mutable seam, isolated in `src/onze.mjs` behind `#[@external(node, …)]`. The mocked
+  mutable seam, isolated in `src/onze.mjs` behind `#[@External.Node(…)]`. The mocked
   code stays ordinary immutable botopink.
 - **Out of scope (v1):** spies / partial mocks, `thenAnswer` callbacks, in-order
   verification across mocks, and argument captors — clean follow-ups.
@@ -113,7 +113,7 @@ parameters.
 `verify` is uniform two-argument (`verify(repo, atLeastOnce())`) because botopink has
 no fn overloading / default parameters. Arrays are compared with `.join(",")` since
 `==` on arrays lowers to JS reference equality. The mock's host state lives in
-`src/onze.mjs`, reached by a project-relative `#[@external]` path; the emitted mock
+`src/onze.mjs`, reached by a project-relative `#[@External.Node]` path; the emitted mock
 body references the onze host externals, so they must be in scope in the module that
 hosts the `#[mock]` interface. See [`AGENTS.md`](AGENTS.md) for the full status table
 and the two core fixes (`@emit` ordering + interface-level markers) that make `#[mock]`

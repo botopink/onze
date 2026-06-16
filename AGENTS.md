@@ -50,7 +50,7 @@ cells resolve through that exported module.
   trick, the only way to pass matchers through a statically-typed call. A literal
   argument means exact equality.
 - **Host-bound mutable state.** The recorder + stub table + matcher stack live in
-  `onze.mjs` behind `#[@external(node, …)]` declarations — the one mutable seam, so
+  `onze.mjs` behind `#[@External.Node(…)]` declarations — the one mutable seam, so
   the mocked code stays ordinary immutable botopink and the **core learns nothing**.
 - **`#[mock]` synthesis.** A comptime annotation processor reflects an interface's
   methods via `@Decl` and `@emit`s the mock record + a `mockXxx()` factory, so the
@@ -77,7 +77,7 @@ not need re-applying when onze is rebased:
 
 ### Known constraints
 
-- **Host path is project-relative.** `#[@external(node, "../../src/onze.mjs", …)]`
+- **Host path is project-relative.** `#[@External.Node("../../src/onze.mjs", …)]`
   resolves from `…/.botopinkbuild/test-out/<mod>.js` back to `repository/onze/src/`
   — correct for onze's own tests. A general consumer story (copying/resolving
   the host file from a dependency) is future work.
