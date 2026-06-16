@@ -118,6 +118,7 @@ jobs:
       - name: zig build test-libs --lib onze --target ${{ matrix.target }} (source)
         if: ${{ vars.BOTOPINK_USE_RELEASE_FASTPATH != 'true' }}
         working-directory: botopink-lang
+        shell: bash
         run: zig build test-libs -- --lib "${LIB_NAME}" --target "${{ matrix.target }}"
 
       - name: botopink-lib-test --lib onze --target ${{ matrix.target }} (fast path)
