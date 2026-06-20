@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Mockito-style mocking + verification for botopink unit tests",
   "src": "src/",
+  "targets": ["commonJS"],
   "files": [
     "onze.bp"
   ]
