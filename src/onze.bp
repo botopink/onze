@@ -7,7 +7,7 @@
 //// (1) records its call into a host-side log and (2) returns the matching stub
 //// value, or the type-default for its return type. `when(...)` writes the stub
 //// table; `verify(...)` reads the call log. All of that mutable state lives behind
-//// the `#[@external]` host cells declared below (see `onze.mjs`) — the compiler
+//// the `#[@External.<targert>(...)]` host cells declared below (see `onze.mjs`) — the compiler
 //// core learns nothing about onze (memory: no lib-specific surface in core).
 ////
 //// Two layers:
