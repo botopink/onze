@@ -3,7 +3,7 @@
 // A test lib needs shared, identity-based mutable state: a mocked method records
 // every call as it runs, and `verify(...)` reads that log back later. botopink is
 // immutable-first, so onze isolates the whole recorder + stub table behind these
-// host cells, reached from `onze.bp` through `#[@external(node, …)]` declarations.
+// host cells, reached from `onze.bp` through `#[@External.Node(…)]` declarations.
 // The mocked code itself stays ordinary immutable botopink — only this file holds
 // mutation. The Erlang/BEAM equivalent is a recorded follow-up.
 //

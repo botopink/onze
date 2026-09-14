@@ -50,7 +50,7 @@ cells resolve through that exported module.
   trick, the only way to pass matchers through a statically-typed call. A literal
   argument means exact equality.
 - **Host-bound mutable state.** The recorder + stub table + matcher stack live in
-  `onze.mjs` behind `#[@external(node, …)]` declarations — the one mutable seam, so
+  `onze.mjs` behind `#[@External.Node(…)]` declarations — the one mutable seam, so
   the mocked code stays ordinary immutable botopink and the **core learns nothing**.
 - **`#[mock]` synthesis.** A comptime annotation processor reflects an interface's
   methods via `@Decl` and `@emit`s the mock record + a `mockXxx()` factory, so the
@@ -60,11 +60,14 @@ cells resolve through that exported module.
 
 | Area | State |
 |---|---|
-| Runtime: record/stub/verify/matchers/thenThrow | **done** — 7 tests green under `botopink test` |
+| Runtime: record/stub/verify/matchers/thenThrow | **done** — green under `botopink test` |
 | `from "onze"` resolution (generic loader) | **done** — bare-imported fns bind |
 | `#[mock]` synthesis (`@Decl` → `@emit`) | **done** — reflects the interface, emits `record MockXxx implement Xxx` + `mockXxx()`; `test/onze_test.bp` drives the suite through `#[mock]` under `botopink test` |
 
-This needed two **core** fixes (in this branch — pure-lib onze couldn't do them):
+The `#[mock]` path depends on two core fixes that landed alongside onze in
+v0.beta.8 (compiler-core commit `671b089`); they are upstream now and do
+not need re-applying when onze is rebased:
+
 1. **Decorators run before body inference** — `@emit`ed decls are spliced before a
    body that references them (a `test {}` calling `mockXxx()`) is type-checked.
    Previously decorators ran after bodies, so the reference failed as unbound and
@@ -74,7 +77,7 @@ This needed two **core** fixes (in this branch — pure-lib onze couldn't do the
 
 ### Known constraints
 
-- **Host path is project-relative.** `#[@external(node, "../../src/onze.mjs", …)]`
+- **Host path is project-relative.** `#[@External.Node("../../src/onze.mjs", …)]`
   resolves from `…/.botopinkbuild/test-out/<mod>.js` back to `repository/onze/src/`
   — correct for onze's own tests. A general consumer story (copying/resolving
   the host file from a dependency) is future work.
@@ -105,3 +108,52 @@ cd repository/onze && botopink test    # runs test/onze_test.bp through #[mock] 
 ```
 
 `examples/mock_synthesis.bp` is a standalone `from "onze"` usage sample.
+
+## CI
+
+`.github/workflows/test.yml` runs `zig build test-libs -- --lib onze
+--target <t>` across the four viable targets on linux + macos, plus
+`commonJS` on windows. `BOTOPINK_LANG_REF` repo variable pins a specific
+botopink-lang ref (default `main`).
+
+Bootstrap: check out this lib + `botopink/botopink-lang`, place this
+lib under `botopink-lang/repository/onze/`, then `zig build install &&
+zig build test-libs`.
+
+## Tagging (auto)
+
+`.github/workflows/tag.yml` reads `version` from `botopink.json` and
+tags every push to `feat`/`master`/`main`:
+
+- **feat** → moving `<version>-feat` tag (force-pushed).
+- **master** / **main** → immutable `<version>` tag (no-op on the same
+  SHA; hard error if `version` wasn't bumped — bump it in `botopink.json`
+  to publish a new release).
+
+Set `requires.onze = "feat"` in a consumer's `botopink.json` and run
+`bpmp sync` to preview unreleased work.
+
+## Local gate
+
+`scripts/git-hooks/pre-commit` is the tracked source of truth for the
+local pre-commit gate. Two install paths:
+
+- **From the meta workspace** — run `scripts/install-hooks.sh` at the
+  root of [botopink/projects][meta]. It walks `.gitmodules` and
+  symlinks the meta's hook plus a shim into every submodule's git dir,
+  so a commit in this lib delegates to the shared
+  [`lib/runners/bp-lib.sh`][bp-lib] runner.
+- **From a standalone clone** — run `scripts/install-hooks.sh` (when
+  this lib ships one) or symlink `scripts/git-hooks/pre-commit` into
+  `.git/hooks/pre-commit` manually. The shim falls back to the
+  self-contained `scripts/git-hooks/lib/runner-standalone.sh` so the
+  gate works without the meta nearby.
+
+The gate runs `botopink test` over `src/` + `test/`. The compiler
+binary is located via (in order) `$BOTOPINK_BIN`, the nearest
+ancestor `repository/botopink-lang/zig-out/bin/botopink`, then
+`$PATH`. If none resolve, the gate prints a yellow warning and exits
+0 — CI runs the full suite and catches any regression there.
+
+[meta]: https://github.com/botopink/projects
+[bp-lib]: https://github.com/botopink/projects/blob/feat/scripts/git-hooks/lib/runners/bp-lib.sh

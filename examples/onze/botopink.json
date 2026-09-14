@@ -4,5 +4,10 @@
   "description": "onze showcase — unit-testing a service against a mocked dependency",
   "target": "commonJS",
   "src": "src/",
-  "dependencies": ["onze"]
+  "dependencies": {
+    "onze": {
+      "git": "https://github.com/botopink/onze.git",
+      "branch": "feat"
+    }
+  }
 }

@@ -10,7 +10,7 @@ mutable state it stands on.
 
 | File | Role |
 |---|---|
-| `onze.bp` | Public API + the `#[mock]` synthesizer. Sections: **host cells** (`#[@external]` `declare fn`s → `onze.mjs`), **matchers** (`eq`/`anyInt`/`anyString`), **verify specs** (`atLeastOnce`/`times`/`never`), **stubbing** (`OnzeStub` builder + `when`), **verification** (`verify`), and the **`#[mock]`** decorator. |
+| `onze.bp` | Public API + the `#[mock]` synthesizer. Sections: **host cells** (`#[@External.Node]` `declare fn`s → `onze.mjs`), **matchers** (`eq`/`anyInt`/`anyString`), **verify specs** (`atLeastOnce`/`times`/`never`), **stubbing** (`OnzeStub` builder + `when`), **verification** (`verify`), and the **`#[mock]`** decorator. |
 | `onze.mjs` | Host runtime — the call log, stub table, matcher stack, and the `when`/`verify` protocol. The single mutable seam; everything else is immutable botopink. |
 
 ## How the pieces connect
@@ -84,6 +84,6 @@ node eval runtime, but the **parser** is stricter here and the eval script conta
 
 ## Host file path
 
-`#[@external(node, "../../src/onze.mjs", …)]` is relative to the generated JS at
+`#[@External.Node("../../src/onze.mjs", …)]` is relative to the generated JS at
 `…/.botopinkbuild/test-out/<module>.js`, so `../../src/` reaches the lib source when
 onze is the project under test. Keep all `.bp` in `src/` so the depth stays constant.
