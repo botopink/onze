@@ -1,7 +1,7 @@
 # onze — mocking + verification for botopink tests
 
 `onze` is botopink's test-double layer: a Mockito-style API for unit tests. Create
-a **mock** of an interface, **stub** what its methods return, run the code under
+a **mock** of a behavior, **stub** what its methods return, run the code under
 test, then **verify** the mock was called as you expect. It is a pure `.bp` library
 reached via `from "onze"` — the compiler core knows nothing about it.
 
@@ -13,9 +13,9 @@ import {mock, when, verify, eq, anyInt, times, never, atLeastOnce} from "onze";
 
 ```bp
 #[mock]
-interface UserRepo {
-    fn find(self: Self, id: i32) -> string
-    fn all(self: Self) -> Array<string>
+behavior UserRepo {
+    fn find(self: Self, id: i32) -> string;
+    fn all(self: Self) -> Array<string>;
 }
 
 test "service reads stubbed users and queries the repo once" {
@@ -36,7 +36,7 @@ test "service reads stubbed users and queries the repo once" {
 
 ## How a mock behaves
 
-A mock is a record that implements the target interface. Each method records the
+A mock is a type that implements the target behavior. Each method records the
 call and returns the matching stub value — or, with no matching stub, the
 **type-default** for its return type:
 
@@ -59,7 +59,7 @@ assert repo.find(1) == "";           // no stub → default for string ("")
 
 | Form | Meaning |
 |---|---|
-| `#[mock] interface T { … }` | Synthesize `record MockT implement T` + `mockT() -> T`. |
+| `#[mock] behavior T { … }` | Synthesize `type MockT(__id: string) implement T` + `mockT() -> T`. |
 | `mockT()` | A fresh mock instance (unique id; isolated call log). |
 
 ### Stubbing — `when(...)`
@@ -99,7 +99,7 @@ parameters.
 ## Design notes
 
 - **Comptime synthesis.** `#[mock]` is an annotation processor: it reflects the
-  interface's methods via `@Decl` and `@emit`s the mock record + factory. The core
+  behavior's methods via `@Decl` and `@emit`s the mock type + factory. The core
   only provides the protocol (recognise → reflect → run the body); every rule lives
   in `src/onze.bp`.
 - **Host-bound state.** The call log, stub table and matcher stack are the one
@@ -115,6 +115,6 @@ no fn overloading / default parameters. Arrays are compared with `.join(",")` si
 `==` on arrays lowers to JS reference equality. The mock's host state lives in
 `src/onze.mjs`, reached by a project-relative `#[@External.Node]` path; the emitted mock
 body references the onze host externals, so they must be in scope in the module that
-hosts the `#[mock]` interface. See [`AGENTS.md`](AGENTS.md) for the full status table
-and the two core fixes (`@emit` ordering + interface-level markers) that make `#[mock]`
+hosts the `#[mock]` behavior. See [`AGENTS.md`](AGENTS.md) for the full status table
+and the two core fixes (`@emit` ordering + behavior-level markers) that make `#[mock]`
 work under `botopink test`.

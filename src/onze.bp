@@ -3,7 +3,7 @@
 //// Reached via `from "onze"`; imported bare:
 ////   import {mock, when, verify, eq, anyInt, times, never, atLeastOnce} from "onze";
 ////
-//// A mock is a record that *implements* the target interface, where every method
+//// A mock is a type that *implements* the target behavior, where every method
 //// (1) records its call into a host-side log and (2) returns the matching stub
 //// value, or the type-default for its return type. `when(...)` writes the stub
 //// table; `verify(...)` reads the call log. All of that mutable state lives behind
@@ -14,8 +14,8 @@
 //// Two layers:
 ////   • the RUNTIME (matchers / when / verify / the host cells) — ordinary botopink,
 ////     exercised by `test/onze_test.bp` under `botopink test`.
-////   • the SYNTHESIS (`#[mock]`) — a comptime decorator that reflects an interface's
-////     methods via `@Decl` and `@emit`s the mock record + a `mockXxx()` factory.
+////   • the SYNTHESIS (`#[mock]`) — a comptime decorator that reflects a behavior's
+////     methods via `@Decl` and `@emit`s the mock type + a `mockXxx()` factory.
 ////     See `./AGENTS.md` for the current pipeline status of `@emit` under test mode.
 ////
 //// See ./AGENTS.md, ./docs.md and the spec: tasks/v0.beta.8/specs/onze.md
@@ -27,36 +27,36 @@
 // source. `pub` so a test/example module compiled with onze can reference them
 // from a synthesized (or hand-written) mock body.
 
-#[@External.Node("../../src/onze.mjs", "newMock"),
-  @External.Erlang("""(fun() -> OzN__ = case get('__onze_counter') of undefined -> 1; OzC__ -> OzC__ + 1 end, put('__onze_counter', OzN__), iolist_to_binary([<<"onze#">>, integer_to_binary(OzN__)]) end)()""")]
+#[@External.Node("../../src/onze.mjs", "newMock")]
+#[@External.Erlang("""(fun() -> OzN__ = case get('__onze_counter') of undefined -> 1; OzC__ -> OzC__ + 1 end, put('__onze_counter', OzN__), iolist_to_binary([<<"onze#">>, integer_to_binary(OzN__)]) end)()""")]
 pub declare fn onzeNewMock() -> string;
 
-#[@External.Node("../../src/onze.mjs", "key"),
-  @External.Erlang("""iolist_to_binary(io_lib:format("~0tp", [$0]))""")]
+#[@External.Node("../../src/onze.mjs", "key")]
+#[@External.Erlang("""iolist_to_binary(io_lib:format("~0tp", [$0]))""")]
 pub declare fn onzeKey<T>(v: T) -> string;
 
-#[@External.Node("../../src/onze.mjs", "pushMatcher"),
-  @External.Erlang("""(fun(OzK__, OzV__) -> OzP__ = case get('__onze_pending') of undefined -> []; OzL__ -> OzL__ end, put('__onze_pending', OzP__ ++ [{OzK__, OzV__}]), 0 end)($0, $1)""")]
+#[@External.Node("../../src/onze.mjs", "pushMatcher")]
+#[@External.Erlang("""(fun(OzK__, OzV__) -> OzP__ = case get('__onze_pending') of undefined -> []; OzL__ -> OzL__ end, put('__onze_pending', OzP__ ++ [{OzK__, OzV__}]), 0 end)($0, $1)""")]
 pub declare fn onzePushMatcher(kind: string, k: string) -> i32;
 
-#[@External.Node("../../src/onze.mjs", "invoke"),
-  @External.Erlang("""(fun(OzId__, OzM__, OzKs__, OzDef__) -> OzP__ = case get('__onze_pending') of undefined -> []; OzL1__ -> OzL1__ end, put('__onze_pending', []), OzMs__ = case length(OzP__) =:= length(OzKs__) of true -> OzP__; false -> [{<<"eq">>, OzK__} || OzK__ <- OzKs__] end, OzMatch__ = fun(OzMx__, OzKx__) -> length(OzMx__) =:= length(OzKx__) andalso lists:all(fun({{OzKind__, OzKey__}, OzArg__}) -> OzKind__ =:= <<"any">> orelse OzKey__ =:= OzArg__ end, lists:zip(OzMx__, OzKx__)) end, OzCalls__ = case get('__onze_calls') of undefined -> []; OzL2__ -> OzL2__ end, case erase('__onze_verify') of undefined -> put('__onze_calls', OzCalls__ ++ [{OzId__, OzM__, OzKs__, OzMs__}]), OzHit__ = [OzSt__ || {OzSId__, OzSM__, OzSMs__, _, _} = OzSt__ <- lists:reverse(case get('__onze_stubs') of undefined -> []; OzL3__ -> OzL3__ end), OzSId__ =:= OzId__, OzSM__ =:= OzM__, OzMatch__(OzSMs__, OzKs__)], case OzHit__ of [] -> OzDef__; [{_, _, _, return, OzRv__} | _] -> OzRv__; [{_, _, _, throw, OzMsg__} | _] -> erlang:error(OzMsg__) end; OzSpec__ -> OzCount__ = length([x || {OzCId__, OzCM__, OzCKs__, _} <- OzCalls__, OzCId__ =:= OzId__, OzCM__ =:= OzM__, OzMatch__(OzMs__, OzCKs__)]), case (case OzSpec__ of -1 -> OzCount__ >= 1; _ -> OzCount__ =:= OzSpec__ end) of true -> OzDef__; false -> erlang:error(iolist_to_binary([<<"onze.verify: ">>, OzM__, <<" - expected ">>, case OzSpec__ of -1 -> <<"at least 1">>; _ -> [<<"exactly ">>, integer_to_binary(OzSpec__)] end, <<" matching call(s), got ">>, integer_to_binary(OzCount__)])) end end end)($0, $1, $2, $3)""")]
+#[@External.Node("../../src/onze.mjs", "invoke")]
+#[@External.Erlang("""(fun(OzId__, OzM__, OzKs__, OzDef__) -> OzP__ = case get('__onze_pending') of undefined -> []; OzL1__ -> OzL1__ end, put('__onze_pending', []), OzMs__ = case length(OzP__) =:= length(OzKs__) of true -> OzP__; false -> [{<<"eq">>, OzK__} || OzK__ <- OzKs__] end, OzMatch__ = fun(OzMx__, OzKx__) -> length(OzMx__) =:= length(OzKx__) andalso lists:all(fun({{OzKind__, OzKey__}, OzArg__}) -> OzKind__ =:= <<"any">> orelse OzKey__ =:= OzArg__ end, lists:zip(OzMx__, OzKx__)) end, OzCalls__ = case get('__onze_calls') of undefined -> []; OzL2__ -> OzL2__ end, case erase('__onze_verify') of undefined -> put('__onze_calls', OzCalls__ ++ [{OzId__, OzM__, OzKs__, OzMs__}]), OzHit__ = [OzSt__ || {OzSId__, OzSM__, OzSMs__, _, _} = OzSt__ <- lists:reverse(case get('__onze_stubs') of undefined -> []; OzL3__ -> OzL3__ end), OzSId__ =:= OzId__, OzSM__ =:= OzM__, OzMatch__(OzSMs__, OzKs__)], case OzHit__ of [] -> OzDef__; [{_, _, _, return, OzRv__} | _] -> OzRv__; [{_, _, _, throw, OzMsg__} | _] -> erlang:error(OzMsg__) end; OzSpec__ -> OzCount__ = length([x || {OzCId__, OzCM__, OzCKs__, _} <- OzCalls__, OzCId__ =:= OzId__, OzCM__ =:= OzM__, OzMatch__(OzMs__, OzCKs__)]), case (case OzSpec__ of -1 -> OzCount__ >= 1; _ -> OzCount__ =:= OzSpec__ end) of true -> OzDef__; false -> erlang:error(iolist_to_binary([<<"onze.verify: ">>, OzM__, <<" - expected ">>, case OzSpec__ of -1 -> <<"at least 1">>; _ -> [<<"exactly ">>, integer_to_binary(OzSpec__)] end, <<" matching call(s), got ">>, integer_to_binary(OzCount__)])) end end end)($0, $1, $2, $3)""")]
 pub declare fn onzeInvoke<T>(id: string, method: string, keys: Array<string>, def: T) -> T;
 
-#[@External.Node("../../src/onze.mjs", "beginVerify"),
-  @External.Erlang("""(fun(OzS__) -> put('__onze_verify', OzS__), 0 end)($0)""")]
+#[@External.Node("../../src/onze.mjs", "beginVerify")]
+#[@External.Erlang("""(fun(OzS__) -> put('__onze_verify', OzS__), 0 end)($0)""")]
 pub declare fn onzeBeginVerify(spec: i32) -> i32;
 
-#[@External.Node("../../src/onze.mjs", "when"),
-  @External.Erlang("""(fun() -> case case get('__onze_calls') of undefined -> []; OzL__ -> OzL__ end of [] -> put('__onze_pending_stub', undefined); OzCs__ -> {OzId__, OzM__, _, OzMs__} = lists:last(OzCs__), put('__onze_calls', lists:droplast(OzCs__)), put('__onze_pending_stub', {OzId__, OzM__, OzMs__}) end, 0 end)()""")]
+#[@External.Node("../../src/onze.mjs", "when")]
+#[@External.Erlang("""(fun() -> case case get('__onze_calls') of undefined -> []; OzL__ -> OzL__ end of [] -> put('__onze_pending_stub', undefined); OzCs__ -> {OzId__, OzM__, _, OzMs__} = lists:last(OzCs__), put('__onze_calls', lists:droplast(OzCs__)), put('__onze_pending_stub', {OzId__, OzM__, OzMs__}) end, 0 end)()""")]
 pub declare fn onzeWhen() -> i32;
 
-#[@External.Node("../../src/onze.mjs", "thenReturn"),
-  @External.Erlang("""(fun(OzV__) -> case get('__onze_pending_stub') of undefined -> ok; {OzId__, OzM__, OzMs__} -> put('__onze_stubs', case get('__onze_stubs') of undefined -> []; OzL__ -> OzL__ end ++ [{OzId__, OzM__, OzMs__, return, OzV__}]) end, put('__onze_pending_stub', undefined), 0 end)($0)""")]
+#[@External.Node("../../src/onze.mjs", "thenReturn")]
+#[@External.Erlang("""(fun(OzV__) -> case get('__onze_pending_stub') of undefined -> ok; {OzId__, OzM__, OzMs__} -> put('__onze_stubs', case get('__onze_stubs') of undefined -> []; OzL__ -> OzL__ end ++ [{OzId__, OzM__, OzMs__, return, OzV__}]) end, put('__onze_pending_stub', undefined), 0 end)($0)""")]
 pub declare fn onzeThenReturn<T>(v: T) -> i32;
 
-#[@External.Node("../../src/onze.mjs", "thenThrow"),
-  @External.Erlang("""(fun(OzV__) -> case get('__onze_pending_stub') of undefined -> ok; {OzId__, OzM__, OzMs__} -> put('__onze_stubs', case get('__onze_stubs') of undefined -> []; OzL__ -> OzL__ end ++ [{OzId__, OzM__, OzMs__, throw, OzV__}]) end, put('__onze_pending_stub', undefined), 0 end)($0)""")]
+#[@External.Node("../../src/onze.mjs", "thenThrow")]
+#[@External.Erlang("""(fun(OzV__) -> case get('__onze_pending_stub') of undefined -> ok; {OzId__, OzM__, OzMs__} -> put('__onze_stubs', case get('__onze_stubs') of undefined -> []; OzL__ -> OzL__ end ++ [{OzId__, OzM__, OzMs__, throw, OzV__}]) end, put('__onze_pending_stub', undefined), 0 end)($0)""")]
 pub declare fn onzeThenThrow(msg: string) -> i32;
 
 // ── argument matchers ───────────────────────────────────────────────────────────
@@ -107,9 +107,7 @@ pub fn never() -> i32 {
 // captures it (with its matchers) as the pending stub target. The returned builder
 // then writes the action. Last stub registered wins on overlap.
 
-pub record OnzeStub {
-    tag: string,
-
+pub type OnzeStub(tag: string) {
     // Make the captured call return `v` for every later matching invocation.
     pub fn thenReturn<T>(self: Self, v: T) -> bool {
         val _r = onzeThenReturn(v);
@@ -144,16 +142,16 @@ pub fn verify<T>(mock: T, spec: i32) -> T {
 
 // ── mock synthesis (`#[mock]`) ──────────────────────────────────────────────────
 //
-// A comptime annotation processor: reflect the annotated interface's methods via
-// `@Decl` and `@emit` (a) a record `MockXxx implement Xxx` whose every method funnels
+// A comptime annotation processor: reflect the annotated behavior's methods via
+// `@Decl` and `@emit` (a) a type `MockXxx(__id: string) implement Xxx` whose every method funnels
 // through `onzeInvoke`, and (b) a `pub fn mockXxx() -> Xxx` factory. The compiler core
 // only provides the protocol (recognise → reflect → run the body) — every rule here
 // is botopink. The generated method records the call and returns the stub value, or
 // the per-return-type default (`""` / `false` / `0` / `[]`).
 //
 // `test/onze_test.bp` drives the whole suite through `#[mock]` under `botopink test`.
-// The emitted record's methods reference the onze host externals (`onzeInvoke` etc.),
-// so those must be in scope in the module that hosts the annotated interface.
+// The emitted type's methods reference the onze host externals (`onzeInvoke` etc.),
+// so those must be in scope in the module that hosts the annotated behavior.
 
 // Comptime-body constraints (see ../AGENTS.md): `if` is an expression (needs
 // `else`, `;`-terminated branches); a bare `if {…}` statement is only legal as the
@@ -162,34 +160,22 @@ pub fn verify<T>(mock: T, spec: i32) -> T {
 pub fn mock(comptime decl: @Decl) {
     var methods = "";
     decl.methods.forEach({ m ->
-        var paramList: Array<string> = [];
-        var keyList: Array<string> = [];
-        m.params.forEach({ p ->
-            if (p.name != "self") {
-                paramList.push(p.name + ": " + p.typeName);
-                keyList.push("onzeKey(" + p.name + ")");
-            }
+            var paramList: Array<string> = [];
+            var keyList: Array<string> = [];
+            m.params.forEach({ p ->
+                    if (p.name != "self") {
+                        paramList.push(p.name + ": " + p.typeName);
+                        keyList.push("onzeKey(" + p.name + ")");
+                    };
+                });
+            val params = paramList.join(", ");
+            val sig = if (params == "") "self: Self" else "self: Self, " + params;
+            val keys = keyList.join(", ");
+            val def = if (m.returnType == "string") "\"\"" else if (m.returnType == "bool") "false" else if (m.returnType.startsWith(
+                "Array"
+            )) "[]" else "0";
+            methods = methods + "  fn " + m.name + "(" + sig + ") -> " + m.returnType + " { return onzeInvoke(self.__id, \"" + m.name + "\", [" + keys + "], " + def + "); }\n";
         });
-        val params = paramList.join(", ");
-        val sig = if (params == "") {
-            "self: Self";
-        } else {
-            "self: Self, " + params;
-        };
-        val keys = keyList.join(", ");
-        val def = if (m.returnType == "string") {
-            "\"\"";
-        } else if (m.returnType == "bool") {
-            "false";
-        } else if (m.returnType.startsWith("Array")) {
-            "[]";
-        } else {
-            "0";
-        };
-        methods = methods + "  fn " + m.name + "(" + sig + ") -> " + m.returnType
-            + " { return onzeInvoke(self.__id, \"" + m.name + "\", [" + keys + "], " + def + "); }\n";
-    });
-    @emit("record Mock" + decl.name + " implement " + decl.name + " {\n  __id: string,\n" + methods + "}");
-    @emit("pub fn mock" + decl.name + "() -> " + decl.name
-        + " { return Mock" + decl.name + "(__id: onzeNewMock()); }");
+    @emit("type Mock" + decl.name + "(__id: string) implement " + decl.name + " {\n" + methods + "}");
+    @emit("pub fn mock" + decl.name + "() -> " + decl.name + " { return Mock" + decl.name + "(__id: onzeNewMock()); }");
 }

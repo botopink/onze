@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **The 1.0.3 surface** (botopink-lang front 12): `#[mock] behavior` replaces `#[mock] interface`,
+  the synthesized double is `type MockXxx(__id: string) implement Xxx`, `OnzeStub` is a
+  `type`, and the sources are `botopink format`ted. The mock synthesis reads
+  `DeclKind.Behavior`; commonJS 8/8, example 4/4 and `can fulfil 3 widgets: true` as
+  before. The erlang cell still stops on unqualified imported calls (C1).
 - The host cells have an erlang form: every `onze*` external carries an
   `@External.Erlang` template mirroring `onze.mjs` (call log, stubs, matcher stack
   and verify mode in the process dictionary; the same verify message). The

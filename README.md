@@ -4,7 +4,7 @@
 
 > Mockito-style mocking + verification library for botopink unit tests.
 
-`onze` is botopink's test-double layer. Create a **mock** of an interface,
+`onze` is botopink's test-double layer. Create a **mock** of a behavior,
 **stub** what its methods return, run the code under test, then **verify**
 the mock was called as you expect. Pure `.bp` client — the compiler core
 knows nothing about it.
@@ -24,8 +24,8 @@ required when this repo lives under a workspace that also has
 ## Quick example
 
 ```bp
-interface Greeter {
-    fn hello(name: string) -> string
+behavior Greeter {
+    fn hello(name: string) -> string;
 }
 
 test "greeter is greeted by name" {

@@ -5,7 +5,7 @@
 > Docs: [`./docs.md`](docs.md) · Spec: [`../../tasks/v0.beta.8/specs/onze.md`](../../tasks/v0.beta.8/specs/onze.md)
 
 A **Mockito-style mocking + verification library** for botopink unit tests:
-create a mock of an interface, **stub** what its methods return, exercise the code
+create a mock of a behavior, **stub** what its methods return, exercise the code
 under test, then **verify** the mock was called as expected. Pure `.bp` client —
 **zero** compiler-core surface. It is the proof that the generic annotation-processor
 mechanism (`@Decl` reflection + `@emit`) and host-bound state handle mocking, not
@@ -39,7 +39,7 @@ cells resolve through that exported module.
 
 ## Design at a glance
 
-- **Mock = a record that implements the interface.** Every method funnels through
+- **Mock = a type that implements the behavior.** Every method funnels through
   one host call (`onzeInvoke`) that records the invocation and returns the matching
   stub value, or the **type-default** for its return type (`"" / false / 0 / []`).
 - **`when(mock.m(args)).thenReturn(v) / .thenThrow(msg)`** writes the stub table;
@@ -56,8 +56,8 @@ cells resolve through that exported module.
   mutable seam, so the mocked code stays ordinary immutable botopink and the **core
   learns nothing**. The erlang test cell still stops on a compiler defect (package
   imports emitted unqualified), so CI keeps its `allow_fail`.
-- **`#[mock]` synthesis.** A comptime annotation processor reflects an interface's
-  methods via `@Decl` and `@emit`s the mock record + a `mockXxx()` factory, so the
+- **`#[mock]` synthesis.** A comptime annotation processor reflects a behavior's
+  methods via `@Decl` and `@emit`s the mock type + a `mockXxx()` factory, so the
   double is generated, never hand-written.
 
 ## Status (v1)
@@ -66,7 +66,7 @@ cells resolve through that exported module.
 |---|---|
 | Runtime: record/stub/verify/matchers/thenThrow | **done** — green under `botopink test` |
 | `from "onze"` resolution (generic loader) | **done** — bare-imported fns bind |
-| `#[mock]` synthesis (`@Decl` → `@emit`) | **done** — reflects the interface, emits `record MockXxx implement Xxx` + `mockXxx()`; `test/onze_test.bp` drives the suite through `#[mock]` under `botopink test` |
+| `#[mock]` synthesis (`@Decl` → `@emit`) | **done** — reflects the behavior, emits `type MockXxx(__id: string) implement Xxx` + `mockXxx()`; `test/onze_test.bp` drives the suite through `#[mock]` under `botopink test` |
 
 The `#[mock]` path depends on two core fixes that landed alongside onze in
 v0.beta.8 (compiler-core commit `671b089`); they are upstream now and do
@@ -77,7 +77,7 @@ not need re-applying when onze is rebased:
    Previously decorators ran after bodies, so the reference failed as unbound and
    `@emit` was silently dead under `botopink test`.
 2. **Interface-level markers run** (`DeclKind.Interface`) — `#[mock]` sits on an
-   interface; the old pipeline skipped interface-level decorators entirely.
+   behavior; the old pipeline skipped interface-level decorators entirely.
 
 ### Known constraints
 

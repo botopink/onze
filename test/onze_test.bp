@@ -1,8 +1,8 @@
 // onze — runtime tests (mock synthesis, stubbing, matchers, verification).
 //
 // Run by `botopink test` from `libs/onze/`. These exercise onze end to end:
-// `#[mock]` SYNTHESIZES the double from the interface (reflects its methods via
-// `@Decl` and `@emit`s `record MockUserRepo implement UserRepo` + a `mockUserRepo()`
+// `#[mock]` SYNTHESIZES the double from the behavior (reflects its methods via
+// `@Decl` and `@emit`s `type MockUserRepo(__id: string) implement UserRepo` + a `mockUserRepo()`
 // factory), then a mock records its calls, `when(...)` stubs returns, argument
 // matchers pick the right stub, and `verify(...)` checks call counts.
 //
@@ -16,14 +16,13 @@
 import {mock, when, verify, eq, anyInt, times, never, atLeastOnce, onzeInvoke, onzeKey, onzeNewMock};
 
 #[mock]
-interface UserRepo {
-    fn find(self: Self, id: i32) -> string
-    fn all(self: Self) -> Array<string>
+behavior UserRepo {
+    fn find(self: Self, id: i32) -> string;
+    fn all(self: Self) -> Array<string>;
 }
 
-// A unit under test that depends only on the interface.
-record UserService {
-    repo: UserRepo,
+// A unit under test that depends only on the behavior.
+type UserService(repo: UserRepo) {
     pub fn list(self: Self) -> Array<string> {
         return self.repo.all();
     }

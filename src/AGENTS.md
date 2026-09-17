@@ -52,13 +52,13 @@ recorded `eq` key.
 
 ## `#[mock]` synthesis (the comptime body)
 
-`mock(comptime decl: @Decl)` runs over the annotated **interface** (interface-level
-markers reflect with `DeclKind.Interface`), reflects `decl.methods` (each `Method{
+`mock(comptime decl: @Decl)` runs over the annotated **behavior** (behavior-level
+markers reflect with `DeclKind.Behavior`), reflects `decl.methods` (each `Method{
 name, params: [{name, typeName}], returnType }`) and `@emit`s two declarations into
 the module:
 
 ```
-record MockXxx implement Xxx { __id: string, <one method per signature> }
+type MockXxx(__id: string) implement Xxx { <one method per signature> }
 pub fn mockXxx() -> Xxx { return MockXxx(__id: onzeNewMock()); }
 ```
 
