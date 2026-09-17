@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- The host cells have an erlang form: every `onze*` external carries an
+  `@External.Erlang` template mirroring `onze.mjs` (call log, stubs, matcher stack
+  and verify mode in the process dictionary; the same verify message). The
+  erlang test cell no longer stops at `MissingExternalTarget`; it still fails
+  to compile on a compiler defect — calls to functions imported from the onze
+  package are emitted unqualified (`'when'/1 undefined`) — so the CI row keeps
+  `allow_fail`.
+
 - The examples gate no longer aborts silently on a `scripts/known-broken-examples.txt`
   holding only comments or blank lines: the runner reads the list with `awk`, whose
   "no entry" is not a failure under `set -euo pipefail`.

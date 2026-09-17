@@ -5,7 +5,9 @@
 // immutable-first, so onze isolates the whole recorder + stub table behind these
 // host cells, reached from `onze.bp` through `#[@External.Node(…)]` declarations.
 // The mocked code itself stays ordinary immutable botopink — only this file holds
-// mutation. The Erlang/BEAM equivalent is a recorded follow-up.
+// mutation. The erlang equivalent is the `@External.Erlang` form on each
+// declaration in `onze.bp` (process-dictionary tables, same semantics); BEAM is a
+// recorded follow-up.
 //
 // State is module-global (one node process per `botopink test` module run). Mock
 // ids are unique per `newMock()` call, so two mocks never collide even though they

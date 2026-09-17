@@ -50,8 +50,12 @@ cells resolve through that exported module.
   trick, the only way to pass matchers through a statically-typed call. A literal
   argument means exact equality.
 - **Host-bound mutable state.** The recorder + stub table + matcher stack live in
-  `onze.mjs` behind `#[@External.Node(…)]` declarations — the one mutable seam, so
-  the mocked code stays ordinary immutable botopink and the **core learns nothing**.
+  `onze.mjs` behind `#[@External.Node(…)]` declarations on commonJS, and in the
+  process dictionary behind the `@External.Erlang` form of the same declarations on
+  erlang (kept in step with `onze.mjs`: same matching, same verify message) — the one
+  mutable seam, so the mocked code stays ordinary immutable botopink and the **core
+  learns nothing**. The erlang test cell still stops on a compiler defect (package
+  imports emitted unqualified), so CI keeps its `allow_fail`.
 - **`#[mock]` synthesis.** A comptime annotation processor reflects an interface's
   methods via `@Decl` and `@emit`s the mock record + a `mockXxx()` factory, so the
   double is generated, never hand-written.
@@ -92,7 +96,8 @@ not need re-applying when onze is rebased:
 ## Conventions
 
 - **Pure `.bp`, zero core.** `grep -riE "onze" modules/compiler-core/src` must return
-  nothing. All behaviour is in `src/onze.bp`; the only host code is `src/onze.mjs`.
+  nothing. All behaviour is in `src/onze.bp`; the host code is `src/onze.mjs` and the
+  `@External.Erlang` templates beside each `onze*` declaration — change both together.
 - **`.bp` over `.d.bp`.** onze ships real, runnable code, not declaration markers.
 - **camelCase** functions (`mockUserRepo`, `anyInt`, `atLeastOnce`).
 - **Comptime-body gotchas** (the `#[mock]` body): `if` is an *expression* (needs
