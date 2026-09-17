@@ -114,7 +114,7 @@ cd repository/onze && botopink test    # runs test/onze_test.bp through #[mock] 
 `.github/workflows/test.yml` runs `zig build test-libs -- --lib onze
 --target <t>` across the four viable targets on linux + macos, plus
 `commonJS` on windows. `BOTOPINK_LANG_REF` repo variable pins a specific
-botopink-lang ref (default `main`).
+botopink-lang ref (default `feat`).
 
 Bootstrap: check out this lib + `botopink/botopink-lang`, place this
 lib under `botopink-lang/repository/onze/`, then `zig build install &&
