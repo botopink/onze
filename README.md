@@ -47,4 +47,4 @@ test "greeter is greeted by name" {
 
 ## License
 
-Same as the parent botopink workspace.
+MIT — see [`LICENSE`](LICENSE). Same license as the rest of the botopink workspace.
