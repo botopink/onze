@@ -160,5 +160,6 @@ into a throwaway `--out`); CI runs the same function once per workflow.
 `scripts/known-broken-examples.txt` lists the examples allowed to fail —
 `examples/<name>  <reason>` per line — and cannot rot: a listed example
 that builds, or a listed path that no longer exists, fails the gate too.
-When a fix makes an example build, delete its line in the same commit.
+When a fix makes an example build, delete its line in the same commit. The list may be absent,
+empty or hold only `#` comments — each means no example is allowed to fail.
 `examples/onze` builds; nothing is listed (`examples/mock_synthesis.bp` is a single file, not a project, and is not built).
