@@ -54,8 +54,12 @@ cells resolve through that exported module.
   process dictionary behind the `@External.Erlang` form of the same declarations on
   erlang (kept in step with `onze.mjs`: same matching, same verify message) — the one
   mutable seam, so the mocked code stays ordinary immutable botopink and the **core
-  learns nothing**. The erlang test cell still stops on a compiler defect (package
-  imports emitted unqualified), so CI keeps its `allow_fail`.
+  learns nothing**. The erlang test cell is green — 8/8, measured 2026-09-18 —
+  since a host-backed `declare fn` with an inline erlang template became
+  callable from another module (`onzeInvoke`, `onzeKey` and `onzeNewMock` are
+  declared in `onze.bp` and called from `test/onze_test.bp`); CI's `allow_fail`
+  is gone, and `erlang` is back in `botopink.json` `targets` — without it the
+  lib-test runner **skips** the cell instead of running it.
 - **`#[mock]` synthesis.** A comptime annotation processor reflects a behavior's
   methods via `@Decl` and `@emit`s the mock type + a `mockXxx()` factory, so the
   double is generated, never hand-written.
@@ -109,7 +113,8 @@ not need re-applying when onze is rebased:
 ## Testing
 
 ```bash
-cd repository/onze && botopink test    # runs test/onze_test.bp through #[mock] (commonJS/node)
+cd repository/onze && botopink test                   # test/onze_test.bp through #[mock] (commonJS/node)
+cd repository/onze && botopink test --target erlang   # the same 8 through escript
 ```
 
 `examples/mock_synthesis.bp` is a standalone `from "onze"` usage sample.
@@ -118,8 +123,13 @@ cd repository/onze && botopink test    # runs test/onze_test.bp through #[mock] 
 
 `.github/workflows/test.yml` runs `zig build test-libs -- --lib onze
 --target <t>` across the four viable targets on linux + macos, plus
-`commonJS` on windows. `BOTOPINK_LANG_REF` repo variable pins a specific
+`commonJS` on windows. Every row is a hard cell — the `erlang` rows lost
+`allow_fail` on 2026-09-18. `BOTOPINK_LANG_REF` repo variable pins a specific
 botopink-lang ref (default `feat`).
+
+`botopink.json` `targets` is what the lib-test runner reads to decide which
+cells to RUN: a target left out of it is reported as skipped (`~`), not as a
+pass, so a target must be listed there and in the workflow matrix both.
 
 Bootstrap: check out this lib + `botopink/botopink-lang`, place this
 lib under `botopink-lang/repository/onze/`, then `zig build install &&
