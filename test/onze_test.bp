@@ -108,7 +108,7 @@ test "onze: verify checks each matcher independently after different-arg calls" 
 
 // LIMITATION (recorded): a `thenThrow` stub matched at run time raises a HOST
 // throw from `onzeInvoke`. botopink's `try … catch …` only unwraps an `@Result`
-// produced by a `#[@result]` fn — it does not catch a host throw from a plain
+// produced by a `-> @Result<T, E>` fn — it does not catch a host throw from a plain
 // (non-effect) method call (`try svc.name(0) catch …` fails to compile, the
 // callee is not `-> @Result`). So "a thenThrow method caught by the caller's
 // try/catch" needs onze to model the throw as an `@Result` effect (a separate
