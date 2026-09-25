@@ -5,7 +5,8 @@
 - **Front 24 — effects by return type** (botopink decision 118): the recorded
   `thenThrow` limitation in `test/onze_test.bp` names the fallible callee as a
   `-> @Result<T, E>` fn instead of a `#[@result]` fn. Comment only; no code spells
-  an effect annotation.
+  an effect annotation. 8/8 on commonJS and erlang against botopink-lang
+  `front/24-effects-by-return` `86609a66`, as before.
 
 - **The 1.0.3 surface** (botopink-lang front 12): `#[mock] behavior` replaces `#[mock] interface`,
   the synthesized double is `type MockXxx(__id: string) implement Xxx`, `OnzeStub` is a
