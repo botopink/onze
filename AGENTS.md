@@ -51,7 +51,11 @@ onze/
 │   │                    (Image, the allowlist), image_handler.bp (the encoder port, the
 │   │                    /_onze/image outcome) — depends on
 │   │                    onze, onze-bundler, jhonstart
-│   ├── onze-og/       ← front 70 — targets ["erlang"]; depends on onze, onze-assets
+│   ├── onze-og/       ← front 70 — targets ["erlang"]: card_style.bp (the closed subset —
+│   │                    `style` is taken by jhonstart's element), metrics.bp (front 52's
+│   │                    sidecars, idiv), layout.bp, svg.bp, raster.bp (the port; NIF
+│   │                    declared, never shipped), response.bp — depends on onze and
+│   │                    jhonstart (it parses the sidecar text itself, so no onze-assets edge)
 │   └── onze-release/  ← front 71: spec.bp (ReleaseSpec, the build id), otp.bp (.rel,
 │                        sys.config, vm.args, bin/onze, systools), docker.bp, package.bp
 │                        (manifest completeness, the secret scan), lifecycle.bp (readiness,

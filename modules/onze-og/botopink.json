@@ -9,7 +9,13 @@
     "erlang"
   ],
   "files": [
-    "root.bp"
+    "root.bp",
+    "card_style.bp",
+    "metrics.bp",
+    "layout.bp",
+    "svg.bp",
+    "raster.bp",
+    "response.bp"
   ],
   "dependencies": {
     "jhonstart": {
@@ -28,9 +34,6 @@
       "path": "../../../jhonstart/modules/jhonstart-emilia"
     },
     "onze": {
-      "workspace": true
-    },
-    "onze-assets": {
       "workspace": true
     }
   }

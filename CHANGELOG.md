@@ -13,6 +13,11 @@
   adapter: `bootSite` (`app(plugins: [emiliaPlugin()], allowedRedirects)`, `setHooks`,
   `setWireNames`), `rakunEntries` (the five `rakun.*` keys), `responseOver`, `chainFor`,
   `pageInput`, `boot`. 21 tests on commonJS and on erlang. `docs.md` documents the four seams.
+- **Social cards (front 70).** `modules/onze-og/`: the closed style subset with its reports,
+  sidecar metrics (`.notdef` fallback, monotonic `measure`), the card layout, SVG emission with
+  gradients in `<defs>` and escaped text, the rasterizer port (`rsvg-convert` / `resvg`, a real
+  PNG in the suite when one is installed; the NIF declared and refused), `requireRasterizer`,
+  `ImageResponse` and the card key. 10 tests on erlang.
 - **Images (front 51).** `Image` (props validation, the source rules and the empty-by-default
   allowlist, `srcset` snapped to configured widths, fill, blur with `data-src`, the loading
   policy, refused sources reported), `imageResponse` (400 on a width or quality outside the
