@@ -16,7 +16,8 @@
     "entry.bp",
     "script.bp",
     "rebuild.bp",
-    "hooks.bp"
+    "hooks.bp",
+    "link.bp"
   ],
   "dependencies": {
     "jhonstart": {

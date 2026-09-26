@@ -120,7 +120,7 @@ pub fn prelude() -> string {
         "    var parts = from.split(\"/\"); parts.pop();",
         "    spec.split(\"/\").forEach(function (p) { if (p === \"..\") parts.pop(); else if (p !== \".\") parts.push(p); });",
         "    var out = parts.join(\"/\");",
-        "    return /\\.js$/.test(out) ? out : out + \".js\";",
+        "    return /\\.m?js$/.test(out) ? out : out + \".js\";",
         "  }",
         "  function load(path) {",
         "    if (cache[path]) return cache[path].exports;",

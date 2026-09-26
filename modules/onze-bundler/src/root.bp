@@ -16,3 +16,4 @@ pub mod entry;
 pub mod script;
 pub mod rebuild;
 pub mod hooks;
+pub mod link;
