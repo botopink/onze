@@ -74,5 +74,5 @@ fn main() {
     val inv = mockInventory();
     val _s = when(inv.stock(eq("widget"))).thenReturn(5);
     val co = Checkout(inv: inv);
-    print("can fulfil 3 widgets: " + co.canFulfil("widget", 3).toString());
+    @print("can fulfil 3 widgets: " + co.canFulfil("widget", 3).toString());
 }
