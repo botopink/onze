@@ -6,7 +6,13 @@
   "entry": "root.bp",
   "target": "commonJS",
   "files": [
-    "root.bp"
+    "root.bp",
+    "spec.bp",
+    "otp.bp",
+    "docker.bp",
+    "package.bp",
+    "lifecycle.bp",
+    "static_export.bp"
   ],
   "dependencies": {
     "jhonstart": {

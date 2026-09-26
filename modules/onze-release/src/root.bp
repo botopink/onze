@@ -1,12 +1,13 @@
-//// The `onze-release` package — module-tree root.
+//// The `onze-release` package — module-tree root (front 71 owns it).
 ////
-//// Deploy time — the build id, the OTP release, the Dockerfile,
-//// the boot script and the static export.
-////
-//// A skeleton created by front 95 (`specs/1.0.10-beta/06-onze/modules.md`
-//// § The cut): an empty `pub` surface and one inline test, so the member is a
-//// row of `zig build test-libs` from the first commit. Owner: front 71.
+//// Deploy time: the descriptor and the build id (`spec`), the OTP release
+//// text and `systools` (`otp`), the Dockerfile (`docker`), packaging the
+//// asset tree (`package`), health, readiness and shutdown (`lifecycle`),
+//// static export (`export`).
 
-test "onze-release: the member compiles and runs on its rows" {
-    assert "onze-release".length() == 12;
-}
+pub mod spec;
+pub mod otp;
+pub mod docker;
+pub mod package;
+pub mod lifecycle;
+pub mod static_export;

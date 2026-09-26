@@ -47,7 +47,11 @@ onze/
 │   │                    stylesheet.bp, assets.bp (the two static roots), preprocess.bp,
 │   │                    head.bp (pageRenderHooks) — depends on onze, onze-bundler, jhonstart
 │   ├── onze-og/       ← front 70 — targets ["erlang"]; depends on onze, onze-assets
-│   └── onze-release/  ← front 71 — depends on onze, onze-bundler, onze-assets
+│   └── onze-release/  ← front 71: spec.bp (ReleaseSpec, the build id), otp.bp (.rel,
+│                        sys.config, vm.args, bin/onze, systools), docker.bp, package.bp
+│                        (manifest completeness, the secret scan), lifecycle.bp (readiness,
+│                        the shutdown order over a Lifecycle record), static_export.bp —
+│                        depends on onze, onze-bundler, onze-assets
 ├── docs.md            ← the reference: onze.json, the alias map, the four seams, the not-built table
 ├── examples/          ← blog/ (53: src/lib/db.bp — the post store —, content/posts/*.md,
 │                        test/{db,tags}_test.bp); scaffold/ (50: the committed output of

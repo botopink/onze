@@ -13,6 +13,13 @@
   adapter: `bootSite` (`app(plugins: [emiliaPlugin()], allowedRedirects)`, `setHooks`,
   `setWireNames`), `rakunEntries` (the five `rakun.*` keys), `responseOver`, `chainFor`,
   `pageInput`, `boot`. 21 tests on commonJS and on erlang. `docs.md` documents the four seams.
+- **Release packaging (front 71).** `modules/onze-release/`: `ReleaseSpec`, `generateBuildId`
+  (sorted, deterministic), `validateBuildId`, `verifyBuildId`; the `.rel`, `sys.config`,
+  `vm.args` (the cookie from the environment) and `bin/onze` texts; `assembleRelease` over a real
+  `systools:make_script` (tested against the local OTP); the two-stage non-root Dockerfile and
+  `.dockerignore`; `packageAssets` (the manifest's promises, `public/` verbatim, `BUILD_ID`) and
+  `scanForSecrets`; readiness and the ordered `shutdown` over a `Lifecycle` record; static
+  export. 9 tests on both rows.
 - **The CLI, first half (front 50).** `modules/onze-cli/`: `resolve` (root walk-up, config,
   aliases), `scan` (the app walk, routing's patterns, decorator arguments, the page+route,
   missing-decorator and staging-clash refusals), `generate` (the decorator/directory check, the
