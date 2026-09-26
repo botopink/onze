@@ -40,7 +40,8 @@ onze/
 │   ├── onze-og/       ← front 70 — targets ["erlang"]; depends on onze, onze-assets
 │   └── onze-release/  ← front 71 — depends on onze, onze-bundler, onze-assets
 ├── docs.md            ← the reference: onze.json, the alias map, the four seams, the not-built table
-├── examples/          ← README.md only; blog (53), scaffold (50), static-site (71) arrive
+├── examples/          ← blog/ (53: src/lib/db.bp — the post store —, content/posts/*.md,
+│                        test/{db,tags}_test.bp); scaffold (50) and static-site (71) arrive
 │                        with their fronts, each a member with its own botopink.json
 ├── scripts/git-hooks/ ← pre-commit: conflict markers, `botopink test` per `modules/*`
 │                        member, `botopink build` per example

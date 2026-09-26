@@ -1,7 +1,8 @@
 # onze examples
 
 Every child of `examples/` holding a `botopink.json` is a member of the onze workspace and a row
-of `zig build test-libs`; this directory holds none yet. The three planned projects
+of `zig build test-libs`. `blog/` exists (front 53 step 1: the store and the seed posts); the
+other two arrive with their fronts. The three projects
 (`specs/1.0.10-beta/06-onze/modules.md` § `repository/onze/examples/**`):
 
 | Example | Front | What it proves |
@@ -9,3 +10,7 @@ of `zig build test-libs`; this directory holds none yet. The three planned proje
 | `blog/` | 53 | the acceptance app — every route under `onze dev` and `onze build && onze start`, the client chunk, the stylesheet, the OG route, the release |
 | `scaffold/` | 50 | the committed output of `onze create scaffold --yes` |
 | `static-site/` | 71 · 60 | `output: export` — every route prerenderable |
+
+`blog/` keeps its sources under `src/` (`src/app/`, `src/components/`, `src/lib/` — `onze.json`'s
+`appDir` is `"src/app"`): a package whose `"src"` is `"."` cannot reach a nested module
+(`specs/1.0.10-beta/06-onze/53-onze-example-app/README.md` § Where it stands, finding F5).

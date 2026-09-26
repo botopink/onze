@@ -1,0 +1,9 @@
+//// blog — onze's acceptance app (front 53), module-tree root.
+////
+//// The routing tree lives under `src/app/` (`onze.json`'s `appDir`). It is
+//// not reachable from here: its directory names (`[slug]`, `(marketing)`) are
+//// not module identifiers, so `onze build` stages it under `.onze/app/` and
+//// generates its `pub mod` lines (front 50). This root declares the modules an
+//// app author reaches by a plain `mod` path.
+
+pub mod lib;

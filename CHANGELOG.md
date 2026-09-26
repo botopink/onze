@@ -13,6 +13,11 @@
   adapter: `bootSite` (`app(plugins: [emiliaPlugin()], allowedRedirects)`, `setHooks`,
   `setWireNames`), `rakunEntries` (the five `rakun.*` keys), `responseOver`, `chainFor`,
   `pageInput`, `boot`. 21 tests on commonJS and on erlang. `docs.md` documents the four seams.
+- **The blog's store (front 53 step 1).** `examples/blog/`: `botopink.json` (the `@/components`
+  / `@/lib` aliases), `onze.json` (`appDir: "src/app"`), three seed posts under
+  `content/posts/`, `src/lib/db.bp` (`listPosts` newest first, `readPost` naming a missing
+  slug, `writePost` refusing a slug outside `[a-z0-9-]+`, `readCount`), and `test/db_test.bp`
+  + `test/tags_test.bp` — 7 tests on both rows.
 - **onze-test's core helpers (front 49).** `assertConfig`, `assertAppFiles`, `assertAlias`,
   `assertPublicEnv` over std's `snapshots.assertAs`, and `fixtureTree`. 7 tests on both rows.
 
