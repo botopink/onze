@@ -8,7 +8,7 @@ import {ScriptDecl, ScriptPlan, planScripts, describeScripts} from "script";
 import {ChunkRef} from "manifest";
 import {fixtureApp} from "fixture";
 import {AliasMap} from "onze";
-import {islandAttr, globals} from "jhonstart";
+import {islandAttr, globals, Island} from "jhonstart";
 import {testing.snapshots} from "std";
 
 fn aliases() -> AliasMap {
@@ -63,7 +63,9 @@ test "entry: the runtime mismatches name their ids" {
 test "entry: parseIslands reads the payload's i triples" {
     val rows = try parseIslands("[[\"i0\",\"Nav\",\"title=Hi&count=2\"],[\"i1\",\"LikeButton\",\"\"]]");
     assert rows.length == 2;
-    assert rows.at(0).unwrapOr(#("", "", ""))._2 == "title=Hi&count=2";
+    val first = rows.at(0).unwrapOr(Island(id: "", component: "", props: []));
+    assert first.component == "Nav";
+    assert first.props.map({ kv -> kv._0 + "=" + kv._1 }).join(",") == "title=Hi,count=2";
     assert parseIslands("[[\"i0\",\"Nav\"]]").isError();
 }
 
@@ -82,6 +84,7 @@ test "script: strategies ---- the four placements and two refusals" {
     ];
     val plan = planScripts(decls);
     assert plan.head.length == 1;
+    assert plan.workers.map({ w -> w.id }).join(",") == "worker:crunch";
     assert plan.scheduled.length == 3;
     assert plan.refusals.length == 2;
     try snapshots.assertAs(@src(), "scripts", describeScripts(decls));

@@ -31,7 +31,7 @@
 //// on front 29's closed whitelist (`string`, `i32`, `f64`, `bool`).
 
 import {json.Json, json.decode} from "std";
-import {islandAttrOf} from "jhonstart";
+import {islandAttrOf, Island, propsOf} from "jhonstart";
 import {AppModule, ClientGraph, GraphNode} from "graph";
 import {ImportRef} from "scan";
 
@@ -153,15 +153,16 @@ fn textOf(v: Json) -> string {
     };
 }
 
-// The islands of a payload's `i` value (a JSON array of `[id, component,
-// props]` triples, props form-encoded) as `#(id, component, props)`.
-pub fn parseIslands(field: string) -> @Result<Array<#(string, string, string)>, string> {
+// The islands of a payload's `i` value — a JSON array of `[id, component,
+// props]` triples, props form-encoded — as jhonstart's `Island`, props
+// decoded with jhonstart's `propsOf`.
+pub fn parseIslands(field: string) -> @Result<Array<Island>, string> {
     val doc = try decode(field);
-    var out: Array<#(string, string, string)> = [];
+    var out: Array<Island> = [];
     for (itemsOf(doc)) { row ->
         val cells = itemsOf(row);
         if (cells.length != 3) throw "payload i: a row is [id, component, props], not " + cells.length.toString() + " cells";
-        out.push(#(textOf(cells.at(0).unwrapOr(Json.Null)), textOf(cells.at(1).unwrapOr(Json.Null)), textOf(cells.at(2).unwrapOr(Json.Null))));
+        out.push(Island(id: textOf(cells.at(0).unwrapOr(Json.Null)), component: textOf(cells.at(1).unwrapOr(Json.Null)), props: propsOf(textOf(cells.at(2).unwrapOr(Json.Null)))));
     };
     return out;
 }

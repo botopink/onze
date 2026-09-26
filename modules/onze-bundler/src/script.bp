@@ -13,7 +13,7 @@ import {ChunkRef} from "manifest";
 
 pub type ScriptDecl(id: string, src: string, strategy: string, onLoad: string)
 
-pub type ScriptPlan(head: Array<ChunkRef>, scheduled: Array<#(string, string, string)>, refusals: Array<string>)
+pub type ScriptPlan(head: Array<ChunkRef>, workers: Array<ChunkRef>, scheduled: Array<#(string, string, string)>, refusals: Array<string>)
 
 pub fn strategies() -> string[] {
     return ["beforeInteractive", "afterInteractive", "lazyOnload", "worker"];
@@ -37,6 +37,7 @@ fn refusalOf(d: ScriptDecl) -> string {
 
 pub fn planScripts(decls: Array<ScriptDecl>) -> ScriptPlan {
     var head: Array<ChunkRef> = [];
+    var workers: Array<ChunkRef> = [];
     var scheduled: Array<#(string, string, string)> = [];
     var refusals: string[] = [];
     for (decls) { d ->
@@ -46,10 +47,11 @@ pub fn planScripts(decls: Array<ScriptDecl>) -> ScriptPlan {
         } else if (d.strategy == "beforeInteractive") {
             head.push(ChunkRef(id: "script:" + d.id, url: d.src, hash: "", bytes: 0));
         } else {
+            if (d.strategy == "worker") workers.push(ChunkRef(id: "worker:" + d.id, url: d.src, hash: "", bytes: 0));
             scheduled.push(#(d.src, d.strategy, d.onLoad));
         };
     };
-    return ScriptPlan(head: head, scheduled: scheduled, refusals: refusals);
+    return ScriptPlan(head: head, workers: workers, scheduled: scheduled, refusals: refusals);
 }
 
 pub fn describeScripts(decls: Array<ScriptDecl>) -> string {
@@ -57,7 +59,7 @@ pub fn describeScripts(decls: Array<ScriptDecl>) -> string {
     for (decls) { d ->
         val problem = refusalOf(d);
         if (problem == "") {
-            val extra = if (d.strategy == "beforeInteractive") "chunk script:" + d.id else if (d.strategy == "worker") "worker:" + d.id else if (d.onLoad != "") "onLoad " + d.onLoad else "";
+            val extra = if (d.strategy == "beforeInteractive") "chunk script:" + d.id else if (d.strategy == "worker") "chunk worker:" + d.id else if (d.onLoad != "") "onLoad " + d.onLoad else "";
             rows.push((d.id.padEnd(12, " ") + d.strategy.padEnd(20, " ") + scriptPlacement(d.strategy).padEnd(24, " ") + extra).trimEnd());
         };
     };
