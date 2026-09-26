@@ -1,0 +1,15 @@
+//// The `onze-test` package — module-tree root.
+////
+//// The test-helper member every library carries (front 95,
+//// `specs/1.0.10-beta/02-packaging/README.md` § 5): `assert<Subject>(loc, …)
+//// -> @Result<void, string>` helpers, fixtures, builders and the E2E runner
+//// (`bootApp`, `request`), standing on std's asserts and snapshots. It
+//// re-exports nothing from std, and mocking is std's (decision 71).
+////
+//// A skeleton created by front 95 (`specs/1.0.10-beta/06-onze/modules.md`
+//// § The cut): an empty `pub` surface and one inline test, so the member is a
+//// row of `zig build test-libs` from the first commit. Owner: front 49 (root) · every track-E front.
+
+test "onze-test: the member compiles and runs on its rows" {
+    assert "onze-test".length() == 9;
+}

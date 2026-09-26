@@ -1,0 +1,12 @@
+//// The `onze-og` package — module-tree root.
+////
+//// `ImageResponse` — style parse, layout, SVG and the rasterizer
+//// port. erlang only: SVG → PNG leaves the VM through a port.
+////
+//// A skeleton created by front 95 (`specs/1.0.10-beta/06-onze/modules.md`
+//// § The cut): an empty `pub` surface and one inline test, so the member is a
+//// row of `zig build test-libs` from the first commit. Owner: front 70.
+
+test "onze-og: the member compiles and runs on its rows" {
+    assert "onze-og".length() == 7;
+}

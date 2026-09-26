@@ -1,0 +1,19 @@
+{
+  "name": "onze-cli",
+  "version": "0.0.1",
+  "description": "onze-cli — `onze create · dev · build · start · info` (front 50) — commonJS",
+  "src": "src/",
+  "entry": "root.bp",
+  "target": "commonJS",
+  "targets": [
+    "commonJS"
+  ],
+  "files": [
+    "root.bp"
+  ],
+  "dependencies": {
+    "onze": {
+      "workspace": true
+    }
+  }
+}

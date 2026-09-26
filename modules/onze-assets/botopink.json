@@ -1,0 +1,19 @@
+{
+  "name": "onze-assets",
+  "version": "0.0.1",
+  "description": "onze-assets — CSS modules, the stylesheet, public/, Image and fonts (fronts 69 · 51 · 52) — commonJS and erlang",
+  "src": "src/",
+  "entry": "root.bp",
+  "target": "commonJS",
+  "files": [
+    "root.bp"
+  ],
+  "dependencies": {
+    "onze": {
+      "workspace": true
+    },
+    "onze-bundler": {
+      "workspace": true
+    }
+  }
+}

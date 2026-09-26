@@ -1,0 +1,11 @@
+{
+  "name": "onze",
+  "version": "0.0.1",
+  "description": "onze core — the vocabulary the three libraries do not share: config, project, alias map, env rule, the boot adapter (front 49) — commonJS and erlang",
+  "src": "src/",
+  "entry": "root.bp",
+  "target": "commonJS",
+  "files": [
+    "root.bp"
+  ]
+}

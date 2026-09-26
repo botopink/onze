@@ -1,0 +1,16 @@
+{
+  "name": "onze-bundler",
+  "version": "0.0.1",
+  "description": "onze-bundler — the client module graph, the boundary refusals, chunks, the client manifest and the hydration entry (front 68) — commonJS and erlang",
+  "src": "src/",
+  "entry": "root.bp",
+  "target": "commonJS",
+  "files": [
+    "root.bp"
+  ],
+  "dependencies": {
+    "onze": {
+      "workspace": true
+    }
+  }
+}

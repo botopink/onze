@@ -1,0 +1,12 @@
+//// The `onze-assets` package — module-tree root.
+////
+//// The asset pipeline — CSS modules, the stylesheet, `public/`,
+//// `Image` and fonts, under one static prefix.
+////
+//// A skeleton created by front 95 (`specs/1.0.10-beta/06-onze/modules.md`
+//// § The cut): an empty `pub` surface and one inline test, so the member is a
+//// row of `zig build test-libs` from the first commit. Owner: front 69 (root) · 51 · 52.
+
+test "onze-assets: the member compiles and runs on its rows" {
+    assert "onze-assets".length() == 11;
+}

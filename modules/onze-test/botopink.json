@@ -1,0 +1,16 @@
+{
+  "name": "onze-test",
+  "version": "0.0.1",
+  "description": "onze-test — test helpers for onze: assert<Subject>(loc, …) snapshot helpers, fixtures and the E2E runner, filled by the track-E fronts — commonJS and erlang",
+  "src": "src/",
+  "entry": "root.bp",
+  "target": "commonJS",
+  "files": [
+    "root.bp"
+  ],
+  "dependencies": {
+    "onze": {
+      "workspace": true
+    }
+  }
+}
