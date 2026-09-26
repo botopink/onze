@@ -13,6 +13,13 @@
   adapter: `bootSite` (`app(plugins: [emiliaPlugin()], allowedRedirects)`, `setHooks`,
   `setWireNames`), `rakunEntries` (the five `rakun.*` keys), `responseOver`, `chainFor`,
   `pageInput`, `boot`. 21 tests on commonJS and on erlang. `docs.md` documents the four seams.
+- **The blog's read path (front 53 step 2).** `examples/blog/src/`: the root and blog layouts,
+  `/`, `/blog`, `/blog/[slug]` (aliased imports, `notFound()`), `/about` under `(marketing)`, the
+  nav (`Link`) and `PostCard` (one emilia class); `test/render_test.bp` renders `/` and `/blog`
+  in process through onze's `bootSite` on both rows — the hero, the nav, three cards, one
+  `<style>`, a non-empty sheet on two consecutive requests. `onze build` builds the whole tree.
+  onze core gains `loadModuleBodies` (the registrations of an imported module on the BEAM);
+  staging regenerates every `mod.bp` under the app.
 - **Social cards (front 70).** `modules/onze-og/`: the closed style subset with its reports,
   sidecar metrics (`.notdef` fallback, monotonic `measure`), the card layout, SVG emission with
   gradients in `<defs>` and escaped text, the rasterizer port (`rsvg-convert` / `resvg`, a real

@@ -129,3 +129,21 @@ pub type OnzeBoot(site: App, rakun: Array<#(string, string)>)
 pub fn boot(config: OnzeConfig, hooks: RenderHooks, i18nExclude: string[]) -> OnzeBoot {
     return OnzeBoot(site: bootSite(config, hooks), rakun: rakunEntries(config, i18nExclude));
 }
+
+// ── module bodies on the BEAM ───────────────────────────────────────────────
+//
+// A decorator's registration (`#[page]`, `#[layout]`, …) is a module-level
+// `val`; on node it runs when the module is required, on erlang it is the
+// module's `'_botopink_init'/0`, which nothing calls for a module that is only
+// imported (front 49's finding F10). The boot runs them: `modules` are the
+// erlang module atoms (`<package>@app@layout`, …); a module without a body
+// is skipped. On node this is a no-op — the requires already ran them.
+#[@External.Node("""((void $0), 0)""")]
+#[@External.Erlang("""(fun(__Ms) -> lists:foldl(fun(__N, __A) -> __M = binary_to_atom(__N, utf8), case code:ensure_loaded(__M) of {module, __M} -> case erlang:function_exported(__M, '_botopink_init', 0) of true -> __M:'_botopink_init'(), __A + 1; false -> __A end; _ -> __A end end, 0, __Ms) end)($0)""")]
+declare fn runModuleBodies(modules: string[]) -> i32;
+
+// Runs the module bodies of `modules` (erlang atoms) once; answers how many
+// ran (always 0 on node, where requiring a module runs its body).
+pub fn loadModuleBodies(modules: string[]) -> i32 {
+    return runModuleBodies(modules);
+}

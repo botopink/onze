@@ -10,8 +10,9 @@
 //// spelling the graph uses too), rewriting every alias prefix of an import
 //// with front 49's `resolveAlias`, and generating:
 ////
-////   * a `mod.bp` for every staged directory under the app that has none,
-////     one `pub mod` line per child, sorted;
+////   * a `mod.bp` for every staged directory under the app, one `pub mod`
+////     line per child, sorted — an authored `mod.bp` under the app is replaced,
+////     since it cannot name `[slug]` or `(group)` children;
 ////   * `onze_routes.bp`, the registrations the boot owes the conventions
 ////     without a decorator — `jhLoading` / `jhError` / `jhNotFound` for each
 ////     `loading.bp`, `error.bp`, `not-found.bp`;
@@ -244,8 +245,11 @@ pub fn stageAt(aliases: AliasMap, appRel: string, appDir: string, sources: Array
     var staged: Array<#(string, string)> = [];
     var rootText = "";
     for (sources) { s ->
+        val authoredAppMod = s._0.startsWith(appRel + "/") && s._0.endsWith("mod.bp") && (s._0 == appRel + "/mod.bp" || s._0.endsWith("/mod.bp"));
         if (s._0 == "root.bp") {
             rootText = s._1;
+        } else if (authoredAppMod) {
+            rootText = rootText;
         } else {
             staged.push(#(stagedPath(s._0), rewriteImports(aliases, s._1)));
         };

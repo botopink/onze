@@ -8,7 +8,16 @@
   "files": [
     "root.bp",
     "lib/mod.bp",
-    "lib/db.bp"
+    "lib/db.bp",
+    "components/mod.bp",
+    "components/nav.bp",
+    "components/post_card.bp",
+    "app/mod.bp",
+    "app/layout.bp",
+    "app/page.bp",
+    "app/blog/mod.bp",
+    "app/blog/layout.bp",
+    "app/blog/page.bp"
   ],
   "alias": {
     "@/components": "components",
@@ -31,6 +40,12 @@
       "path": "../../../jhonstart/modules/jhonstart-emilia"
     },
     "onze": {
+      "workspace": true
+    },
+    "onze-bundler": {
+      "workspace": true
+    },
+    "onze-assets": {
       "workspace": true
     }
   }

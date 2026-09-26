@@ -1,0 +1,4 @@
+//// blog/components — the shared UI.
+
+pub mod nav;
+pub mod post_card;

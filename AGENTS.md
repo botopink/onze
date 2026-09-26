@@ -64,7 +64,10 @@ onze/
 ├── .gitignore         ← out/, .botopinkbuild/, .onze/ (a build's output)
 ├── docs.md            ← the reference: onze.json, the alias map, the four seams, the not-built table
 ├── examples/          ← blog/ (53: src/lib/db.bp — the post store —, content/posts/*.md,
-│                        test/{db,tags}_test.bp); scaffold/ (50: the committed output of
+│                        src/components/{nav,post_card}.bp, src/app/ — layout, page, blog/
+│                        layout + page, blog/[slug]/page, (marketing)/about/page —,
+│                        public/, test/{db,tags,render}_test.bp; [slug] and (marketing)
+│                        compile only through `onze build`'s staged tree); scaffold/ (50: the committed output of
 │                        `onze create scaffold --yes --libs ../../..`, diffed by
 │                        create_test.bp); static-site (71) arrives with its front
 ├── scripts/git-hooks/ ← pre-commit: conflict markers, `botopink test` per `modules/*`
@@ -91,6 +94,9 @@ onze/
   erlang, the rest inherit both.
 - The front that adds a module appends its `pub mod` line and its `files` entry in its own commit
   (`06-onze/modules.md` § Front → submodule ownership names the owner of each `root.bp`).
+- On erlang an imported module's decorator registrations are its `'_botopink_init'/0`, which
+  nothing calls for a module that is only imported: the boot runs them with
+  `loadModuleBodies([...atoms])` (onze core); on node requiring a module already ran them.
 - Any code or layout change updates this file in the same commit.
 
 ## Local gate
