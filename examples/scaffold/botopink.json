@@ -4,6 +4,7 @@
   "src": "src/",
   "entry": "root.bp",
   "target": "erlang",
+  "files": ["root.bp", "app/mod.bp", "app/layout.bp", "app/page.bp"],
   "targets": ["erlang", "commonJS"],
   "alias": {
     "@/components": "components",

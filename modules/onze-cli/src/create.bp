@@ -178,6 +178,7 @@ pub fn scaffoldFilesIn(o: CreateOpts, member: bool) -> Array<#(string, string)> 
         "  \"src\": " + quote(if (o.srcDir) "src/" else ".") + ",",
         "  \"entry\": \"root.bp\",",
         "  \"target\": \"erlang\",",
+        "  \"files\": [\"root.bp\", \"app/mod.bp\", \"app/layout.bp\", \"app/page.bp\"],",
         "  \"targets\": [\"erlang\", \"commonJS\"],",
         "  \"alias\": {",
         "    " + quote(o.importAlias + "components") + ": \"components\",",
