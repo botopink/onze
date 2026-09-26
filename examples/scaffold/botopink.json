@@ -1,0 +1,20 @@
+{
+  "name": "scaffold",
+  "version": "0.1.0",
+  "src": "src/",
+  "entry": "root.bp",
+  "target": "erlang",
+  "targets": ["erlang", "commonJS"],
+  "alias": {
+    "@/components": "components",
+    "@/lib": "lib"
+  },
+  "dependencies": {
+    "jhonstart": { "path": "../../../jhonstart/modules/jhonstart" },
+    "jhonstart-link": { "path": "../../../jhonstart/modules/jhonstart-link" },
+    "jhonstart-forms": { "path": "../../../jhonstart/modules/jhonstart-forms" },
+    "emilia": { "path": "../../../emilia/modules/emilia" },
+    "jhonstart-emilia": { "path": "../../../jhonstart/modules/jhonstart-emilia" },
+    "onze": { "workspace": true }
+  }
+}

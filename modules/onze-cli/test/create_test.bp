@@ -1,0 +1,130 @@
+// `botopink test` suite for `src/create.bp`, `src/info.bp` and `src/main.bp`
+// (front 50 steps 1, 5 and 9).
+
+import {CreateOpts, createDefaults, parseCreateOpts, scaffoldFiles, scaffoldFilesIn, insideOnzeWorkspace, writeScaffold, createHelp} from "create";
+import {Outcome, run, commands} from "main";
+import {infoText, versionAt} from "info";
+import {Project, resolveProject} from "resolve";
+import {OnzeConfig, AliasMap} from "onze";
+import {io.fs, io.process, io.clock, path, testing.snapshots} from "std";
+
+fn optsError(args: string[]) -> string {
+    return case parseCreateOpts(args) {
+        Ok(o) -> "ok";
+        Error(e) -> e.split("\n").at(0).unwrapOr(e);
+    };
+}
+
+fn scratch() -> string {
+    val dir = path.join([process.cwd(), ".botopinkbuild", "tmp", "create-" + process.pid().toString() + "-" + clock.nowMillis().toString()]);
+    val made = process.run("mkdir", ["-p", dir]);
+    return dir;
+}
+
+fn botopinkBin() -> string {
+    var dir = process.cwd();
+    var found = "";
+    var guard = 0;
+    while (found == "" && guard < 12) {
+        val cand = path.join([dir, "repository", "botopink-lang", "zig-out", "bin", "botopink"]);
+        if (fs.exists(cand)) found = cand;
+        dir = path.dirname(dir);
+        guard = guard + 1;
+    };
+    return found;
+}
+
+fn repositoryDir() -> string {
+    return path.normalize(path.join([process.cwd(), "..", "..", ".."]));
+}
+
+test "create: the defaults, --src-dir, --import-alias" {
+    val d = try parseCreateOpts(["my-app", "--yes"]);
+    assert d.port == 3000;
+    assert d.importAlias == "@/";
+    assert d.srcDir;
+    val s = try parseCreateOpts(["my-app", "--yes", "--src-dir"]);
+    val onzeJson = scaffoldFiles(s).filter({ f -> f._0 == "onze.json" }).at(0).unwrapOr(#("", ""))._1;
+    assert onzeJson.contains("\"appDir\": \"src/app\"");
+    assert scaffoldFiles(s).any({ f -> f._0 == "src/app/page.bp" });
+    val a = try parseCreateOpts(["my-app", "--yes", "--import-alias", "~/"]);
+    val manifest = scaffoldFiles(a).filter({ f -> f._0 == "botopink.json" }).at(0).unwrapOr(#("", ""))._1;
+    assert manifest.contains("\"~/components\": \"components\"");
+}
+
+test "create: usage errors ---- no token dropped" {
+    try snapshots.assertAs(@src(), "errors", [
+        optsError([]),
+        optsError(["a", "b"]),
+        optsError(["a", "--frobnicate"]),
+        optsError(["a", "--port"]),
+        optsError(["a", "--port", "99999"]),
+        optsError(["My App"]),
+        optsError(["a", "--no-src-dir"]),
+    ].join("\n"));
+}
+
+test "create: help ---- the flag table from the one defaults record" {
+    try snapshots.assertAs(@src(), "help", createHelp());
+}
+
+test "create: a non-empty directory is refused, --yes or not" {
+    val dir = scratch();
+    val w = fs.writeText(path.join([dir, "keep.txt"]), "mine");
+    val r = writeScaffold(dir, scaffoldFiles(createDefaults()));
+    assert r.isError();
+    assert fs.readText(path.join([dir, "keep.txt"])).unwrapOr("") == "mine";
+    val gone = process.run("rm", ["-rf", dir]);
+}
+
+test "create: the scaffold passes botopink check with no edits" {
+    val bin = botopinkBin();
+    assert bin != "";
+    val dir = scratch();
+    val out = run(dir, ["create", "my-app", "--yes", "--libs", repositoryDir()], "test");
+    assert out.code == 0;
+    val app = path.join([dir, "my-app"]);
+    assert fs.exists(path.join([app, "public"]));
+    val checked = try process.run("sh", ["-c", "cd '" + app + "' && '" + bin + "' check 2>&1"]);
+    if (checked.status != 0) @print(checked.stdout);
+    assert checked.status == 0;
+    val gone = process.run("rm", ["-rf", dir]);
+}
+
+test "main: no arguments and an unknown command exit non-zero" {
+    val none = run("/", [], "test");
+    assert none.code != 0;
+    assert none.text == commands();
+    val odd = run("/", ["deploy"], "test");
+    assert odd.code != 0;
+    assert odd.text.startsWith("onze: unknown command \"deploy\"");
+}
+
+test "info: outside a project prints the tools and project (none)" {
+    val out = run("/", ["info"], "1.0.10-beta");
+    assert out.code == 0;
+    assert out.text.contains("project       (none)");
+    assert out.text.contains("botopink      1.0.10-beta");
+}
+
+test "info: inside a project, the resolved config and every dependency" {
+    val dir = scratch();
+    val created = run(dir, ["create", "demo", "--yes", "--libs", repositoryDir()], "test");
+    val p = try resolveProject(path.join([dir, "demo"]));
+    val text = infoText([], p, [#("jhonstart", "0.0.1"), #("missing-lib", "(not found)")], "8080");
+    assert text.contains("port          8080  (PORT from the environment; onze.json says 3000)");
+    assert text.contains("missing-lib   (not found)");
+    assert text.contains("alias         @/components → components, @/lib → lib");
+    assert versionAt(path.join([dir, "nope", "botopink.json"])) == "(not found)";
+    val gone = process.run("rm", ["-rf", dir]);
+}
+
+test "create: examples/scaffold is what create --yes writes" {
+    assert insideOnzeWorkspace(path.join(["..", "..", "examples"]));
+    val fresh = scaffoldFilesIn(try parseCreateOpts(["scaffold", "--yes", "--libs", "../../.."]), true);
+    for (fresh) { f ->
+        val committed = fs.readText(path.join(["..", "..", "examples", "scaffold", f._0])).unwrapOr("(missing)");
+        if (committed != f._1) @print("differs: " + f._0);
+        assert committed == f._1;
+    };
+}

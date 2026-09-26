@@ -13,6 +13,14 @@
   adapter: `bootSite` (`app(plugins: [emiliaPlugin()], allowedRedirects)`, `setHooks`,
   `setWireNames`), `rakunEntries` (the five `rakun.*` keys), `responseOver`, `chainFor`,
   `pageInput`, `boot`. 21 tests on commonJS and on erlang. `docs.md` documents the four seams.
+- **The CLI, first half (front 50).** `modules/onze-cli/`: `resolve` (root walk-up, config,
+  aliases), `scan` (the app walk, routing's patterns, decorator arguments, the page+route,
+  missing-decorator and staging-clash refusals), `generate` (the decorator/directory check, the
+  staged tree under `<outDir>/src/` — renamed directories and stems, rewritten aliases, generated
+  `mod.bp`s, `onze_routes.bp`, root, manifest — checked by `botopink check` in a test), `create`
+  (the flag table from one defaults record, `--libs` path dependencies, the non-empty refusal;
+  the scaffold passes `botopink check`), `info`, and the dispatch. 19 tests on commonJS.
+  `examples/scaffold/` is the committed `create` output.
 - **The styling pipeline (front 69).** `modules/onze-assets/`: CSS modules compiled to a
   generated accessor module with `<file>_<class>_<hash>` names (undefined uses reported,
   `</style` refused), the global stylesheet (global first, fingerprinted, its `Y` record read

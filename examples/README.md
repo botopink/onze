@@ -1,8 +1,9 @@
 # onze examples
 
 Every child of `examples/` holding a `botopink.json` is a member of the onze workspace and a row
-of `zig build test-libs`. `blog/` exists (front 53 step 1: the store and the seed posts); the
-other two arrive with their fronts. The three projects
+of `zig build test-libs`. `blog/` exists (front 53 step 1: the store and the seed posts) and
+`scaffold/` (front 50: what `onze create scaffold --yes --libs ../../..` writes, diffed against a
+fresh `create` by `modules/onze-cli/test/create_test.bp`); `static-site/` arrives with front 71. The three projects
 (`specs/1.0.10-beta/06-onze/modules.md` § `repository/onze/examples/**`):
 
 | Example | Front | What it proves |

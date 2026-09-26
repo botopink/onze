@@ -1,0 +1,8 @@
+{
+  "name": "scaffold",
+  "port": 3000,
+  "basePath": "",
+  "appDir": "src/app",
+  "publicDir": "public",
+  "outDir": ".onze"
+}

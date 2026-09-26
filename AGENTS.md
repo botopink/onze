@@ -33,7 +33,11 @@ onze/
 │   ├── onze-test/     ← the `<lib>-test` member: core.bp (assertConfig, assertAppFiles,
 │   │                    assertAlias, assertPublicEnv), fixtures.bp (fixtureTree); the E2E
 │   │                    runner arrives with 53. Depends on onze. Re-exports nothing from std
-│   ├── onze-cli/      ← front 50 — targets ["commonJS"]; depends on onze
+│   ├── onze-cli/      ← front 50 — targets ["commonJS"]: resolve.bp, scan.bp, generate.bp
+│   │                    (the check, the staged tree under <outDir>/src/), create.bp,
+│   │                    info.bp, main.bp (dispatch; `node out/main.js <cmd>`); dev, build
+│   │                    and start answer "not available yet". Depends on onze,
+│   │                    onze-bundler
 │   ├── onze-bundler/  ← front 68: manifest.bp (both rows — the one parser the server
 │   │                    reads), scan.bp, graph.bp, refusal.bp, chunk.bp, entry.bp,
 │   │                    script.bp, rebuild.bp, hooks.bp (RenderHooks over the tags),
@@ -46,8 +50,9 @@ onze/
 │   └── onze-release/  ← front 71 — depends on onze, onze-bundler, onze-assets
 ├── docs.md            ← the reference: onze.json, the alias map, the four seams, the not-built table
 ├── examples/          ← blog/ (53: src/lib/db.bp — the post store —, content/posts/*.md,
-│                        test/{db,tags}_test.bp); scaffold (50) and static-site (71) arrive
-│                        with their fronts, each a member with its own botopink.json
+│                        test/{db,tags}_test.bp); scaffold/ (50: the committed output of
+│                        `onze create scaffold --yes --libs ../../..`, diffed by
+│                        create_test.bp); static-site (71) arrives with its front
 ├── scripts/git-hooks/ ← pre-commit: conflict markers, `botopink test` per `modules/*`
 │                        member, `botopink build` per example
 └── .github/workflows/ ← test.yml (`zig build test-libs -- --lib onze`), tag.yml

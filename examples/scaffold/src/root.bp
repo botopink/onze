@@ -1,0 +1,3 @@
+//// scaffold — an onze app. `onze dev` serves it; `onze build` stages app/ and generates its module tree.
+
+pub mod app;

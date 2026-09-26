@@ -12,7 +12,10 @@
     "root.bp",
     "resolve.bp",
     "scan.bp",
-    "generate.bp"
+    "generate.bp",
+    "create.bp",
+    "info.bp",
+    "main.bp"
   ],
   "dependencies": {
     "jhonstart": {

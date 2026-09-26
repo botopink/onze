@@ -234,7 +234,10 @@ pub fn stage(aliases: AliasMap, appRel: string, appDir: string, sources: Array<#
     val stagedApp = stagedPath(appRel + "/x.bp").split("/").take(appRel.split("/").length).join("/");
     val mods = modFiles(stagedApp, staged.map({ f -> f._0 }));
     val all = staged.append(mods).append([#("onze_routes.bp", routesModule(appDir, entries))]);
-    val root = rootText.trimEnd() + "\n\n" + banner() + "\npub mod " + stagedApp.split("/").at(0).unwrapOr("app") + ";\npub mod onze_routes;\n";
+    val appTop = stagedApp.split("/").at(0).unwrapOr("app");
+    val declaresApp = rootText.split("\n").any({ l -> l.trim() == "pub mod " + appTop + ";" });
+    val appLine = if (declaresApp) "" else "pub mod " + appTop + ";\n";
+    val root = rootText.trimEnd() + "\n\n" + banner() + "\n" + appLine + "pub mod onze_routes;\n";
     val withRoot = all.append([#("root.bp", root)]);
     val names = sortedText(withRoot.map({ f -> f._0 }));
     val manifestText = try stagedManifest(manifest, names);
