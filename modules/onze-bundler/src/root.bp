@@ -1,12 +1,14 @@
-//// The `onze-bundler` package — module-tree root.
+//// The `onze-bundler` package — module-tree root (front 68 owns it).
 ////
-//// The client bundle — module graph, refusals, chunks, the manifest
-//// the BEAM server reads on every render, and the generated hydration entry.
-////
-//// A skeleton created by front 95 (`specs/1.0.10-beta/06-onze/modules.md`
-//// § The cut): an empty `pub` surface and one inline test, so the member is a
-//// row of `zig build test-libs` from the first commit. Owner: front 68.
+//// The client bundle: the textual module scan, the client graph, the three
+//// build refusals, chunks, the client manifest the BEAM server reads on every
+//// render, the generated hydration entry, `<Script>` placement and the dev
+//// rebuild. `manifest` compiles for both targets; the rest runs at build time
+//// under the CLI (commonJS) and is asserted on both rows where it is pure.
 
-test "onze-bundler: the member compiles and runs on its rows" {
-    assert "onze-bundler".length() == 12;
-}
+pub mod manifest;
+pub mod scan;
+pub mod graph;
+pub mod refusal;
+pub mod chunk;
+pub mod fixture;

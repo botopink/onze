@@ -6,7 +6,13 @@
   "entry": "root.bp",
   "target": "commonJS",
   "files": [
-    "root.bp"
+    "root.bp",
+    "manifest.bp",
+    "scan.bp",
+    "graph.bp",
+    "refusal.bp",
+    "chunk.bp",
+    "fixture.bp"
   ],
   "dependencies": {
     "jhonstart": {
