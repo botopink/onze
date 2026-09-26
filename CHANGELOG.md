@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Retirement banner (botopink front 95, decision 79).** `README.md` opens with the
+  archive notice: the last code commit is tagged `mocking-lib-final`, the surface lives
+  on as std's `mocks` and `asserts` modules, and the name `onze` passes to the
+  Next.js-style orchestrator. No code changes.
+
 - **Front 24 — effects by return type** (botopink decision 118): the recorded
   `thenThrow` limitation in `test/onze_test.bp` names the fallible callee as a
   `-> @Result<T, E>` fn instead of a `#[@result]` fn. Comment only; no code spells

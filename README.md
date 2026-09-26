@@ -2,6 +2,15 @@
 
 [![CI](https://github.com/botopink/onze/actions/workflows/test.yml/badge.svg?branch=feat)](https://github.com/botopink/onze/actions/workflows/test.yml)
 
+> **Archived — this library is retired.** Its last code commit is tagged `mocking-lib-final`.
+> The mocking surface lives on in botopink's std as the `mocks` module
+> (`libs/std/src/mocks.bp`, `import {mocks} from "std"`) and the assertion surface as the
+> `asserts` module (`libs/std/src/asserts.bp`, `import {asserts} from "std"`) — both under
+> `testing` once std's tree is regrouped (`import {testing: {mocks, asserts}} from "std"`).
+> The name `onze` now belongs to the Next.js-style orchestrator (decision 79 of botopink
+> 1.0.10-beta); the migration table is `specs/1.0.10-beta/01-std/onze-migration.md` in the
+> botopink meta repository.
+
 > Mockito-style mocking + verification library for botopink unit tests.
 
 `onze` is botopink's test-double layer. Create a **mock** of a behavior,

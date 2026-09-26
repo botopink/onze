@@ -4,6 +4,10 @@
 > Parent (workspace): [`../AGENTS.md`](../AGENTS.md) · Sibling (core): [`../botopink-lang/AGENTS.md`](../botopink-lang/AGENTS.md)
 > Docs: [`./docs.md`](docs.md) · Spec: [`../../tasks/v0.beta.8/specs/onze.md`](../../tasks/v0.beta.8/specs/onze.md)
 
+> **Retired (decision 79 of botopink 1.0.10-beta).** This repository is archived under the tag
+> `mocking-lib-final`; its surface is std's `mocks` and `asserts` modules, and the name `onze`
+> passes to the orchestrator. `README.md` carries the banner. Change nothing here.
+
 A **Mockito-style mocking + verification library** for botopink unit tests:
 create a mock of a behavior, **stub** what its methods return, exercise the code
 under test, then **verify** the mock was called as expected. Pure `.bp` client —
