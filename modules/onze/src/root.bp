@@ -1,13 +1,10 @@
-//// The `onze` package — module-tree root.
+//// The `onze` package — module-tree root (front 49 owns it).
 ////
-//// The vocabulary the three libraries do not share — `OnzeConfig`, `OnzeProject`,
-//// `AppFile`, `AliasMap`/`resolveAlias`, the public-env rule and `Onze.run` —
-//// filled by front 49, which owns this `root.bp` and `botopink.json`.
-////
-//// A skeleton created by front 95 (`specs/1.0.10-beta/06-onze/modules.md`
-//// § The cut): an empty `pub` surface and one inline test, so the member is a
-//// row of `zig build test-libs` from the first commit. Owner: front 49.
+//// The vocabulary the three libraries do not share: `OnzeConfig` and the
+//// public-env rule (`config`), `OnzeProject` / `AppFile` / the alias map
+//// (`types`), and the boot adapter (`integration`). Nothing here re-exports
+//// jhonstart, rakun or emilia.
 
-test "onze: the member compiles and runs on its rows" {
-    assert "onze".length() == 4;
-}
+pub mod config;
+pub mod types;
+pub default mod integration;

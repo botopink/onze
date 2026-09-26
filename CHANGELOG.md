@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- **The core (front 49).** `modules/onze/`: `config.bp` — `OnzeConfig` (name, port, basePath,
+  appDir, publicDir, outDir, dev, actionsBodyLimit, allowedRedirects), `defaultConfig()`,
+  `withPort` / `withDev`, `loadConfig(botopinkJson, onzeJson)` refusing an unknown key, a wrong
+  kind or an out-of-range port by name, `describeConfig`; the action wire names
+  (`__bp_action` / `X-Bp-Action`) and the asset prefix `/_onze`; the `ONZE_PUBLIC_` rule
+  (`publicEnvPrefix`, `isPublicEnvName`, `publicEnv`). `types.bp` — `AliasMap`, `loadAliases`
+  (a target escaping the root refused at load), `resolveAlias` (longest prefix), `OnzeProject`,
+  `AppFile`, the eight `appFileKinds()`, `classifyAppFile`. `integration.bp` — the boot
+  adapter: `bootSite` (`app(plugins: [emiliaPlugin()], allowedRedirects)`, `setHooks`,
+  `setWireNames`), `rakunEntries` (the five `rakun.*` keys), `responseOver`, `chainFor`,
+  `pageInput`, `boot`. 21 tests on commonJS and on erlang. `docs.md` documents the four seams.
+- **onze-test's core helpers (front 49).** `assertConfig`, `assertAppFiles`, `assertAlias`,
+  `assertPublicEnv` over std's `snapshots.assertAs`, and `fixtureTree`. 7 tests on both rows.
+
 - **The orchestrator's workspace (botopink front 95, decision 79).** The name `onze` passes
   from the archived mocking library (tag `mocking-lib-final`; its surface is std's
   `testing.mocks` and `testing.asserts`) to the orchestrator. `botopink.json` is a workspace

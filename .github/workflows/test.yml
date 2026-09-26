@@ -9,8 +9,8 @@
 # contributes its members by manifest name, so `--lib onze` selects the member
 # `modules/onze/` and the umbrella has no row. The other members (`onze-test`,
 # `onze-cli`, `onze-bundler`, `onze-assets`, `onze-og`, `onze-release`) are rows
-# of their own — `--lib` takes one name, so this job runs the core only; the
-# pre-commit hook runs `botopink test` in every `modules/*` member, and the
+# of their own — `--lib` takes one name, so the test step loops over the seven
+# (a member restricted away from the matrix target is reported skipped); the
 # Examples build step below builds each example from its manifest.
 name: test
 
@@ -116,13 +116,19 @@ jobs:
         if: ${{ vars.BOTOPINK_USE_RELEASE_FASTPATH != 'true' }}
         working-directory: botopink-lang
         shell: bash
-        run: zig build test-libs -- --lib "${LIB_NAME}" --target "${{ matrix.target }}"
+        run: |
+          for lib in onze onze-test onze-cli onze-bundler onze-assets onze-og onze-release; do
+            zig build test-libs -- --lib "$lib" --target "${{ matrix.target }}"
+          done
 
       - name: botopink-lib-test --lib onze --target ${{ matrix.target }} (fast path)
         if: ${{ vars.BOTOPINK_USE_RELEASE_FASTPATH == 'true' }}
         working-directory: botopink-lang
         shell: bash
-        run: botopink-lib-test --lib "${LIB_NAME}" --target "${{ matrix.target }}"
+        run: |
+          for lib in onze onze-test onze-cli onze-bundler onze-assets onze-og onze-release; do
+            botopink-lib-test --lib "$lib" --target "${{ matrix.target }}"
+          done
 
       # Every examples/*/ with a botopink.json builds (runExamplesGate, the same
       # stage as the pre-commit hook); scripts/known-broken-examples.txt lists

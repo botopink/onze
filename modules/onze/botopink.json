@@ -6,6 +6,26 @@
   "entry": "root.bp",
   "target": "commonJS",
   "files": [
-    "root.bp"
-  ]
+    "root.bp",
+    "config.bp",
+    "types.bp",
+    "integration.bp"
+  ],
+  "dependencies": {
+    "jhonstart": {
+      "path": "../../../jhonstart/modules/jhonstart"
+    },
+    "jhonstart-link": {
+      "path": "../../../jhonstart/modules/jhonstart-link"
+    },
+    "jhonstart-forms": {
+      "path": "../../../jhonstart/modules/jhonstart-forms"
+    },
+    "emilia": {
+      "path": "../../../emilia/modules/emilia"
+    },
+    "jhonstart-emilia": {
+      "path": "../../../jhonstart/modules/jhonstart-emilia"
+    }
+  }
 }

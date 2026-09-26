@@ -3,8 +3,10 @@
 > The Next.js-style orchestrator for botopink: the one package that knows rakun (the server),
 > jhonstart (the UI) and emilia (the styles) together, and wires them into an application.
 
-**Status: skeleton.** The workspace and its seven members exist with an empty `pub` surface and
-one inline test each; the code lands with the track-E fronts of 1.0.10-beta (49 first).
+**Status: in progress.** The core (`modules/onze/`, front 49) and the core helpers of
+`modules/onze-test/` are written; the other members land with their track-E fronts of 1.0.10-beta.
+[`docs.md`](docs.md) is the reference: the configuration, the alias map, the four seams, and what
+onze deliberately does not build.
 
 This repository took the name `onze` from the old mocking library (decision 79 of 1.0.10-beta):
 that library is archived under the tag `mocking-lib-final`, and its surface is std's
@@ -25,5 +27,9 @@ compiles nothing and ships nothing. Each member is reached by its manifest name:
 | [`modules/onze-og/`](modules/onze-og/) | `"onze-og"` — `ImageResponse` | erlang | 70 |
 | [`modules/onze-release/`](modules/onze-release/) | `"onze-release"` — build id, OTP release, Dockerfile, static export | both | 71 |
 
-`botopink test` runs inside a member, never at the root. The cut and the dependency graph are
+`botopink test` runs inside a member, never at the root.
+
+A member that depends on `onze` lists the jhonstart chain before it, in dependency order
+(`jhonstart`, `jhonstart-link`, `jhonstart-forms`, `emilia`, `jhonstart-emilia`): the compiler
+follows no dependency's own `dependencies` and loads the list in the order written. The cut and the dependency graph are
 `specs/1.0.10-beta/06-onze/modules.md` in the botopink meta repository.
