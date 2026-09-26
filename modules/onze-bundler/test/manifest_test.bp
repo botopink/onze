@@ -4,6 +4,8 @@
 
 import {ChunkRef, ClientBundleManifest, formatManifest, parseManifest, chunkFor, headScriptTags, scriptTags, sameManifest, staticUrl, emptyChunk} from "manifest";
 import {testing.snapshots} from "std";
+import {bundleRenderHooks} from "hooks";
+import {RenderHooks} from "jhonstart";
 
 fn ref(id: string, file: string, hash: string, bytes: i32) -> ChunkRef {
     return ChunkRef(id: id, url: staticUrl("b7f2a1", file), hash: hash, bytes: bytes);
@@ -61,4 +63,12 @@ test "script tags: order ---- shared, route, entry after the payload" {
 test "manifest: chunkFor a route with no chunk is empty" {
     assert chunkFor(full(), "/").url == "";
     assert chunkFor(full(), "/blog/[slug]").hash == "7e0055";
+}
+
+test "hooks: the bundle's tags reach jhonstart's RenderHooks for the route" {
+    val h = bundleRenderHooks(full());
+    val body = h.bodyExtra;
+    val head = h.headExtra;
+    assert body("/blog/[slug]") == scriptTags(full(), "/blog/[slug]");
+    assert head("/") == headScriptTags(full());
 }

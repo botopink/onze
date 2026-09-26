@@ -12,7 +12,11 @@
     "graph.bp",
     "refusal.bp",
     "chunk.bp",
-    "fixture.bp"
+    "fixture.bp",
+    "entry.bp",
+    "script.bp",
+    "rebuild.bp",
+    "hooks.bp"
   ],
   "dependencies": {
     "jhonstart": {

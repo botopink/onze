@@ -1,0 +1,318 @@
+//// onze-bundler — the hydration entry (front 68 step 6).
+////
+//// The entry is GENERATED botopink source, `<outDir>/client/entry.bp`,
+//// compiled and linked like any other client module — so it is type-checked
+//// by the same compiler and a developer can read it. It defines no marker, no
+//// global and no matcher of its own: the island marker is jhonstart front
+//// 29's (`islandAttrOf`), the globals are jhonstart's registry
+//// (`globals().payload` / `.fill` / `.signal`), the router matches with the
+//// bundled `routing` itself, and nothing of rakun is imported. In order, the
+//// generated `main()`:
+////
+////   1. sets the browser's validation message source (`setMessageSource`),
+////   2. registers the fill function under `globals().fill` and the signal
+////      function under `globals().signal` (with the configured
+////      `allowedRedirects`) — before any streamed chunk can arrive,
+////   3. registers one starter per client component in
+////      `globalThis.__jhIslandStarters` (the table jhonstart's `hydrate()`
+////      reads) — each decodes the island's props into the component's
+////      `#[clientProps]` record and renders it under jhonstart's client
+////      runtime,
+////   4. checks the document against the payload — an island or a hole on one
+////      side and not the other is a hard error naming its id,
+////   5. calls jhonstart's `hydrate()`,
+////   6. calls `linkMount()` and `formMount(actionHeader)` once, after every
+////      island,
+////   7. schedules the `afterInteractive`, then the `lazyOnload`, scripts, and
+////      starts the `worker` ones.
+////
+//// The props decoder is generated from the component's source: the parameter
+//// type of `#[client] pub fn Name(props: T)` and `T`'s fields as written, each
+//// on front 29's closed whitelist (`string`, `i32`, `f64`, `bool`).
+
+import {json.Json, json.decode} from "std";
+import {islandAttrOf} from "jhonstart";
+import {AppModule, ClientGraph, GraphNode} from "graph";
+import {ImportRef} from "scan";
+
+pub type ClientComponent(moduleId: string, name: string, propsType: string, propsModule: string, fields: Array<#(string, string)>)
+
+// `scripts` are the entry-scheduled `<Script>`s as `#(src, strategy,
+// onLoad)`: `afterInteractive`, `lazyOnload` and `worker` (step 7).
+pub type EntryConfig(allowedRedirects: Array<string>, actionHeader: string, scripts: Array<#(string, string, string)>)
+
+// ── reading the components ──────────────────────────────────────────────────
+
+fn identPrefix(text: string) -> string {
+    var out = "";
+    var open = true;
+    for (text.split("")) { c ->
+        val word = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_".contains(c);
+        if (open && word) {
+            out = out + c;
+        } else {
+            open = false;
+        };
+    };
+    return out;
+}
+
+// `name: type` pairs of a record's field list text (`a: string, b: i32`).
+fn fieldsOf(list: string) -> Array<#(string, string)> {
+    var out: Array<#(string, string)> = [];
+    for (list.split(",")) { part ->
+        val p = part.trim();
+        val colon = p.indexOf(":");
+        if (colon > 0) out.push(#(p.slice(0, colon).trim(), p.slice(colon + 1).trim()));
+    };
+    return out;
+}
+
+// The fields of `pub type <name>(…)` in `source`, the declaration possibly
+// spanning lines; `[]` when there is none.
+pub fn recordFieldsOf(source: string, name: string) -> Array<#(string, string)> {
+    val flat = source.split("\n").map({ l -> l.trim() }).join(" ");
+    val head = "type " + name + "(";
+    val at = flat.indexOf(head);
+    if (at < 0) return [];
+    val rest = flat.slice(at + head.length());
+    val close = rest.indexOf(")");
+    if (close < 0) return [];
+    return fieldsOf(rest.slice(0, close));
+}
+
+// The `#[client]` components of the client graph, each with its props record
+// when it takes one.
+pub fn clientComponents(graph: ClientGraph, modules: Array<AppModule>) -> Array<ClientComponent> {
+    var out: Array<ClientComponent> = [];
+    for (graph.nodes) { n ->
+        val m = modules.filter({ x -> x.id == n.moduleId }).at(0).unwrapOr(AppModule(id: "", path: "", source: "", refs: [], client: false));
+        var armed = false;
+        for (m.source.split("\n")) { raw ->
+            val l = raw.trim();
+            if (l.startsWith("#[client]")) {
+                armed = true;
+            } else if (armed && l.startsWith("pub fn ")) {
+                val name = identPrefix(l.slice(7));
+                val params = l.slice(l.indexOf("(") + 1, l.indexOf(")"));
+                val typeName = if (params.contains(":")) params.slice(params.indexOf(":") + 1).trim() else "";
+                val home = if (typeName == "") #("", []) else propsRecordOf(modules, typeName);
+                out.push(ClientComponent(moduleId: m.id, name: name, propsType: typeName, propsModule: home._0, fields: home._1));
+                armed = false;
+            };
+        };
+    };
+    return out;
+}
+
+// The module declaring the record `typeName`, and its fields.
+fn propsRecordOf(modules: Array<AppModule>, typeName: string) -> #(string, Array<#(string, string)>) {
+    var home = "";
+    var found: Array<#(string, string)> = [];
+    for (modules) { m ->
+        val f = recordFieldsOf(m.source, typeName);
+        val first = found.length == 0 && f.length > 0;
+        if (first) {
+            home = m.id;
+            found = f;
+        };
+    };
+    return #(home, found);
+}
+
+// ── the runtime checks, as pure functions ───────────────────────────────────
+
+// The mismatches between the document and the payload: an island id on one
+// side only, a hole id in the payload with no `[data-jh-h]` element. Empty
+// when they agree; the generated entry raises the first.
+pub fn islandMismatches(domIslands: string[], payloadIslands: string[], domHoles: string[], payloadHoles: string[]) -> string[] {
+    var out: string[] = [];
+    for (payloadIslands) { id ->
+        if (domIslands.contains(id) == false) out.push("island " + id + " is in the payload and not in the document");
+    };
+    for (domIslands) { id ->
+        if (payloadIslands.contains(id) == false) out.push("island " + id + " is in the document and not in the payload");
+    };
+    for (payloadHoles) { id ->
+        if (domHoles.contains(id) == false) out.push("hole " + id + " is in the payload and not in the document");
+    };
+    return out;
+}
+
+fn itemsOf(v: Json) -> Array<Json> {
+    return case v {
+        Arr(items: xs) -> xs;
+        _ -> [];
+    };
+}
+
+fn textOf(v: Json) -> string {
+    return case v {
+        Str(value: s) -> s;
+        _ -> "";
+    };
+}
+
+// The islands of a payload's `i` value (a JSON array of `[id, component,
+// props]` triples, props form-encoded) as `#(id, component, props)`.
+pub fn parseIslands(field: string) -> @Result<Array<#(string, string, string)>, string> {
+    val doc = try decode(field);
+    var out: Array<#(string, string, string)> = [];
+    for (itemsOf(doc)) { row ->
+        val cells = itemsOf(row);
+        if (cells.length != 3) throw "payload i: a row is [id, component, props], not " + cells.length.toString() + " cells";
+        out.push(#(textOf(cells.at(0).unwrapOr(Json.Null)), textOf(cells.at(1).unwrapOr(Json.Null)), textOf(cells.at(2).unwrapOr(Json.Null))));
+    };
+    return out;
+}
+
+// ── generation ──────────────────────────────────────────────────────────────
+
+fn quote(s: string) -> string {
+    return "\"" + s.replaceAll("\\", "\\\\").replaceAll("\"", "\\\"") + "\"";
+}
+
+fn decodeField(f: #(string, string)) -> string {
+    val raw = "prop(p, " + quote(f._0) + ")";
+    val value = if (f._1 == "i32") "toI32(" + raw + ")" else if (f._1 == "f64") "toF64(" + raw + ")" else if (f._1 == "bool") "(" + raw + " == \"true\")" else raw;
+    return f._0 + ": " + value;
+}
+
+fn starterOf(c: ClientComponent) -> string {
+    val call = if (c.propsType == "") c.name + "()" else c.name + "(" + c.propsType + "(" + c.fields.map({ f -> decodeField(f) }).join(", ") + "))";
+    return [
+        "fn start" + c.name + "(raw: string, commit: fn(html: string) -> i32) -> i32 {",
+        "    val p = propsOf(raw);",
+        "    return clientRender({ -> " + call + " }, { tree -> commitTree(commit, tree) });",
+        "}",
+    ].join("\n");
+}
+
+fn importsOfComponents(cs: Array<ClientComponent>) -> string[] {
+    var out: string[] = [];
+    for (cs) { c ->
+        val together = c.propsType != "" && c.propsModule == c.moduleId;
+        val names = if (together) c.name + ", " + c.propsType else c.name;
+        out.push("import {" + names + "} from " + quote(c.moduleId) + ";");
+        val apart = c.propsType != "" && c.propsModule != c.moduleId && c.propsModule != "";
+        if (apart) out.push("import {" + c.propsType + "} from " + quote(c.propsModule) + ";");
+    };
+    return out;
+}
+
+fn scheduleLine(s: #(string, string, string)) -> string {
+    val cell = if (s._1 == "lazyOnload") "scheduleLazy" else "scheduleNow";
+    return "    " + cell + "(" + quote(s._0) + ", " + quote(s._2) + ");";
+}
+
+// The generated twin of `islandMismatches` — the entry is a client module and
+// imports nothing of onze, so the check is written into it; the entry suite
+// asserts the two agree.
+pub fn islandMismatchesSource() -> string {
+    return [
+        "fn islandMismatches(domIslands: string[], payloadIslands: string[], domHoles: string[], payloadHoles: string[]) -> string[] {",
+        "    var out: string[] = [];",
+        "    for (payloadIslands) { id ->",
+        "        if (domIslands.contains(id) == false) out.push(\"island \" + id + \" is in the payload and not in the document\");",
+        "    };",
+        "    for (domIslands) { id ->",
+        "        if (payloadIslands.contains(id) == false) out.push(\"island \" + id + \" is in the document and not in the payload\");",
+        "    };",
+        "    for (payloadHoles) { id ->",
+        "        if (domHoles.contains(id) == false) out.push(\"hole \" + id + \" is in the payload and not in the document\");",
+        "    };",
+        "    return out;",
+        "}",
+    ].join("\n");
+}
+
+// The entry module's source.
+pub fn generateEntry(components: Array<ClientComponent>, config: EntryConfig) -> string {
+    val redirects = "[" + config.allowedRedirects.map({ r -> quote(r) }).join(", ") + "]";
+    val attr = islandAttrOf("")._0;
+    var lines: string[] = [
+        "// GENERATED by onze build — do not edit.",
+        "",
+        "import {globals, readPayload, registerFill, registerSignal, hydrate, propsOf, clientRender, renderNode, Element} from \"jhonstart\";",
+        "import {linkMount} from \"jhonstart-link\";",
+        "import {formMount} from \"jhonstart-forms\";",
+        "import {setMessageSource, builtInOnly} from \"validation\";",
+    ];
+    for (importsOfComponents(components)) { l ->
+        lines.push(l);
+    };
+    lines = lines.append([
+        "",
+        "#[@External.Node(\"\"\"((globalThis.__jhIslandStarters = globalThis.__jhIslandStarters || {})[$0] = function (__el, __props) { return ($1)(__props, function (__html) { __el.innerHTML = __html; return 0; }); }, 0)\"\"\")]",
+        "declare fn registerStarter(name: string, start: fn(raw: string, commit: fn(html: string) -> i32) -> i32) -> i32;",
+        "",
+        "#[@External.Node(\"\"\"(globalThis.document ? Array.from(globalThis.document.querySelectorAll(\"[\" + $0 + \"]\")).map(function (__e) { return __e.getAttribute($0); }) : [])\"\"\")]",
+        "declare fn domIds(attr: string) -> string[];",
+        "",
+        "#[@External.Node(\"\"\"(function (__p) { var __v = globalThis[__p]; return __v && Array.isArray(__v[$1]) ? __v[$1].map(function (__r) { return String(Array.isArray(__r) ? __r[0] : __r); }) : []; })($0)\"\"\")]",
+        "declare fn payloadIds(payload: string, key: string) -> string[];",
+        "",
+        "#[@External.Node(\"\"\"(function (__s, __f) { if (!globalThis.document) return 0; var __t = globalThis.document.createElement(\"script\"); __t.src = __s; if (__f) __t.onload = function () { if (typeof globalThis[__f] === \"function\") globalThis[__f](); }; globalThis.document.body.appendChild(__t); return 0; })($0, $1)\"\"\")]",
+        "declare fn scheduleNow(src: string, onLoad: string) -> i32;",
+        "",
+        "#[@External.Node(\"\"\"(function (__s, __f) { if (!globalThis.document) return 0; var __go = function () { var __t = globalThis.document.createElement(\"script\"); __t.src = __s; if (__f) __t.onload = function () { if (typeof globalThis[__f] === \"function\") globalThis[__f](); }; globalThis.document.body.appendChild(__t); }; if (globalThis.document.readyState === \"complete\") __go(); else globalThis.addEventListener(\"load\", __go); return 0; })($0, $1)\"\"\")]",
+        "declare fn scheduleLazy(src: string, onLoad: string) -> i32;",
+        "",
+        "#[@External.Node(\"\"\"(typeof globalThis.Worker === \"function\" ? (new globalThis.Worker($0), 0) : 0)\"\"\")]",
+        "declare fn startWorker(src: string) -> i32;",
+        "",
+        "#[@External.Node(\"\"\"(function (__m) { if (__m.length > 0) throw new Error(__m[0]); return 0; })($0)\"\"\")]",
+        "declare fn raiseFirst(problems: string[]) -> i32;",
+        "",
+        "#[@External.Node(\"\"\"(parseInt($0, 10) || 0)\"\"\")]",
+        "declare fn toI32(s: string) -> i32;",
+        "",
+        "#[@External.Node(\"\"\"(parseFloat($0) || 0)\"\"\")]",
+        "declare fn toF64(s: string) -> f64;",
+        "",
+        "fn prop(p: Array<#(string, string)>, name: string) -> string {",
+        "    val hit = p.filter({ kv -> kv._0 == name });",
+        "    if (hit.length == 0) return \"\";",
+        "    val first = hit.at(0).unwrapOr(#(\"\", \"\"));",
+        "    return first._1;",
+        "}",
+        "",
+        "fn commitTree(commit: fn(html: string) -> i32, tree: Element) {",
+        "    val done = commit(renderNode(tree));",
+        "}",
+        "",
+        islandMismatchesSource(),
+    ]);
+    for (components) { c ->
+        lines.push("");
+        lines.push(starterOf(c));
+    };
+    lines = lines.append([
+        "",
+        "pub fn main() {",
+        "    setMessageSource(builtInOnly());",
+        "    val g = globals();",
+        "    registerFill(g.fill, payloadIds(g.payload, \"h\"));",
+        "    registerSignal(g.signal, " + redirects + ");",
+    ]);
+    for (components) { c ->
+        lines.push("    registerStarter(" + quote(c.name) + ", { raw, commit -> start" + c.name + "(raw, commit) });");
+    };
+    lines = lines.append([
+        "    raiseFirst(islandMismatches(domIds(" + quote(attr) + "), payloadIds(g.payload, \"i\"), domIds(\"data-jh-h\"), payloadIds(g.payload, \"h\")));",
+        "    hydrate();",
+        "    linkMount();",
+        "    formMount(" + quote(config.actionHeader) + ");",
+    ]);
+    for (config.scripts.filter({ s -> s._1 == "afterInteractive" })) { s ->
+        lines.push(scheduleLine(s));
+    };
+    for (config.scripts.filter({ s -> s._1 == "lazyOnload" })) { s ->
+        lines.push(scheduleLine(s));
+    };
+    for (config.scripts.filter({ s -> s._1 == "worker" })) { s ->
+        lines.push("    startWorker(" + quote(s._0) + ");");
+    };
+    lines.push("}");
+    return lines.join("\n") + "\n";
+}

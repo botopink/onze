@@ -13,6 +13,15 @@
   adapter: `bootSite` (`app(plugins: [emiliaPlugin()], allowedRedirects)`, `setHooks`,
   `setWireNames`), `rakunEntries` (the five `rakun.*` keys), `responseOver`, `chainFor`,
   `pageInput`, `boot`. 21 tests on commonJS and on erlang. `docs.md` documents the four seams.
+- **The client bundle (front 68).** `modules/onze-bundler/`: the manifest (`V/E/S/C/H/R/Y/P`,
+  one parser on both targets, version-checked, unknown kinds ignored), `headScriptTags` /
+  `scriptTags` and `bundleRenderHooks`; the textual import scanner and staged module ids; the
+  client graph with chains; the refusals (server-only, request scope, the env table, emilia
+  non-literal / flush / hash split — all reported, none relaxable); chunk planning, the
+  `__onze_require` prelude, content-hashed names, `manifestOf`, `emitChunk`; the generated
+  hydration entry (starters decoding `#[clientProps]`, the document/payload check, `hydrate`,
+  `linkMount`, `formMount`, script scheduling) — compiled and run under node in a scratch
+  package; `<Script>` strategies; the dev rebuild. 37 tests on commonJS and on erlang.
 - **The blog's store (front 53 step 1).** `examples/blog/`: `botopink.json` (the `@/components`
   / `@/lib` aliases), `onze.json` (`appDir: "src/app"`), three seed posts under
   `content/posts/`, `src/lib/db.bp` (`listPosts` newest first, `readPost` naming a missing

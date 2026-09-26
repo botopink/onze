@@ -137,6 +137,75 @@ fails a build whose client graph reaches it.
 `Onze_Public_Secret` would leak. `publicEnv(names)` drops every name the predicate rejects, so the
 list the bundler inlines cannot hold a non-public value even when its caller passes one.
 
+## The client bundle (`onze-bundler`, front 68)
+
+`onze build` walks the client module graph textually (the compiler exposes no module-graph API):
+every `import … ;` and `mod …;` line of every `.bp` file, an unreadable import failing the scan with
+`file:line`. The roots are the `#[client]` modules the route modules reach on the server side; each
+root's closure is the client graph, and every node keeps the chain from the root that pulled it in.
+
+**The build refuses**, with no flag, config key or annotation that relaxes it, a client-graph module
+that imports jhonstart's `serverOnly` (or `request` / `cookies` / `headers`), reads a non-`ONZE_PUBLIC_`
+variable, reads a variable whose name is not a literal, calls `env.vars()` / `env.write` /
+`env.clear`, calls `emilia(…)` with a token list that is not a literal (or a module-level `val` of
+one), calls `flush()`, or writes a non-ASCII token list (the two targets' `contentHash` would
+disagree). Every refusal of a build is printed, each with its chain:
+
+```
+refused: server-only module lib.db reached from client root components.status
+  components.status > lib.format > lib.db
+build failed: 1 refusal
+```
+
+**Chunks.** `shared` (every client module two or more routes reach, plus jhonstart's client
+runtime), one `route:<pattern>` chunk per route that reaches a module of its own, and `entry` (the
+generated hydration entry). Each is the `__onze_require` registry prelude plus one factory per
+module, named `<base>.<contentHash>.js` and served from `/_onze/static/<buildId>/` — immutable, so
+two builds of an unchanged tree give the same names and one changed byte changes exactly the
+chunks containing it.
+
+**The manifest**, `<outDir>/client-manifest.txt`, read back by the server on every render:
+
+```
+V|1|<buildId>
+E|entry|/_onze/static/<buildId>/entry.<hash>.js|<hash>|<bytes>
+S|shared|/_onze/static/<buildId>/shared.<hash>.js|<hash>|<bytes>
+C|route:/blog/[slug]|/_onze/static/<buildId>/r1.<hash>.js|<hash>|<bytes>
+H|script:analytics|/a.js|<hash>|<bytes>
+R|/blog/[slug]|route:/blog/[slug]
+Y|styles|/_onze/static/<buildId>/app.<hash>.css|<hash>|<bytes>
+P|ONZE_PUBLIC_API_URL|https://api.example.com
+```
+
+A field escapes `%`, `|`, line feed and carriage return (`%25`, `%7C`, `%0A`, `%0D`) and is read
+back with std's `percentDecode`. A line of an unknown kind is ignored; a `V` other than `1` is an
+error. One parser, both targets.
+
+**The script-tag order**, straddling jhonstart's render:
+
+| # | What | Where | Owner |
+|---|---|---|---|
+| 1 | every `beforeInteractive` script (`H`), blocking | `<head>` | `headScriptTags` |
+| 2 | the document's markup | `<body>` | jhonstart's render |
+| 3 | the payload script, `window.__bp0 = …` | end of `<body>` | jhonstart's render, never onze |
+| 4 | `shared`, `defer` | after the payload | `scriptTags` |
+| 5 | the route chunk, `defer` | after `shared` | `scriptTags` |
+| 6 | `entry`, `defer` | last | `scriptTags` |
+
+`bundleRenderHooks(manifest)` wraps the two functions as jhonstart's `RenderHooks`; `bootSite`
+installs them. `afterInteractive` and `lazyOnload` scripts are scheduled by the entry, `worker`
+scripts started by it (a worker cannot declare `onLoad`).
+
+**The entry** is generated botopink source: it sets the validation message source, registers
+`globals().fill` and `globals().signal` (with `allowedRedirects`), registers one starter per
+client component in `globalThis.__jhIslandStarters` (decoding the island's props into the
+component's `#[clientProps]` record from its source), raises on an island or a hole present on one
+side of the document/payload only, then calls `hydrate()`, `linkMount()` and
+`formMount(actionHeader)`. It imports nothing from `routing` and nothing of rakun.
+
+**Dev.** A body edit relinks only the chunks containing the module; an import edit re-walks the
+graph; a refusal fails dev with the build's own report; the manifest is written before the push.
+
 ## What onze deliberately does not build
 
 | Not built | Why it is not here |

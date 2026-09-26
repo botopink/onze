@@ -12,3 +12,7 @@ pub mod graph;
 pub mod refusal;
 pub mod chunk;
 pub mod fixture;
+pub mod entry;
+pub mod script;
+pub mod rebuild;
+pub mod hooks;

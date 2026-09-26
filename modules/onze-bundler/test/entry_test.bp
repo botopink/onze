@@ -1,0 +1,88 @@
+// `botopink test` suite for `src/entry.bp` and `src/script.bp` (front 68
+// steps 6 and 7).
+
+import {parseFixture, ImportRef} from "scan";
+import {AppModule, ClientGraph, GraphNode, loadModules, clientGraph} from "graph";
+import {ClientComponent, EntryConfig, clientComponents, generateEntry, islandMismatches, parseIslands, recordFieldsOf, islandMismatchesSource} from "entry";
+import {ScriptDecl, ScriptPlan, planScripts, describeScripts} from "script";
+import {ChunkRef} from "manifest";
+import {fixtureApp} from "fixture";
+import {AliasMap} from "onze";
+import {islandAttr, globals} from "jhonstart";
+import {testing.snapshots} from "std";
+
+fn aliases() -> AliasMap {
+    return AliasMap(entries: [#("@/components", "components"), #("@/lib", "lib")]);
+}
+
+fn componentsOf(tree: string) -> @Result<Array<ClientComponent>, string> {
+    val modules = try loadModules(parseFixture(tree));
+    return clientComponents(clientGraph(modules, aliases(), "app"), modules);
+}
+
+fn withProps() -> string {
+    return fixtureApp() + "\n== components/props.bp\n#[clientProps]\npub type NavProps(title: string, count: i32)\n#[clientProps]\npub type LikeProps(\n    likes: i32,\n    ratio: f64,\n    open: bool,\n)";
+}
+
+fn config() -> EntryConfig {
+    return EntryConfig(allowedRedirects: [], actionHeader: "X-Bp-Action", scripts: [#("/c.js", "afterInteractive", "chatReady"), #("/ads.js", "lazyOnload", ""), #("/w.js", "worker", "")]);
+}
+
+test "entry: islandAttr is jhonstart's, and the globals are the registry's" {
+    val a = islandAttr(0);
+    assert a._0 == "data-jh-i";
+    assert a._1 == "i0";
+    assert globals().payload == "__bp0";
+    assert globals().fill == "__bp1";
+    assert globals().signal == "__bp2";
+}
+
+test "entry: generated ---- islands, holes, mounts" {
+    val cs = try componentsOf(withProps());
+    assert cs.map({ c -> c.name + ":" + c.propsType }).join(",") == "Nav:NavProps,LikeButton:LikeProps";
+    val src = generateEntry(cs, config());
+    val fill = src.indexOf("registerFill(");
+    val signal = src.indexOf("registerSignal(");
+    val hydrate = src.indexOf("    hydrate();");
+    val link = src.indexOf("    linkMount();");
+    val form = src.indexOf("    formMount(\"X-Bp-Action\");");
+    assert fill > 0 && signal > fill && hydrate > signal && link > hydrate && form > link;
+    assert src.contains("from \"routing\"") == false;
+    assert src.contains("rakun") == false;
+    assert src.contains("window.__bp") == false;
+    assert src.contains(islandMismatchesSource());
+    try snapshots.assertAs(@src(), "entry", src);
+}
+
+test "entry: the runtime mismatches name their ids" {
+    val problems = islandMismatches(["i0", "i2"], ["i0", "i1"], [], ["h1"]);
+    assert problems.join("\n") == "island i1 is in the payload and not in the document\nisland i2 is in the document and not in the payload\nhole h1 is in the payload and not in the document";
+    assert islandMismatches(["i0"], ["i0"], ["h1"], ["h1"]).length == 0;
+}
+
+test "entry: parseIslands reads the payload's i triples" {
+    val rows = try parseIslands("[[\"i0\",\"Nav\",\"title=Hi&count=2\"],[\"i1\",\"LikeButton\",\"\"]]");
+    assert rows.length == 2;
+    assert rows.at(0).unwrapOr(#("", "", ""))._2 == "title=Hi&count=2";
+    assert parseIslands("[[\"i0\",\"Nav\"]]").isError();
+}
+
+test "entry: a props record may span lines" {
+    assert recordFieldsOf("pub type P(\n    a: string,\n    b: i32,\n)", "P").map({ f -> f._0 + "=" + f._1 }).join(",") == "a=string,b=i32";
+}
+
+test "script: strategies ---- the four placements and two refusals" {
+    val decls = [
+        ScriptDecl(id: "analytics", src: "/a.js", strategy: "beforeInteractive", onLoad: ""),
+        ScriptDecl(id: "chat", src: "/c.js", strategy: "afterInteractive", onLoad: "chatReady"),
+        ScriptDecl(id: "ads", src: "/ads.js", strategy: "lazyOnload", onLoad: ""),
+        ScriptDecl(id: "crunch", src: "/w.js", strategy: "worker", onLoad: ""),
+        ScriptDecl(id: "bad", src: "/w2.js", strategy: "worker", onLoad: "never"),
+        ScriptDecl(id: "odd", src: "/o.js", strategy: "eventually", onLoad: ""),
+    ];
+    val plan = planScripts(decls);
+    assert plan.head.length == 1;
+    assert plan.scheduled.length == 3;
+    assert plan.refusals.length == 2;
+    try snapshots.assertAs(@src(), "scripts", describeScripts(decls));
+}

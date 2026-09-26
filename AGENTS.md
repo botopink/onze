@@ -34,7 +34,11 @@ onze/
 │   │                    assertAlias, assertPublicEnv), fixtures.bp (fixtureTree); the E2E
 │   │                    runner arrives with 53. Depends on onze. Re-exports nothing from std
 │   ├── onze-cli/      ← front 50 — targets ["commonJS"]; depends on onze
-│   ├── onze-bundler/  ← front 68 — depends on onze
+│   ├── onze-bundler/  ← front 68: manifest.bp (both rows — the one parser the server
+│   │                    reads), scan.bp, graph.bp, refusal.bp, chunk.bp, entry.bp,
+│   │                    script.bp, rebuild.bp, hooks.bp (RenderHooks over the tags),
+│   │                    fixture.bp (the frozen fixture app every suite reads) — depends
+│   │                    on onze and jhonstart
 │   ├── onze-assets/   ← fronts 69 (owns root.bp + botopink.json) · 51 · 52 — depends on onze,
 │   │                    onze-bundler
 │   ├── onze-og/       ← front 70 — targets ["erlang"]; depends on onze, onze-assets
