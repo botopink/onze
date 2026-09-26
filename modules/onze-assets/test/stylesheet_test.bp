@@ -5,7 +5,7 @@ import {StyleModule, compileStyleModule} from "style_module";
 import {buildStylesheet, styleRecords, styleChunk, stylesheetFile, stylesheetLinks} from "stylesheet";
 import {AssetRoot, staticRoots, describeRoots} from "assets";
 import {ChunkRef, parseManifest, formatManifest, emptyManifest, ClientBundleManifest} from "onze-bundler";
-import {testing.snapshots} from "std";
+import {testing.snapshots, io.fs, path} from "std";
 import {pageRenderHooks, headFragment} from "head";
 import {RenderHooks} from "jhonstart";
 
@@ -50,4 +50,21 @@ test "head: the stylesheet link precedes the head scripts" {
     assert text == "<link rel=\"stylesheet\" href=\"/_onze/static/b1/app.abc123.css\">\n<script src=\"/a.js\"></script>";
     val body = h.bodyExtra;
     assert body("/") == "<script src=\"/e.js\" defer></script>";
+}
+
+// The front's gate (decision 113): no onze source calls emilia's `flush()` or
+// defines a style sink — the flush moments are jhonstart's render's.
+test "gate: no onze module calls flush() or defines a sink" {
+    val files = fs.walk("..").unwrapOr([]).filter({ f -> f.contains("/src/") && f.endsWith(".bp") });
+    assert files.length > 10;
+    var hits: string[] = [];
+    for (files) { f ->
+        val text = fs.readText(path.join(["..", f])).unwrapOr("");
+        for (text.split("\n")) { line ->
+            val call = line.contains("await flush()") || line.contains("= flush()") || line.trim().startsWith("flush(");
+            val sink = line.contains("fn styleSink") || line.contains("type StyleSink");
+            if (call || sink) hits.push(f + ": " + line.trim());
+        };
+    };
+    assert hits.length == 0;
 }
