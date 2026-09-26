@@ -124,5 +124,5 @@ pub fn clientSubstitutions() -> Array<#(string, string)> {
 
 // The line that runs the entry once its chunk has loaded.
 pub fn bootLine(entryFile: string) -> string {
-    return "globalThis.__onze_require(\"" + entryFile + "\").main();\n";
+    return "globalThis.__onze_require(\"" + entryFile + "\").onzeEntryMain();\n";
 }

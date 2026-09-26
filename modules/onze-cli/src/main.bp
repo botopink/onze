@@ -10,6 +10,8 @@ import {resolveProject, Project} from "resolve";
 import {OnzeConfig, AliasMap} from "onze";
 import {parseCreateOpts, scaffoldFiles, scaffoldFilesIn, insideOnzeWorkspace, writeScaffold, describeCreate, createHelp, CreateOpts} from "create";
 import {infoText, tools, dependencyVersions} from "info";
+import {BuildResult, buildProject} from "build";
+import {io.fs, path} from "std";
 
 pub type Outcome(code: i32, text: string)
 
@@ -54,6 +56,30 @@ fn infoCommand(cwd: string, botopinkVersion: string) -> Outcome {
     };
 }
 
+// The botopink binary: `BOTOPINK_BIN`, else the first `botopink` on `PATH`.
+fn botopinkBin() -> string {
+    return env.read("BOTOPINK_BIN") ?? "botopink";
+}
+
+fn buildCommand(cwd: string, args: string[]) -> Outcome {
+    if (args.length > 0) return Outcome(code: 1, text: "onze build: unexpected argument " + args.at(0).unwrapOr(""));
+    val resolved = resolveProject(cwd);
+    if (resolved.isError()) return Outcome(code: 1, text: projectError(resolved));
+    val p = resolved.unwrapOr(Project(root: "", config: OnzeConfig(name: "", port: 0, basePath: "", appDir: "", publicDir: "", outDir: "", dev: false, actionsBodyLimit: 0, allowedRedirects: []), aliases: AliasMap(entries: [])));
+    return case buildProject(p, botopinkBin()) {
+        Ok(b) -> Outcome(code: 0, text: "built " + p.config.name + " — build id " + b.buildId + "
+" + b.chunks.map({ c -> "  static/" + b.buildId + "/" + c }).join("\n"));
+        Error(e) -> Outcome(code: 1, text: "onze build failed:\n" + e);
+    };
+}
+
+fn projectError(r: @Result<Project, string>) -> string {
+    return case r {
+        Ok(p) -> "";
+        Error(e) -> e;
+    };
+}
+
 // The dispatch: `args` without the program name.
 pub fn run(cwd: string, args: string[], botopinkVersion: string) -> Outcome {
     if (args.length == 0) return Outcome(code: 1, text: commands());
@@ -62,7 +88,7 @@ pub fn run(cwd: string, args: string[], botopinkVersion: string) -> Outcome {
     if (cmd == "create") return createCommand(cwd, rest);
     if (cmd == "info") return infoCommand(cwd, botopinkVersion);
     if (cmd == "dev" || cmd == "start") return Outcome(code: 2, text: "onze " + cmd + ": not available yet - it boots the rakun server (rakun fronts 04 and 23), which this build of onze cannot reach");
-    if (cmd == "build") return Outcome(code: 2, text: "onze build: not wired yet - see onze-cli's AGENTS.md");
+    if (cmd == "build") return buildCommand(cwd, rest);
     return Outcome(code: 1, text: "onze: unknown command \"" + cmd + "\"\n\n" + commands());
 }
 

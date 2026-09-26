@@ -167,7 +167,10 @@ pub fn scaffoldFiles(o: CreateOpts) -> Array<#(string, string)> {
 // workspace (its `onze` dependency is then `{ "workspace": true }`).
 pub fn scaffoldFilesIn(o: CreateOpts, member: bool) -> Array<#(string, string)> {
     val src = if (o.srcDir) "src/" else "";
-    val deps = scaffoldLibraries().filter({ l -> o.emilia || (l._0 != "emilia" && l._0 != "jhonstart-emilia") }).map({ l -> "    " + dependencyOf(o, l, member) });
+    // Every library, emilia included even under `--no-emilia`: onze's core
+    // registers the jhonstart-emilia bridge, and the compiler follows no
+    // dependency's own dependencies.
+    val deps = scaffoldLibraries().map({ l -> "    " + dependencyOf(o, l, member) });
     val manifest = [
         "{",
         "  \"name\": " + quote(o.name) + ",",

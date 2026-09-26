@@ -35,9 +35,9 @@ onze/
 │   │                    runner arrives with 53. Depends on onze. Re-exports nothing from std
 │   ├── onze-cli/      ← front 50 — targets ["commonJS"]: resolve.bp, scan.bp, generate.bp
 │   │                    (the check, the staged tree under <outDir>/src/), create.bp,
-│   │                    info.bp, main.bp (dispatch; `node out/main.js <cmd>`); dev, build
-│   │                    and start answer "not available yet". Depends on onze,
-│   │                    onze-bundler
+│   │                    info.bp, build.bp (`onze build`), main.bp (dispatch;
+│   │                    `node out/main.js <cmd>`); dev and start answer "not available
+│   │                    yet". Depends on onze, onze-bundler, onze-assets, onze-release
 │   ├── onze-bundler/  ← front 68: manifest.bp (both rows — the one parser the server
 │   │                    reads), scan.bp, graph.bp, refusal.bp, chunk.bp, entry.bp,
 │   │                    script.bp, rebuild.bp, hooks.bp (RenderHooks over the tags),
@@ -52,6 +52,7 @@ onze/
 │                        (manifest completeness, the secret scan), lifecycle.bp (readiness,
 │                        the shutdown order over a Lifecycle record), static_export.bp —
 │                        depends on onze, onze-bundler, onze-assets
+├── .gitignore         ← out/, .botopinkbuild/, .onze/ (a build's output)
 ├── docs.md            ← the reference: onze.json, the alias map, the four seams, the not-built table
 ├── examples/          ← blog/ (53: src/lib/db.bp — the post store —, content/posts/*.md,
 │                        test/{db,tags}_test.bp); scaffold/ (50: the committed output of

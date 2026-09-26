@@ -14,13 +14,18 @@ no parser drops a token.
 | `src/generate.bp` | `checkTree`, `stagedPath`, `rewriteImports`, `modFiles`, `routesModule`, `stagedManifest`, `stage` — the staged tree under `<outDir>/src/` |
 | `src/create.bp` | `CreateOpts`, `createDefaults` (the one defaults record), `createHelp`, `parseCreateOpts`, `scaffoldFiles(In)`, `writeScaffold`, `mkdirs` |
 | `src/info.bp` | `infoText`, `dependencyVersions`, `versionAt`, `tools` |
+| `src/build.bp` | `buildProject(project, bin)` — scan, check, the client graph's refusals, the style modules (generated into the staged tree as `styles.<file>`), the staged server package compiled for erlang into `<outDir>/server/`, the staged client package (+ the generated entry) compiled for commonJS, the file-level link, the stylesheet, the build id, `static/<buildId>/`, `client-manifest.txt`, `build-id`; `srcDirOf`, `workspaceMembers` (a `{ "workspace": true }` dependency becomes a path in the staged manifest) |
 | `src/main.bp` | `run(cwd, args, version) -> Outcome`, `main()` — `node out/main.js <command> …` after `botopink build` |
 
-`dev`, `build` and `start` answer "not available yet": `build` waits on the release member's
-build id (front 71) to be wired, `dev` and `start` on rakun's server boot (rakun fronts 04, 23).
+`dev` and `start` answer "not available yet": they boot rakun's server (rakun fronts 04, 23).
+`build` runs the compiler through `BOTOPINK_BIN` (or `botopink` on `PATH`). Route-level
+splitting is not done: the generated entry imports every client component, so every island is in
+`shared`; the server half is the `.erl` the compiler emits (no `erlc` pass yet); no prerender
+(rakun front 60).
 
 Tests (`test/`, commonJS): `scan_test` (scan + resolve), `generate_test` (the check, the staged
 tree, and a round trip that runs `botopink check` over it — the binary is found by walking up to
 `repository/botopink-lang/zig-out/bin/botopink`), `create_test` (flags, help, the refusal, the
 scaffold passing `botopink check`, `examples/scaffold` equal to a fresh `create`, `info`, the
-dispatch).
+dispatch), `build_test` (the committed scaffold built twice to the same id — ~18 s a build —, a
+refusal failing a build before anything compiles, a CSS module's accessors compiling).

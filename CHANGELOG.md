@@ -13,6 +13,12 @@
   adapter: `bootSite` (`app(plugins: [emiliaPlugin()], allowedRedirects)`, `setHooks`,
   `setWireNames`), `rakunEntries` (the five `rakun.*` keys), `responseOver`, `chainFor`,
   `pageInput`, `boot`. 21 tests on commonJS and on erlang. `docs.md` documents the four seams.
+- **`onze build` (front 50 step 7).** `modules/onze-cli/src/build.bp`: scan, check, the client
+  graph's refusals, the CSS modules' generated accessors, the staged server package compiled for
+  erlang, the staged client package plus the generated entry compiled for commonJS and linked by
+  file (`onze-bundler`'s `link.bp`), the stylesheet, the build id, `static/<buildId>/`,
+  `client-manifest.txt`, `build-id`. The scaffold builds (twice, to the same id) and its bundle
+  boots under node. 23 CLI tests.
 - **Release packaging (front 71).** `modules/onze-release/`: `ReleaseSpec`, `generateBuildId`
   (sorted, deterministic), `validateBuildId`, `verifyBuildId`; the `.rel`, `sys.config`,
   `vm.args` (the cookie from the environment) and `bin/onze` texts; `assembleRelease` over a real

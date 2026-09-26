@@ -15,7 +15,8 @@
     "generate.bp",
     "create.bp",
     "info.bp",
-    "main.bp"
+    "main.bp",
+    "build.bp"
   ],
   "dependencies": {
     "jhonstart": {
@@ -37,6 +38,12 @@
       "workspace": true
     },
     "onze-bundler": {
+      "workspace": true
+    },
+    "onze-assets": {
+      "workspace": true
+    },
+    "onze-release": {
       "workspace": true
     }
   }

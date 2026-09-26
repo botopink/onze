@@ -75,7 +75,7 @@ fn startLikeButton(raw: string, commit: fn(html: string) -> i32) -> i32 {
     return clientRender({ -> LikeButton(LikeProps(likes: toI32(prop(p, "likes")), ratio: toF64(prop(p, "ratio")), open: (prop(p, "open") == "true"))) }, { tree -> commitTree(commit, tree) });
 }
 
-pub fn main() {
+pub fn onzeEntryMain() {
     setMessageSource(builtInOnly());
     val g = globals();
     registerFill(g.fill, payloadIds(g.payload, "h"));

@@ -134,8 +134,9 @@ pub fn routesModule(appDir: string, entries: Array<RouteEntry>) -> string {
 }
 
 // The staged package's manifest: the project's own, `src` pointed at the
-// staged tree, each relative `path` dependency re-rooted one level down.
-pub fn stagedManifest(manifest: string, files: string[]) -> @Result<string, string> {
+// staged tree, each relative `path` dependency re-rooted `depth` levels down
+// (the staged package sits at `<root>/<outDir>/` — one level — or deeper).
+pub fn stagedManifest(manifest: string, files: string[], depth: i32, workspace: Array<#(string, string)>) -> @Result<string, string> {
     val doc = try decode(manifest);
     val members = case doc {
         Obj(members: ms) -> ms;
@@ -150,7 +151,7 @@ pub fn stagedManifest(manifest: string, files: string[]) -> @Result<string, stri
         } else if (m._0 == "entry") {
             fields.push(quote("entry") + ": " + quote("root.bp"));
         } else if (m._0 == "dependencies") {
-            fields.push(quote("dependencies") + ": " + rerootDeps(m._1));
+            fields.push(quote("dependencies") + ": " + rerootDeps(m._1, depth, workspace));
         } else if (m._0 != "alias") {
             fields.push(quote(m._0) + ": " + jsonText(m._1));
         };
@@ -160,24 +161,36 @@ pub fn stagedManifest(manifest: string, files: string[]) -> @Result<string, stri
     return "{\n  " + fields.join(",\n  ") + "\n}\n";
 }
 
-fn rerootDeps(v: Json) -> string {
+fn rerootDeps(v: Json, depth: i32, workspace: Array<#(string, string)>) -> string {
     val members = case v {
         Obj(members: ms) -> ms;
         _ -> [];
     };
-    return "{ " + members.map({ m -> quote(m._0) + ": " + rerootDep(m._1) }).join(", ") + " }";
+    val deps = case v {
+        Obj(members: ms) -> ms;
+        _ -> [];
+    };
+    return "{ " + deps.map({ m -> quote(m._0) + ": " + rerootDep(m._0, m._1, depth, workspace) }).join(", ") + " }";
 }
 
-fn rerootDep(v: Json) -> string {
+// A `{ "workspace": true }` dependency becomes a `path` to the member the
+// enclosing workspace names — the staged package is no workspace member.
+fn rerootDep(name: string, v: Json, depth: i32, workspace: Array<#(string, string)>) -> string {
     val members = case v {
         Obj(members: ms) -> ms;
         _ -> [];
     };
-    return "{ " + members.map({ m -> quote(m._0) + ": " + (if (m._0 == "path") quote(reroot(textOf(m._1))) else jsonText(m._1)) }).join(", ") + " }";
+    val isWorkspace = members.any({ m -> m._0 == "workspace" });
+    val hit = workspace.filter({ w -> w._0 == name });
+    if (isWorkspace && hit.length > 0) {
+        val pair = hit.at(0).unwrapOr(#("", ""));
+        return "{ \"path\": " + quote(pair._1) + " }";
+    }
+    return "{ " + members.map({ m -> quote(m._0) + ": " + (if (m._0 == "path") quote(reroot(textOf(m._1), depth)) else jsonText(m._1)) }).join(", ") + " }";
 }
 
-fn reroot(p: string) -> string {
-    return if (p.startsWith("/")) p else "../" + p;
+fn reroot(p: string, depth: i32) -> string {
+    return if (p.startsWith("/")) p else "../".repeat(depth) + p;
 }
 
 fn textOf(v: Json) -> string {
@@ -222,6 +235,12 @@ pub fn sortedText(xs: string[]) -> string[] {
 // routes module and the root. `appRel` is the app directory relative to the
 // project's src (`app` for `src/app`). Answers `#(path under <outDir>/, text)`.
 pub fn stage(aliases: AliasMap, appRel: string, appDir: string, sources: Array<#(string, string)>, entries: Array<RouteEntry>, manifest: string) -> @Result<Array<#(string, string)>, string> {
+    return try stageAt(aliases, appRel, appDir, sources, entries, manifest, 1, [], []);
+}
+
+// `stage`, the package `depth` levels below the project root, with `extraMods`
+// declared by the root beside the app (a generated entry, the style modules).
+pub fn stageAt(aliases: AliasMap, appRel: string, appDir: string, sources: Array<#(string, string)>, entries: Array<RouteEntry>, manifest: string, depth: i32, extraMods: string[], workspace: Array<#(string, string)>) -> @Result<Array<#(string, string)>, string> {
     var staged: Array<#(string, string)> = [];
     var rootText = "";
     for (sources) { s ->
@@ -237,10 +256,11 @@ pub fn stage(aliases: AliasMap, appRel: string, appDir: string, sources: Array<#
     val appTop = stagedApp.split("/").at(0).unwrapOr("app");
     val declaresApp = rootText.split("\n").any({ l -> l.trim() == "pub mod " + appTop + ";" });
     val appLine = if (declaresApp) "" else "pub mod " + appTop + ";\n";
-    val root = rootText.trimEnd() + "\n\n" + banner() + "\n" + appLine + "pub mod onze_routes;\n";
+    val extra = extraMods.map({ m -> "pub mod " + m + ";\n" }).join("");
+    val root = rootText.trimEnd() + "\n\n" + banner() + "\n" + appLine + "pub mod onze_routes;\n" + extra;
     val withRoot = all.append([#("root.bp", root)]);
     val names = sortedText(withRoot.map({ f -> f._0 }));
-    val manifestText = try stagedManifest(manifest, names);
+    val manifestText = try stagedManifest(manifest, names, depth, workspace);
     var out: Array<#(string, string)> = withRoot.map({ f -> #("src/" + f._0, f._1) });
     out.push(#("botopink.json", manifestText));
     return out;

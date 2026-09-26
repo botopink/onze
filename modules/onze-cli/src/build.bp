@@ -1,0 +1,208 @@
+//// onze-cli — `build` (front 50 step 7).
+////
+//// Resolve → scan → check → the client graph and its refusals → stage →
+//// compile the server (erlang) and the client (commonJS) → link the client
+//// chunks → the stylesheet → the build id → the manifest:
+////
+////     <outDir>/
+////       src/, botopink.json     the staged server package the compiler sees
+////       server/                 its BEAM modules
+////       client/                 the staged client package (+ the generated entry)
+////       client-js/              its compiled JavaScript
+////       static/<buildId>/       the content-hashed chunks and the stylesheet
+////       client-manifest.txt     front 68's manifest
+////       build-id                front 71's id
+////
+//// `build` fails, it does not warn: a scan or check problem, a refusal, a
+//// compile error each fail it, naming the authored file. It starts no server
+//// and opens no port.
+////
+//// Route-level splitting is not done yet: the generated entry imports every
+//// client component, so every island's closure is in `shared` and the entry
+//// chunk is the entry alone; the manifest carries no route chunk. Lazy
+//// starters (the entry loading a route's components on demand) are what
+//// splitting needs.
+
+import {io.fs, io.process, io.env, path, hash, json.Json, json.decode} from "std";
+import {OnzeConfig, AliasMap, emptyAliases, defaultActionHeader} from "onze";
+import {SourceFile, ImportRef, AppModule, ClientGraph, GraphNode, loadModules, clientGraph, BuildRefusal, BuildReport, checkBuild, describeReport, ClientComponent, EntryConfig, clientComponents, generateEntry, ChunkRef, ClientBundleManifest, formatManifest, staticUrl, manifestVersion, jsClosure, linkFiles, bootLine, clientSubstitutions} from "onze-bundler";
+import {StyleModule, compileStyleModule, generateStyleModuleSource, buildStylesheet, styleChunk, stylesheetFile} from "onze-assets";
+import {generateBuildId} from "onze-release";
+import {Project} from "resolve";
+import {RouteEntry, scanFiles} from "scan";
+import {checkTree, stageAt, sortedText} from "generate";
+
+pub type BuildResult(buildId: string, manifest: string, staged: Array<string>, chunks: Array<string>, stylesheet: string)
+
+fn membersOf(v: Json) -> Array<#(string, Json)> {
+    return case v {
+        Obj(members: ms) -> ms;
+        _ -> [];
+    };
+}
+
+// The package's source directory as `botopink.json` names it, without the
+// trailing slash (`"src"` by default).
+pub fn srcDirOf(manifest: string) -> string {
+    val doc = decode(manifest).unwrapOr(Json.Null);
+    val hit = membersOf(doc).filter({ m -> m._0 == "src" });
+    val raw = if (hit.length == 0) "src/" else textOf(hit.at(0).unwrapOr(#("", Json.Null))._1);
+    val trimmed = if (raw.endsWith("/")) raw.slice(0, raw.length() - 1) else raw;
+    return if (trimmed == "") "." else trimmed;
+}
+
+fn textOf(v: Json) -> string {
+    return case v {
+        Str(value: s) -> s;
+        _ -> "";
+    };
+}
+
+fn run(dir: string, bin: string, args: string[]) -> @Result<void, string> {
+    val quoted = args.map({ a -> "'" + a + "'" }).join(" ");
+    val r = try process.run("sh", ["-c", "cd '" + dir + "' && '" + bin + "' " + quoted + " 2>&1"]);
+    if (r.status != 0) throw "botopink " + args.join(" ") + " failed in " + dir + ":\n" + r.stdout.trim();
+    return;
+}
+
+fn writeAll(base: string, files: Array<#(string, string)>) -> @Result<void, string> {
+    for (files) { f ->
+        val target = path.join([base, f._0]);
+        val made = try process.run("mkdir", ["-p", path.dirname(target)]);
+        val w = try fs.writeText(target, f._1);
+    };
+    return;
+}
+
+fn envValue(name: string) -> string {
+    return env.read(name) ?? "";
+}
+
+// Builds the project into its `outDir`. `bin` is the `botopink` binary.
+pub fn buildProject(p: Project, bin: string) -> @Result<BuildResult, string> {
+    val manifest = try fs.readText(path.join([p.root, "botopink.json"]));
+    val src = srcDirOf(manifest);
+    val appDir = p.config.appDir;
+    val prefix = if (src == ".") "" else src + "/";
+    if (appDir.startsWith(prefix) == false) throw "onze build: appDir \"" + appDir + "\" is not under the package's src \"" + src + "\"";
+    val appRel = appDir.slice(prefix.length(), appDir.length());
+    val srcPath = path.join([p.root, src]);
+    val rel = try fs.walk(srcPath);
+    var sources: Array<#(string, string)> = [];
+    var styles: Array<#(string, string)> = [];
+    for (rel) { r ->
+        val text = try fs.readText(path.join([srcPath, r]));
+        if (r.endsWith(".bp")) sources.push(#(r, text));
+        if (r.endsWith(".module.css")) styles.push(#(r, text));
+    };
+    val globalCss = fs.readText(path.join([srcPath, appRel, "globals.css"])).unwrapOr("");
+
+    // scan and check
+    val appFiles = sources.filter({ s -> s._0.startsWith(appRel + "/") }).map({ s -> #(prefix + s._0, s._1) });
+    val entries = try scanFiles(if (src == ".") "" else src, appDir, appFiles);
+    val drift = checkTree(appDir, entries);
+    if (drift.length > 0) throw drift.join("\n");
+
+    // the client graph and its refusals, over the authored sources
+    val modules = try loadModules(sources.map({ s -> SourceFile(path: s._0, source: s._1) }));
+    val graph = clientGraph(modules, p.aliases, appRel);
+    val report = checkBuild(graph, modules, p.config, { n -> envValue(n) });
+    if (report.refusals.length > 0) throw describeReport(report);
+
+    // the style modules, generated into the staged tree as `styles.<name>`
+    var compiledStyles: Array<StyleModule> = [];
+    var styleSources: Array<#(string, string)> = [];
+    for (styles) { s ->
+        val m = try compileStyleModule(s._0, s._1);
+        compiledStyles.push(m);
+        val name = s._0.slice(0, s._0.length() - 11).replaceAll("/", "_").replaceAll(".", "_");
+        styleSources.push(#("styles/" + name + ".bp", generateStyleModuleSource(m)));
+    };
+    val styleMod = if (styleSources.length == 0) [] else [#("styles/mod.bp", sortedText(styleSources.map({ s -> "pub mod " + s._0.slice(7, s._0.length() - 3) + ";" })).join("\n") + "\n")];
+    val extraMods = if (styleSources.length == 0) [] else ["styles"];
+
+    // stage and compile the server
+    val outDir = path.join([p.root, p.config.outDir]);
+    val workspace = workspaceMembers(p.root);
+    val serverFiles = try stageAt(p.aliases, appRel, appDir, sources.append(styleSources).append(styleMod), entries, manifest, 1, extraMods, workspace);
+    val cleaned = process.run("rm", ["-rf", outDir]);
+    try writeAll(outDir, serverFiles);
+    try run(outDir, bin, ["build", "--target", "erlang", "--out", path.join([outDir, "server"])]);
+
+    // the client package: the same tree plus the generated entry
+    val components = clientComponents(graph, modules);
+    val entrySource = generateEntry(components, EntryConfig(allowedRedirects: p.config.allowedRedirects, actionHeader: defaultActionHeader(), scripts: []));
+    val clientDir = path.join([outDir, "client"]);
+    val clientFiles = try stageAt(p.aliases, appRel, appDir, sources.append(styleSources).append(styleMod).append([#("onze_entry.bp", entrySource)]), entries, manifest, 2, extraMods.append(["onze_entry"]), workspace);
+    try writeAll(clientDir, clientFiles.map({ f -> if (f._0 == "botopink.json") #(f._0, restrictToCommonJs(f._1)) else f }));
+    val jsDir = path.join([outDir, "client-js"]);
+    try run(clientDir, bin, ["build", "--target", "commonJS", "--out", jsDir]);
+
+    // link: the entry's closure is shared; the entry chunk runs it
+    val closure = try jsClosure(jsDir, ["onze_entry.js"], clientSubstitutions());
+    val sharedFiles = closure.filter({ f -> f != "onze_entry.js" });
+    val sharedText = try linkFiles(jsDir, sharedFiles, clientSubstitutions());
+    val entryLinked = try linkFiles(jsDir, ["onze_entry.js"], clientSubstitutions());
+    val entryText = entryLinked + bootLine("onze_entry.js");
+
+    // the stylesheet
+    val sheet = try buildStylesheet(globalCss, compiledStyles);
+
+    // the build id: every staged source and every linked text
+    val moduleHashes = serverFiles.map({ f -> hash.contentHash(f._0 + "\n" + f._1) }).append([hash.contentHash(sheet._0)]);
+    val buildId = generateBuildId(moduleHashes, hash.contentHash(sharedText + entryText));
+
+    // write the static tree and the manifest
+    val staticDir = path.join([outDir, "static", buildId]);
+    val sharedName = "shared." + chunkHashOf(sharedText) + ".js";
+    val entryName = "entry." + chunkHashOf(entryText) + ".js";
+    val sheetName = stylesheetFile(sheet._1);
+    try writeAll(staticDir, [#(sharedName, sharedText), #(entryName, entryText), #(sheetName, sheet._0)]);
+    val m = ClientBundleManifest(
+        version: manifestVersion(),
+        buildId: buildId,
+        entry: ChunkRef(id: "entry", url: staticUrl(buildId, entryName), hash: chunkHashOf(entryText), bytes: entryText.length()),
+        shared: [ChunkRef(id: "shared", url: staticUrl(buildId, sharedName), hash: chunkHashOf(sharedText), bytes: sharedText.length())],
+        chunks: [],
+        routes: [],
+        styles: [styleChunk(buildId, sheet._1, sheet._0.length())],
+        publicEnv: report.inlined,
+    );
+    val manifestText = formatManifest(m);
+    try writeAll(outDir, [#("client-manifest.txt", manifestText), #("build-id", buildId + "\n")]);
+    return BuildResult(buildId: buildId, manifest: manifestText, staged: serverFiles.map({ f -> f._0 }), chunks: [sharedName, entryName, sheetName], stylesheet: sheet._0);
+}
+
+// The members of the workspace enclosing `root` (the first ancestor whose
+// `botopink.json` lists `workspaces`), as `#(name, absolute directory)`.
+pub fn workspaceMembers(root: string) -> Array<#(string, string)> {
+    var dir = path.dirname(root);
+    var out: Array<#(string, string)> = [];
+    var guard = 0;
+    while (out.length == 0 && guard < 8) {
+        val manifest = fs.readText(path.join([dir, "botopink.json"])).unwrapOr("");
+        if (manifest.contains("\"workspaces\"")) {
+            for (["modules", "examples"]) { group ->
+                for (fs.list(path.join([dir, group])).unwrapOr([])) { m ->
+                    val member = path.join([dir, group, m]);
+                    val text = fs.readText(path.join([member, "botopink.json"])).unwrapOr("");
+                    val name = textOf(membersOf(decode(text).unwrapOr(Json.Null)).filter({ f -> f._0 == "name" }).at(0).unwrapOr(#("", Json.Null))._1);
+                    if (name != "") out.push(#(name, member));
+                };
+            };
+            guard = 8;
+        };
+        dir = path.dirname(dir);
+        guard = guard + 1;
+    };
+    return out;
+}
+
+fn chunkHashOf(text: string) -> string {
+    return hash.contentHash(text).padStart(8, "0");
+}
+
+// The client package compiles for commonJS only.
+fn restrictToCommonJs(manifest: string) -> string {
+    return manifest.replace("\"target\": \"erlang\"", "\"target\": \"commonJS\"").replace("\"targets\": [\"erlang\", \"commonJS\"]", "\"targets\": [\"commonJS\"]");
+}

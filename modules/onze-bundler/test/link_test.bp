@@ -38,6 +38,6 @@ test "link: the closure of a tree links into one chunk that runs without a netwo
     val text = try linkFiles(dir, files, clientSubstitutions());
     val got = evalEntry(text);
     assert got == "42" || got == "no-js-engine";
-    assert bootLine("entry.js") == "globalThis.__onze_require(\"entry.js\").main();\n";
+    assert bootLine("entry.js") == "globalThis.__onze_require(\"entry.js\").onzeEntryMain();\n";
     val gone = process.run("rm", ["-rf", dir]);
 }

@@ -290,7 +290,7 @@ pub fn generateEntry(components: Array<ClientComponent>, config: EntryConfig) ->
     };
     lines = lines.append([
         "",
-        "pub fn main() {",
+        "pub fn onzeEntryMain() {",
         "    setMessageSource(builtInOnly());",
         "    val g = globals();",
         "    registerFill(g.fill, payloadIds(g.payload, \"h\"));",
