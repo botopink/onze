@@ -9,7 +9,10 @@
     "commonJS"
   ],
   "files": [
-    "root.bp"
+    "root.bp",
+    "resolve.bp",
+    "scan.bp",
+    "generate.bp"
   ],
   "dependencies": {
     "jhonstart": {
@@ -28,6 +31,9 @@
       "path": "../../../jhonstart/modules/jhonstart-emilia"
     },
     "onze": {
+      "workspace": true
+    },
+    "onze-bundler": {
       "workspace": true
     }
   }

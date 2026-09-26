@@ -1,13 +1,9 @@
-//// The `onze-cli` package — module-tree root.
+//// The `onze-cli` package — module-tree root (front 50 owns it).
 ////
 //// The command line — `create`, `dev`, `build`, `start`, `info` — in
-//// `compiler-cli`'s shape (a `main.bp` dispatch, one file per command, pure
-//// option parsers). commonJS only: it runs before any BEAM node exists.
-////
-//// A skeleton created by front 95 (`specs/1.0.10-beta/06-onze/modules.md`
-//// § The cut): an empty `pub` surface and one inline test, so the member is a
-//// row of `zig build test-libs` from the first commit. Owner: front 50.
+//// `compiler-cli`'s shape: a `main` dispatch, one module per command, pure
+//// option parsers. commonJS only: it runs before any BEAM node exists.
 
-test "onze-cli: the member compiles and runs on its rows" {
-    assert "onze-cli".length() == 8;
-}
+pub mod resolve;
+pub mod scan;
+pub mod generate;

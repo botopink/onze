@@ -53,6 +53,14 @@ pub fn stagedSegment(seg: string) -> string {
     return seg;
 }
 
+// The staged, identifier-safe stem of a convention file: `not-found` is not
+// an identifier and `default` is a keyword.
+pub fn stagedStem(stem: string) -> string {
+    if (stem == "not-found") return "not_found";
+    if (stem == "default") return "default_view";
+    return stem;
+}
+
 // The module id of `filePath` under `packageRoot`: stable across platforms —
 // a backslash path and a slash path give the same id.
 pub fn moduleIdOf(packageRoot: string, filePath: string) -> string {
@@ -64,7 +72,9 @@ pub fn moduleIdOf(packageRoot: string, filePath: string) -> string {
     val noExt = if (rel.endsWith(".bp")) rel.slice(0, rel.length() - 3) else rel;
     val parts = noExt.split("/").filter({ p -> p != "" });
     val trimmed = if (parts.length > 1 && parts.at(parts.length - 1).unwrapOr("") == "mod") parts.take(parts.length - 1) else parts;
-    return trimmed.map({ p -> stagedSegment(p) }).join(".");
+    val dirs = trimmed.take(trimmed.length - 1).map({ p -> stagedSegment(p) });
+    val last = stagedStem(trimmed.at(trimmed.length - 1).unwrapOr(""));
+    return dirs.append([last]).join(".");
 }
 
 // ── the scan ────────────────────────────────────────────────────────────────
