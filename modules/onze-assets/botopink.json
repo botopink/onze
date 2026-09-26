@@ -6,7 +6,12 @@
   "entry": "root.bp",
   "target": "commonJS",
   "files": [
-    "root.bp"
+    "root.bp",
+    "style_module.bp",
+    "stylesheet.bp",
+    "assets.bp",
+    "preprocess.bp",
+    "head.bp"
   ],
   "dependencies": {
     "jhonstart": {

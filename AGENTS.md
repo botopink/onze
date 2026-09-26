@@ -39,8 +39,9 @@ onze/
 │   │                    script.bp, rebuild.bp, hooks.bp (RenderHooks over the tags),
 │   │                    fixture.bp (the frozen fixture app every suite reads) — depends
 │   │                    on onze and jhonstart
-│   ├── onze-assets/   ← fronts 69 (owns root.bp + botopink.json) · 51 · 52 — depends on onze,
-│   │                    onze-bundler
+│   ├── onze-assets/   ← fronts 69 (owns root.bp + botopink.json) · 51 · 52: style_module.bp,
+│   │                    stylesheet.bp, assets.bp (the two static roots), preprocess.bp,
+│   │                    head.bp (pageRenderHooks) — depends on onze, onze-bundler, jhonstart
 │   ├── onze-og/       ← front 70 — targets ["erlang"]; depends on onze, onze-assets
 │   └── onze-release/  ← front 71 — depends on onze, onze-bundler, onze-assets
 ├── docs.md            ← the reference: onze.json, the alias map, the four seams, the not-built table

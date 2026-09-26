@@ -13,6 +13,11 @@
   adapter: `bootSite` (`app(plugins: [emiliaPlugin()], allowedRedirects)`, `setHooks`,
   `setWireNames`), `rakunEntries` (the five `rakun.*` keys), `responseOver`, `chainFor`,
   `pageInput`, `boot`. 21 tests on commonJS and on erlang. `docs.md` documents the four seams.
+- **The styling pipeline (front 69).** `modules/onze-assets/`: CSS modules compiled to a
+  generated accessor module with `<file>_<class>_<hash>` names (undefined uses reported,
+  `</style` refused), the global stylesheet (global first, fingerprinted, its `Y` record read
+  back by the bundler's parser), `stylesheetLinks` / `pageRenderHooks`, the two static roots
+  for rakun-web front 82 (`AssetRoot`, exactly two), the preprocessor hook. 11 tests on both rows.
 - **The client bundle (front 68).** `modules/onze-bundler/`: the manifest (`V/E/S/C/H/R/Y/P`,
   one parser on both targets, version-checked, unknown kinds ignored), `headScriptTags` /
   `scriptTags` and `bundleRenderHooks`; the textual import scanner and staged module ids; the

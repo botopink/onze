@@ -206,6 +206,41 @@ side of the document/payload only, then calls `hydrate()`, `linkMount()` and
 **Dev.** A body edit relinks only the chunks containing the module; an import edit re-walks the
 graph; a refusal fails dev with the build's own report; the manifest is written before the push.
 
+## Styles and static files (`onze-assets`, front 69)
+
+**emilia's block is not onze's.** jhonstart's render writes it — into the head after the shell,
+into each streamed boundary's fill, and the payload's `s` — through the `jhonstart-emilia`
+`RenderPlugin` that `bootSite` registers; the ordering rule is jhonstart front 30's and onze
+restates none of it.
+
+**CSS Modules.** `app/blog/blog.module.css` becomes the generated `.onze/styles/app_blog_blog.bp`,
+one accessor per class the file defines (a class that begins a selector), renamed
+`<file>_<class>_<hash>` (six hex digits of std's `contentHash` of the file) in the selectors only.
+The accessors are functions — `import {container} from "styles.app_blog_blog"; … container()` —
+because a `pub val` does not cross modules today. A class used but not defined is left as written
+and reported once; `:global(…)` is not supported; a file containing `</style` is refused.
+
+**The stylesheet.** The global CSS (`app/globals.css`), then every module's rewritten CSS, in one
+file, `/_onze/static/<buildId>/app.<hash>.css`, linked in the head (never inlined — it does not
+change per request). Its `Y` record goes into the client manifest. `pageRenderHooks(manifest)`
+is the head fragment (the stylesheet `<link>`s, then the `beforeInteractive` scripts) and the body
+tags as jhonstart's `RenderHooks`.
+
+**Exactly two static roots**, served by rakun-web front 82 (onze serves no file), and no
+configuration adds a third:
+
+| Root | Directory | Cache |
+|---|---|---|
+| `/_onze/static/<buildId>/**` | `<outDir>/static/<buildId>/` | `public, max-age=31536000, immutable` |
+| `/**` | `public/` | `no-cache` |
+
+Every other directory — `app/`, `src/`, `content/`, `lib/`, `.onze/` — is unreachable over HTTP.
+An app that wants a file published copies it into `public/`.
+
+**Preprocessors.** `preprocess(command, inputPath)` runs the configured command with the input path
+and takes its stdout; no command means the file as written; a missing command or a non-zero exit
+fails the build naming the command, with its output attached.
+
 ## What onze deliberately does not build
 
 | Not built | Why it is not here |
