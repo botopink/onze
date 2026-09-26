@@ -13,6 +13,11 @@
   adapter: `bootSite` (`app(plugins: [emiliaPlugin()], allowedRedirects)`, `setHooks`,
   `setWireNames`), `rakunEntries` (the five `rakun.*` keys), `responseOver`, `chainFor`,
   `pageInput`, `boot`. 21 tests on commonJS and on erlang. `docs.md` documents the four seams.
+- **Fonts (front 52).** `googleFont` / `googleFontWith` (self-hosted faces, the requested
+  subsets, `.metrics.txt` sidecars, preload tags, the class and the variable), the adjusted
+  fallback from a committed metrics table (Inter over Arial: 107.00 % / 96.88 % / 24.15 % /
+  0.00 %), `localFont` (copied under its hash, refused outside the root or missing, the
+  probe-absent degradation logged), `fontHead`. 7 tests on both rows over a fixture Google CSS.
 - **`onze build` (front 50 step 7).** `modules/onze-cli/src/build.bp`: scan, check, the client
   graph's refusals, the CSS modules' generated accessors, the staged server package compiled for
   erlang, the staged client package plus the generated entry compiled for commonJS and linked by

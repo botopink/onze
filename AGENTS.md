@@ -45,7 +45,10 @@ onze/
 │   │                    on onze and jhonstart
 │   ├── onze-assets/   ← fronts 69 (owns root.bp + botopink.json) · 51 · 52: style_module.bp,
 │   │                    stylesheet.bp, assets.bp (the two static roots), preprocess.bp,
-│   │                    head.bp (pageRenderHooks) — depends on onze, onze-bundler, jhonstart
+│   │                    head.bp (pageRenderHooks), font_metrics.bp (the committed
+│   │                    table — transcribed, generator owed), font.bp (googleFont over
+│   │                    a FontBuild seam, localFont, fallbackFace, fontHead) — depends on
+│   │                    onze, onze-bundler, jhonstart
 │   ├── onze-og/       ← front 70 — targets ["erlang"]; depends on onze, onze-assets
 │   └── onze-release/  ← front 71: spec.bp (ReleaseSpec, the build id), otp.bp (.rel,
 │                        sys.config, vm.args, bin/onze, systools), docker.bp, package.bp

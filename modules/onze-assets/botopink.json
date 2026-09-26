@@ -11,7 +11,9 @@
     "stylesheet.bp",
     "assets.bp",
     "preprocess.bp",
-    "head.bp"
+    "head.bp",
+    "font_metrics.bp",
+    "font.bp"
   ],
   "dependencies": {
     "jhonstart": {
