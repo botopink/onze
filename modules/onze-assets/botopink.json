@@ -13,7 +13,9 @@
     "preprocess.bp",
     "head.bp",
     "font_metrics.bp",
-    "font.bp"
+    "font.bp",
+    "image.bp",
+    "image_handler.bp"
   ],
   "dependencies": {
     "jhonstart": {

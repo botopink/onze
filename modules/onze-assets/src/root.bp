@@ -12,3 +12,5 @@ pub mod preprocess;
 pub mod head;
 pub mod font_metrics;
 pub mod font;
+pub mod image;
+pub mod image_handler;

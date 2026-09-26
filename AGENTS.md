@@ -47,7 +47,9 @@ onze/
 │   │                    stylesheet.bp, assets.bp (the two static roots), preprocess.bp,
 │   │                    head.bp (pageRenderHooks), font_metrics.bp (the committed
 │   │                    table — transcribed, generator owed), font.bp (googleFont over
-│   │                    a FontBuild seam, localFont, fallbackFace, fontHead) — depends on
+│   │                    a FontBuild seam, localFont, fallbackFace, fontHead), image.bp
+│   │                    (Image, the allowlist), image_handler.bp (the encoder port, the
+│   │                    /_onze/image outcome) — depends on
 │   │                    onze, onze-bundler, jhonstart
 │   ├── onze-og/       ← front 70 — targets ["erlang"]; depends on onze, onze-assets
 │   └── onze-release/  ← front 71: spec.bp (ReleaseSpec, the build id), otp.bp (.rel,

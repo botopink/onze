@@ -13,6 +13,12 @@
   adapter: `bootSite` (`app(plugins: [emiliaPlugin()], allowedRedirects)`, `setHooks`,
   `setWireNames`), `rakunEntries` (the five `rakun.*` keys), `responseOver`, `chainFor`,
   `pageInput`, `boot`. 21 tests on commonJS and on erlang. `docs.md` documents the four seams.
+- **Images (front 51).** `Image` (props validation, the source rules and the empty-by-default
+  allowlist, `srcset` snapped to configured widths, fill, blur with `data-src`, the loading
+  policy, refused sources reported), `imageResponse` (400 on a width or quality outside the
+  config, the encoder under `timeout` with an argument vector, pass-through when it is missing,
+  a content-hash cache key, immutable caching with an `ETag`). 7 tests on both rows, with
+  stand-in encoder scripts.
 - **Fonts (front 52).** `googleFont` / `googleFontWith` (self-hosted faces, the requested
   subsets, `.metrics.txt` sidecars, preload tags, the class and the variable), the adjusted
   fallback from a committed metrics table (Inter over Arial: 107.00 % / 96.88 % / 24.15 % /
