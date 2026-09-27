@@ -74,7 +74,9 @@ onze/
 │                        (manifest completeness, the secret scan), lifecycle.bp (readiness,
 │                        the shutdown order over a Lifecycle record), static_export.bp —
 │                        depends on onze and onze-bundler
-├── .gitignore         ← out/, .botopinkbuild/, .onze/ (a build's output)
+├── .gitignore         ← out/, .botopinkbuild/, .onze/ (a build's output); *.snap.new and
+│                        *.snap.md.new (a snapshot mismatch's scratch file — the hook refuses
+│                        one that is staged)
 ├── docs.md            ← the reference: onze.json, the alias map, the four seams, the not-built table
 ├── examples/          ← blog/ (53: src/lib/db.bp — the post store —, content/posts/*.md,
 │                        src/components/{nav,post_card}.bp, src/app/ — layout, page, blog/
@@ -84,9 +86,16 @@ onze/
 │                        by `onze start` in onze-cli's start_test); scaffold/ (50: the
 │                        committed output of `onze create scaffold --yes --libs ../../..`,
 │                        diffed by create_test.bp); static-site (71) arrives with its front
-├── scripts/git-hooks/ ← pre-commit: conflict markers, `botopink test` per `modules/*`
-│                        member, `botopink build` per example
-└── .github/workflows/ ← test.yml (`zig build test-libs -- --lib onze`), tag.yml
+├── scripts/git-hooks/ ← pre-commit (lib/runner-standalone.sh): conflict markers, a staged
+│                        *.snap.new, the compiler (absent → the gate fails, never skips),
+│                        `botopink test` per `modules/*` member on every target its manifest
+│                        declares (manifestTargets: the member's `targets`, else the
+│                        workspace's), `botopink build` per example on every declared target
+│                        (runExamplesGate — no allow list)
+└── .github/workflows/ ← test.yml (one `botopink-lib-test` per runner × workspace target, the
+                         members and examples discovered from the root via BOTOPINK_LIB_ROOTS,
+                         every row hard; the sibling libraries checked out as dependencies;
+                         then runExamplesGate on the row's target), tag.yml
 ```
 
 ## Rules
@@ -118,4 +127,12 @@ onze/
 ## Local gate
 
 `git config core.hooksPath scripts/git-hooks` once per clone. The hook runs `botopink test` in
-every `modules/*` member on its manifest target and builds every example.
+every `modules/*` member on every target its manifest declares and builds every example on
+every target it declares; it fails when the compiler binary is not found (`BOTOPINK_BIN`, an
+ancestor `zig-out/bin/botopink`, or `PATH`) and when a `*.snap.new` / `*.snap.md.new` is staged.
+The same cells, discovered by the runner from the workspace root, are CI's:
+`cd $(mktemp -d) && BOTOPINK_LIB_ROOTS=<this repository> botopink-lib-test --target <t>`.
+
+A `targets` restriction is audited by building the member on the excluded target: `onze-server`'s
+commonJS build fails on rakun's host bindings, so its `["erlang"]` stands; `onze-cli` (erlang) and
+`onze-og` (commonJS) built, so their lines were deleted and both run on both rows.

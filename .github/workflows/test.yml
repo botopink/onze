@@ -1,17 +1,23 @@
 # Per-platform CI for onze, the orchestrator.
 #
-# onze runs on `commonJS` and on `erlang` (`onze-cli` restricts itself to
-# commonJS, `onze-og` to erlang). Bootstrap: check out this lib + botopink-lang,
-# place this lib under `botopink-lang/repository/onze/`, run
-# `zig build test-libs -- --lib onze --target <matrix.target>`.
+# The matrix is the workspace's target set — `targets` in the root
+# botopink.json: commonJS and erlang — times the runners, and every row is hard
+# (gate-j: a row that cannot fail measures nothing). Bootstrap: check out this
+# lib + botopink-lang, place this lib under `botopink-lang/repository/onze/`
+# and the libraries its members depend on by `path` next to it
+# (`repository/jhonstart`, `repository/emilia`, `repository/rakun`).
 #
-# `repository/onze/` is a workspace (decision 75): the `repository/` root
-# contributes its members by manifest name, so `--lib onze` selects the member
-# `modules/onze/` and the umbrella has no row. The other members (`onze-test`,
-# `onze-cli`, `onze-bundler`, `onze-assets`, `onze-og`, `onze-release`) are rows
-# of their own — `--lib` takes one name, so the test step loops over the seven
-# (a member restricted away from the matrix target is reported skipped); the
-# Examples build step below builds each example from its manifest.
+# One `botopink-lib-test` call per row runs every member of `modules/*` and
+# every example of `examples/*` (decision 75: the umbrella is not a cell, its
+# members are — the runner discovers them from the workspace root that
+# `BOTOPINK_LIB_ROOTS` names; nothing is listed by hand here). A member runs on
+# the targets its manifest declares (`onze-cli` commonJS; `onze-og` and
+# `onze-server` erlang; the rest both), so the erlang row runs the erlang
+# members and the commonJS row the commonJS ones — a member that excludes the
+# row's target is not a cell of that row, and nothing is "restricted" or
+# skipped. The runner's cwd is a scratch directory so its walk-up adds no other
+# root: the sibling libraries are dependencies, not rows. Then the examples gate
+# — the pre-commit hook's stage — builds every example on the row's target.
 name: test
 
 on:
@@ -34,17 +40,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # The `erlang` axis is a hard cell. windows-2022 commonJS runs the
-        # source step under `shell: bash`, so the row carries
-        # `allow_fail: false`.
+        # Every row hard. windows-2022 runs the shell steps under `shell: bash`.
         include:
-          - { runner: ubuntu-22.04, target: commonJS, allow_fail: false }
-          - { runner: ubuntu-22.04, target: erlang,   allow_fail: false }
-          - { runner: macos-14,     target: commonJS, allow_fail: false }
-          - { runner: macos-14,     target: erlang,   allow_fail: false }
-          - { runner: windows-2022, target: commonJS, allow_fail: false }
+          - { runner: ubuntu-22.04, target: commonJS }
+          - { runner: ubuntu-22.04, target: erlang }
+          - { runner: macos-14,     target: commonJS }
+          - { runner: macos-14,     target: erlang }
+          - { runner: windows-2022, target: commonJS }
     runs-on: ${{ matrix.runner }}
-    continue-on-error: ${{ matrix.allow_fail }}
     steps:
       - name: Checkout this lib
         uses: actions/checkout@v5
@@ -69,18 +72,52 @@ jobs:
             cp -R self "botopink-lang/repository/${LIB_NAME}"
           fi
 
+      # The members depend on sibling libraries by the workspace-relative
+      # `{ "path": "../../../<lib>/modules/<member>" }` (modules/*/botopink.json),
+      # which resolves to botopink-lang/repository/<lib>: onze → jhonstart,
+      # jhonstart-forms, jhonstart-emilia, emilia; onze-server → rakun,
+      # rakun-app, rakun-web. They are dependencies of the cells, never rows.
+      - name: Checkout jhonstart (dependency)
+        uses: actions/checkout@v5
+        with:
+          repository: botopink/jhonstart
+          ref: feat
+          path: botopink-lang/repository/jhonstart
+
+      - name: Checkout emilia (dependency)
+        uses: actions/checkout@v5
+        with:
+          repository: botopink/emilia
+          ref: feat
+          path: botopink-lang/repository/emilia
+
+      - name: Checkout rakun (dependency)
+        uses: actions/checkout@v5
+        with:
+          repository: botopink/rakun
+          ref: feat
+          path: botopink-lang/repository/rakun
+
+      # Both hosts on every row: the compiler's comptime evaluation spawns
+      # `erl`, `onze build` (onze-cli, on both rows) compiles the staged
+      # server with `erlc`, and the cli suites drive `node out/main.js`.
       - name: Install erlang (linux)
-        if: matrix.runner == 'ubuntu-22.04' && matrix.target == 'erlang'
+        if: matrix.runner == 'ubuntu-22.04'
         run: |
           sudo apt-get update -y
           sudo apt-get install -y erlang
 
       - name: Install erlang (macos)
-        if: matrix.runner == 'macos-14' && matrix.target == 'erlang'
+        if: matrix.runner == 'macos-14'
         run: brew install erlang
 
-      - name: Install Node 20 (for commonJS target)
-        if: matrix.target == 'commonJS'
+      - name: Install erlang (windows)
+        if: matrix.runner == 'windows-2022'
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: '27'
+
+      - name: Install Node 20
         uses: actions/setup-node@v5
         with:
           node-version: '20'
@@ -88,7 +125,8 @@ jobs:
       # H7 (v0.beta.19) — release fast path. Opt-in via the lib's
       # `BOTOPINK_USE_RELEASE_FASTPATH` repo variable. Set to `true` after
       # botopink-lang has published at least one tagged release; until then,
-      # the source path below is the default.
+      # the source path below is the default. Both put `botopink` and
+      # `botopink-lib-test` on PATH.
       - name: Install botopink (release fast path)
         if: ${{ vars.BOTOPINK_USE_RELEASE_FASTPATH == 'true' }}
         shell: bash
@@ -110,35 +148,27 @@ jobs:
       - name: zig build install (source build path)
         if: ${{ vars.BOTOPINK_USE_RELEASE_FASTPATH != 'true' }}
         working-directory: botopink-lang
-        run: zig build install
-
-      - name: zig build test-libs --lib onze --target ${{ matrix.target }} (source)
-        if: ${{ vars.BOTOPINK_USE_RELEASE_FASTPATH != 'true' }}
-        working-directory: botopink-lang
         shell: bash
         run: |
-          for lib in onze onze-test onze-cli onze-bundler onze-assets onze-og onze-release; do
-            zig build test-libs -- --lib "$lib" --target "${{ matrix.target }}"
-          done
+          zig build install
+          echo "$GITHUB_WORKSPACE/botopink-lang/zig-out/bin" >> "$GITHUB_PATH"
 
-      - name: botopink-lib-test --lib onze --target ${{ matrix.target }} (fast path)
-        if: ${{ vars.BOTOPINK_USE_RELEASE_FASTPATH == 'true' }}
-        working-directory: botopink-lang
+      - name: botopink-lib-test · every member and example · ${{ matrix.target }}
         shell: bash
         run: |
-          for lib in onze onze-test onze-cli onze-bundler onze-assets onze-og onze-release; do
-            botopink-lib-test --lib "$lib" --target "${{ matrix.target }}"
-          done
+          root="$GITHUB_WORKSPACE/botopink-lang/repository/${LIB_NAME}"
+          bin="$(command -v botopink)" || { echo "botopink binary not on PATH"; exit 1; }
+          cd "$(mktemp -d)"
+          export BOTOPINK_BIN="$bin"
+          BOTOPINK_LIB_ROOTS="$root" botopink-lib-test --bin "$bin" --target "${{ matrix.target }}"
 
-      # Every examples/*/ with a botopink.json builds (runExamplesGate, the same
-      # stage as the pre-commit hook); scripts/known-broken-examples.txt lists
-      # the ones allowed to fail. Each example uses its own manifest target, so
-      # this runs once, not per target.
-      - name: Examples build
-        if: matrix.target == 'commonJS'
+      # Every examples/*/ with a botopink.json builds on the row's target
+      # (runExamplesGate — the same stage as the pre-commit hook, which builds
+      # every declared target; here each row builds its own).
+      - name: Examples build · ${{ matrix.target }}
         working-directory: botopink-lang/repository/${{ env.LIB_NAME }}
         shell: bash
         run: |
           source scripts/git-hooks/lib/runner-standalone.sh
           bin=$(locateBotopink) || { echo "botopink binary not found"; exit 1; }
-          runExamplesGate "$bin"
+          runExamplesGate "$bin" "${{ matrix.target }}"

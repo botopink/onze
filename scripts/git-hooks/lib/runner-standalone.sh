@@ -3,21 +3,23 @@
 #
 # Sourced by scripts/git-hooks/pre-commit. It is the only runner: it needs
 # nothing outside this repository (standalone clone, meta checkout, worktree,
-# bpmp packing). Stages: conflict markers in staged files, `botopink test`
-# (per member under modules/*/ when the root botopink.json is a workspace —
-# decision 75: the umbrella compiles nothing and `botopink test` there is a
-# refusal — else over the package's own src/ + test/), then `botopink build`
-# of every example (runExamplesGate — CI calls it too).
+# bpmp packing). Stages: conflict markers in staged files, a staged
+# `*.snap.new` / `*.snap.md.new` (a snapshot mismatch's scratch file, never
+# committed), the compiler binary (absent → the gate fails, it never skips),
+# `botopink test` (per member under modules/*/ on every target its manifest
+# declares — the root botopink.json is a workspace, decision 75: the umbrella
+# compiles nothing and `botopink test` there is a refusal — else over the
+# package's own src/ + test/), then `botopink build` of every example on every
+# target its manifest declares (runExamplesGate — CI calls it too). Nothing is
+# allow-listed: an example that does not build fails the gate (decision 67).
 set -euo pipefail
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
 NC='\033[0m'
 
 fail() { echo -e "${RED}✗ $1${NC}"; exit 1; }
 pass() { echo -e "${GREEN}✓ $1${NC}"; }
-warn() { echo -e "${YELLOW}⚠ $1${NC}"; }
 
 locateBotopink() {
     if [ -n "${BOTOPINK_BIN:-}" ] && [ -x "$BOTOPINK_BIN" ]; then
@@ -64,29 +66,50 @@ runStandaloneGate() {
         pass "No conflict markers"
     fi
 
-    # 2. botopink test.
+    # 2. a staged snapshot scratch file. A mismatch writes `<slug>.snap.new`
+    #    (`.snap.md.new` for markdown snapshots) next to the snapshot; the
+    #    snapshot is re-recorded on purpose or the code is fixed — the scratch
+    #    file is never committed.
+    local snaps
+    snaps=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.snap(\.md)?\.new$' || true)
+    if [ -n "$snaps" ]; then
+        echo "$snaps" | sed 's/^/  /'
+        fail "Staged *.snap.new / *.snap.md.new — re-record the snapshot or fix the code, never commit the scratch file"
+    fi
+    pass "No staged *.snap.new"
+
+    # 3. the compiler. Absent is a failure, never a skipped gate.
     local bin
+    if ! bin=$(locateBotopink); then
+        echo "  botopink binary not found: set BOTOPINK_BIN to a built compiler, or build one"
+        echo "  (cd repository/botopink-lang && zig build) so an ancestor zig-out/bin/botopink exists,"
+        echo "  or put botopink on \$PATH"
+        fail "botopink binary not found — the .bp gate cannot run"
+    fi
+    # The suites that build fixtures (onze-cli's build/create/generate/start
+    # tests) read BOTOPINK_BIN: they compile with the compiler that runs them.
+    export BOTOPINK_BIN="$bin"
+
+    # 4. botopink test.
     if grep -q '"workspaces"' "$root/botopink.json" 2>/dev/null; then
         # A workspace: one `botopink test` per library member (modules/*/ with a
-        # botopink.json), each on its own manifest target. The examples are
-        # applications and are built by stage 3.
-        if ! bin=$(locateBotopink); then
-            warn "botopink binary not found (env BOTOPINK_BIN, ancestor zig-out/bin, or \$PATH) — skipping .bp gate"
-            return 0
-        fi
-        local member found=""
+        # botopink.json) per target its manifest declares. The examples are
+        # applications and are built by stage 5.
+        local member found="" target
         for member in "$root"/modules/*/; do
             [ -f "$member/botopink.json" ] || continue
             found=1
-            echo -n "  Testing modules/$(basename "$member") (botopink test)... "
-            if ( cd "$member" && "$bin" test ) >/dev/null 2>&1; then
-                echo -e "${GREEN}✓${NC}"
-            else
-                echo -e "${RED}✗${NC}"
-                echo
-                echo "  Re-run for failure output:  ( cd $member && $bin test )"
-                fail "$(basename "$member"): botopink test failed"
-            fi
+            for target in $(manifestTargets "$member/botopink.json"); do
+                echo -n "  Testing modules/$(basename "$member") · $target (botopink test)... "
+                if ( cd "$member" && "$bin" test --target "$target" ) >/dev/null 2>&1; then
+                    echo -e "${GREEN}✓${NC}"
+                else
+                    echo -e "${RED}✗${NC}"
+                    echo
+                    echo "  Re-run for failure output:  ( cd $member && $bin test --target $target )"
+                    fail "$(basename "$member") · $target: botopink test failed"
+                fi
+            done
         done
         [ -n "$found" ] || fail "botopink.json is a workspace but no modules/*/ holds a botopink.json"
     else
@@ -94,71 +117,84 @@ runStandaloneGate() {
             echo "  (no .bp sources under src/ or test/ — nothing to test)"
             return 0
         fi
-        if ! bin=$(locateBotopink); then
-            warn "botopink binary not found (env BOTOPINK_BIN, ancestor zig-out/bin, or \$PATH) — skipping .bp gate"
-            return 0
-        fi
-        echo -n "  Testing $(basename "$root") (botopink test)... "
-        if ( cd "$root" && "$bin" test ) >/dev/null 2>&1; then
-            echo -e "${GREEN}✓${NC}"
-        else
-            echo -e "${RED}✗${NC}"
-            echo
-            echo "  Re-run for failure output:  ( cd $root && $bin test )"
-            fail "$(basename "$root"): botopink test failed"
-        fi
+        local target
+        for target in $(manifestTargets "$root/botopink.json"); do
+            echo -n "  Testing $(basename "$root") · $target (botopink test)... "
+            if ( cd "$root" && "$bin" test --target "$target" ) >/dev/null 2>&1; then
+                echo -e "${GREEN}✓${NC}"
+            else
+                echo -e "${RED}✗${NC}"
+                echo
+                echo "  Re-run for failure output:  ( cd $root && $bin test --target $target )"
+                fail "$(basename "$root") · $target: botopink test failed"
+            fi
+        done
     fi
 
-    # 3. every example builds, unless listed as known broken.
+    # 5. every example builds.
     runExamplesGate "$bin"
 }
 
-# runExamplesGate <botopink-bin>
+# manifestTargets <botopink.json>
 #
-# Builds every `examples/*/` that has a `botopink.json` (each with its own
-# manifest target, into a throwaway --out). `scripts/known-broken-examples.txt`
-# lists the examples allowed to fail — one `examples/<name>  <reason>` per
-# line, `#` comments. The list cannot rot: a listed example that builds, or a
-# listed path that no longer exists, fails the gate too.
-runExamplesGate() {
-    local bin="$1"
+# The targets a manifest declares, one per line — the lib-test runner's
+# reading, so the hook runs exactly the cells CI runs: the member's `targets`
+# list when it has one (a member may only restrict), else the workspace's
+# `targets`, else every target `botopink test` runs (commonJS erlang). A
+# member's `target` (the default of a bare `botopink build`) is not a
+# restriction and is not read.
+manifestTargets() {
+    local file="$1"
+    local listed
+    listed=$(targetsListOf "$file")
+    if [ -n "$listed" ]; then
+        echo "$listed"; return 0
+    fi
     local root
     root=$(git rev-parse --show-toplevel)
-    local list="$root/scripts/known-broken-examples.txt"
-    local known=""
-    if [ -f "$list" ]; then
-        # awk, not `grep -v | awk`: a list of only comments or blank lines has
-        # no entry, and grep's "no match" exit 1 would abort under pipefail.
-        # An unreadable list still fails (awk exits non-zero).
-        known=$(awk '!/^[[:space:]]*(#|$)/ {print $1}' "$list")
+    listed=$(targetsListOf "$root/botopink.json")
+    if [ -n "$listed" ]; then
+        echo "$listed"; return 0
     fi
-    local k
-    for k in $known; do
-        [ -f "$root/$k/botopink.json" ] || fail "$list names $k, which has no botopink.json — delete its line"
-    done
-    local dir name rel out bad=""
+    printf 'commonJS\nerlang\n'
+}
+
+# targetsListOf <botopink.json> — the `targets` array's entries, one per line;
+# empty when the manifest has none.
+targetsListOf() {
+    [ -f "$1" ] || return 0
+    tr -d '\n\r' < "$1" | sed -n 's/.*"targets"[[:space:]]*:[[:space:]]*\[\([^]]*\)\].*/\1/p' | tr -d '" ' | tr ',' '\n' | sed '/^$/d'
+}
+
+# runExamplesGate <botopink-bin> [<target>]
+#
+# Builds every `examples/*/` that has a `botopink.json` on every target its
+# manifest declares (into a throwaway --out) — or, with `<target>`, on that
+# one target for the examples that declare it (a CI row builds its own
+# target). There is no allow list: an example that does not build fails the
+# gate.
+runExamplesGate() {
+    local bin="$1"
+    local only="${2:-}"
+    local root
+    root=$(git rev-parse --show-toplevel)
+    local dir name rel out target bad=""
     for dir in "$root"/examples/*/; do
         [ -f "$dir/botopink.json" ] || continue
         name=$(basename "$dir")
         rel="examples/$name"
-        out=$(mktemp -d)
-        echo -n "  Building $rel (botopink build)... "
-        if ( cd "$dir" && "$bin" build --out "$out" ) >/dev/null 2>&1; then
-            if printf '%s\n' "$known" | grep -qx "$rel"; then
-                echo -e "${RED}✗${NC}"
-                bad="$bad\n  $rel builds but is listed in scripts/known-broken-examples.txt — delete its line"
-            else
+        for target in $(manifestTargets "$dir/botopink.json"); do
+            [ -z "$only" ] || [ "$target" = "$only" ] || continue
+            out=$(mktemp -d)
+            echo -n "  Building $rel · $target (botopink build)... "
+            if ( cd "$dir" && "$bin" build --target "$target" --out "$out" ) >/dev/null 2>&1; then
                 echo -e "${GREEN}✓${NC}"
-            fi
-        else
-            if printf '%s\n' "$known" | grep -qx "$rel"; then
-                echo -e "${YELLOW}known broken${NC}"
             else
                 echo -e "${RED}✗${NC}"
-                bad="$bad\n  $rel does not build — re-run: ( cd $dir && $bin build --out \$(mktemp -d) )"
+                bad="$bad\n  $rel · $target does not build — re-run: ( cd $dir && $bin build --target $target --out \$(mktemp -d) )"
             fi
-        fi
-        rm -rf "$out"
+            rm -rf "$out"
+        done
     done
     if [ -n "$bad" ]; then
         echo -e "$bad"
