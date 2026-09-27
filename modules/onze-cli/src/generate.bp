@@ -206,7 +206,12 @@ fn rerootDep(name: string, v: Json, root: string, workspace: Array<#(string, str
         val pair = hit.at(0).unwrapOr(#("", ""));
         return "{ \"path\": " + quote(pair._1) + " }";
     }
-    return "{ " + members.map({ m -> quote(m._0) + ": " + (if (m._0 == "path") quote(reroot(textOf(m._1), root)) else jsonText(m._1)) }).join(", ") + " }";
+    var fields: string[] = [];
+    for (members) { m ->
+        val value = if (m._0 == "path") { quote(reroot(textOf(m._1), root)) } else { jsonText(m._1) };
+        fields.push(quote(m._0) + ": " + value);
+    };
+    return "{ " + fields.join(", ") + " }";
 }
 
 // A dependency path against the project root; an absolute one, or any when

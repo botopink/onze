@@ -190,11 +190,13 @@ pub fn place(e: Element, s: Style, x: i32, y: i32, w: i32, h: i32, faces: Array<
     val sizes: Array<#(i32, i32)> = flow.map({ c -> intrinsic(c, styled(s, c), cw, ch, faces) });
     var used = 0;
     for (sizes) { z ->
-        used = used + (if (row) z._0 else z._1);
+        val main = if (row) { z._0 } else { z._1 };
+        used = used + main;
     };
     val n = sizes.length;
     val main = if (row) cw else ch;
-    val free = main - used - (if (n > 1) s.gap * (n - 1) else 0);
+    val gaps = if (n > 1) { s.gap * (n - 1) } else { 0 };
+    val free = main - used - gaps;
     val between = s.justifyContent == "space-between" && n > 1;
     val step = if (between) s.gap + (free / (n - 1)) else s.gap;
     val start = if (s.justifyContent == "center") (free / 2) else if (s.justifyContent == "flex-end") free else 0;
@@ -206,7 +208,8 @@ pub fn place(e: Element, s: Style, x: i32, y: i32, w: i32, h: i32, faces: Array<
         val cs = styled(s, c);
         val cross = if (row) ch else cw;
         val own = if (row) z._1 else z._0;
-        val stretch = s.alignItems == "stretch" && allText(c) == false && (if (row) cs.height else cs.width) == "";
+        val crossSize = if (row) { cs.height } else { cs.width };
+        val stretch = s.alignItems == "stretch" && allText(c) == false && crossSize == "";
         val size = if (stretch) cross else own;
         val crossAt = if (s.alignItems == "center") ((cross - size) / 2) else if (s.alignItems == "flex-end") cross - size else 0;
         val bx = if (row) cx + offset else cx + crossAt;
@@ -214,7 +217,8 @@ pub fn place(e: Element, s: Style, x: i32, y: i32, w: i32, h: i32, faces: Array<
         val bw = if (row) z._0 else size;
         val bh = if (row) size else z._1;
         boxes.push(place(c, cs, bx, by, bw, bh, faces));
-        offset = offset + (if (row) z._0 else z._1) + step;
+        val advance = if (row) { z._0 } else { z._1 };
+        offset = offset + advance + step;
         i = i + 1;
     };
     for (e.children.filter({ c -> isAbsolute(styleOfElement(c)) })) { c ->
@@ -233,6 +237,7 @@ pub fn layout(tree: Element, size: ImageSize, faces: Array<FontMetrics>) -> Layo
 
 pub fn describeLayout(b: LayoutBox, depth: i32) -> string {
     val lead = "  ".repeat(depth);
-    val head = lead + b.tag.padEnd(5, " ") + "x=" + b.x.toString().padEnd(5, " ") + "y=" + b.y.toString().padEnd(5, " ") + "w=" + b.width.toString().padEnd(6, " ") + "h=" + b.height.toString() + (if (b.lines.length > 0) "   lines: " + b.lines.join(" / ") else "");
+    val lines = if (b.lines.length > 0) { "   lines: " + b.lines.join(" / ") } else { "" };
+    val head = lead + b.tag.padEnd(5, " ") + "x=" + b.x.toString().padEnd(5, " ") + "y=" + b.y.toString().padEnd(5, " ") + "w=" + b.width.toString().padEnd(6, " ") + "h=" + b.height.toString() + lines;
     return [head].append(b.children.map({ c -> describeLayout(c, depth + 1) })).join("\n");
 }

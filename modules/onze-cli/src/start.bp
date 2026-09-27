@@ -23,7 +23,8 @@ import {Project} from "resolve";
 // The configuration as botopink source: an `OnzeConfig(…)` literal.
 pub fn configLiteral(c: OnzeConfig) -> string {
     val redirects = "[" + c.allowedRedirects.map({ r -> quote(r) }).join(", ") + "]";
-    return "OnzeConfig(name: " + quote(c.name) + ", port: " + c.port.toString() + ", basePath: " + quote(c.basePath) + ", appDir: " + quote(c.appDir) + ", publicDir: " + quote(c.publicDir) + ", outDir: " + quote(c.outDir) + ", dev: " + (if (c.dev) "true" else "false") + ", actionsBodyLimit: " + c.actionsBodyLimit.toString() + ", allowedRedirects: " + redirects + ", lang: " + quote(c.lang) + ")";
+    val dev = if (c.dev) { "true" } else { "false" };
+    return "OnzeConfig(name: " + quote(c.name) + ", port: " + c.port.toString() + ", basePath: " + quote(c.basePath) + ", appDir: " + quote(c.appDir) + ", publicDir: " + quote(c.publicDir) + ", outDir: " + quote(c.outDir) + ", dev: " + dev + ", actionsBodyLimit: " + c.actionsBodyLimit.toString() + ", allowedRedirects: " + redirects + ", lang: " + quote(c.lang) + ")";
 }
 
 // The server package's `onze_main.bp`.

@@ -178,10 +178,13 @@ fn widestOf(xs: string[]) -> i32 {
 // The graph as the `graph` snapshots record it.
 pub fn describeGraph(graph: ClientGraph) -> string {
     val width = widestOf(graph.nodes.map({ n -> n.moduleId }));
-    var rows: string[] = ["roots: " + (if (graph.roots.length == 0) "(none)" else graph.roots.join(", "))];
+    val rootsText = if (graph.roots.length == 0) { "(none)" } else { graph.roots.join(", ") };
+    var rows: string[] = ["roots: " + rootsText];
     for (graph.nodes) { n ->
-        rows.push(n.moduleId.padEnd(width + 3, " ") + (if (n.isRoot) "root" else "-").padEnd(7, " ") + "chain: " + chainText(n.chain));
+        val rootMark = if (n.isRoot) { "root" } else { "-" };
+        rows.push(n.moduleId.padEnd(width + 3, " ") + rootMark.padEnd(7, " ") + "chain: " + chainText(n.chain));
     };
-    rows.push("not in graph: " + (if (graph.outside.length == 0) "(none)" else graph.outside.join(", ")));
+    val outsideText = if (graph.outside.length == 0) { "(none)" } else { graph.outside.join(", ") };
+    rows.push("not in graph: " + outsideText);
     return rows.join("\n");
 }

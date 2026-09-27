@@ -136,8 +136,9 @@ pub fn validateSource(cfg: ImageConfig, publicDir: string, src: string) -> @Resu
     if (cleanPath == null) throw "Image: " + src + " escapes its host's root";
     val clean = cleanPath ?? "/";
     val ok = cfg.remotePatterns.any({ p -> p.protocol == u._0 && hostMatches(p.hostname, u._1) && p.port == u._2 && clean.startsWith(p.pathPrefix) });
-    if (ok == false) throw "Image: host " + u._1 + (if (u._2 == "") "" else ":" + u._2) + " not in remotePatterns (" + src + ")";
-    return u._0 + "://" + u._1 + (if (u._2 == "") "" else ":" + u._2) + clean;
+    val portSuffix = if (u._2 == "") { "" } else { ":" + u._2 };
+    if (ok == false) throw "Image: host " + u._1 + portSuffix + " not in remotePatterns (" + src + ")";
+    return u._0 + "://" + u._1 + portSuffix + clean;
 }
 
 // The handler URL for one width.

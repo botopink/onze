@@ -117,8 +117,9 @@ test "og: rasterizer ---- png with no tool fails at the route, svg needs none" {
     assert nif.isError();
     val none = rasterize(noRasterizer(), "<svg/>", defaultSize(), path.join([testTmp(), "x.png"]));
     assert none.isError();
+    val svgVerdict = if (requireRasterizer(route, "image/svg+xml", noRasterizer()).length == 0) { "ok" } else { "error" };
     try snapshots.assertAs(@src(), "rasterizer", [
-        "image/svg+xml  kind=none   " + (if (requireRasterizer(route, "image/svg+xml", noRasterizer()).length == 0) "ok" else "error"),
+        "image/svg+xml  kind=none   " + svgVerdict,
         "image/png      kind=none   error: " + requireRasterizer(route, "image/png", noRasterizer()).join("; "),
         "image/png      kind=nif    error: " + requireRasterizer(route, "image/png", Rasterizer(kind: "nif", command: "")).join("; "),
     ].join("\n"));

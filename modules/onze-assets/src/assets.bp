@@ -25,6 +25,11 @@ pub fn staticRoots(publicDir: string, outDir: string, buildId: string) -> Array<
     ];
 }
 
+fn describeRoot(r: AssetRoot) -> string {
+    val immutable = if (r.immutable) { "1" } else { "0" };
+    return r.pattern.padEnd(26, " ") + "-> " + r.directory.padEnd(23, " ") + "immutable=" + immutable + "  cacheSeconds=" + r.cacheSeconds.toString();
+}
+
 pub fn describeRoots(roots: Array<AssetRoot>) -> string {
-    return roots.map({ r -> r.pattern.padEnd(26, " ") + "-> " + r.directory.padEnd(23, " ") + "immutable=" + (if (r.immutable) "1" else "0") + "  cacheSeconds=" + r.cacheSeconds.toString() }).join("\n");
+    return roots.map({ r -> describeRoot(r) }).join("\n");
 }

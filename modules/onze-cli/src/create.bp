@@ -217,14 +217,22 @@ pub fn mkdirs(dir: string) -> @Result<void, string> {
 }
 
 // What `create` prints before writing: the resolved options.
+fn onOff(flag: bool) -> string {
+    return if (flag) "on" else "off";
+}
+
+fn dependenciesText(libs: string) -> string {
+    return if (libs == "") "git (feat)" else "path " + libs;
+}
+
 pub fn describeCreate(o: CreateOpts) -> string {
     return [
         "name          " + o.name,
         "port          " + o.port.toString(),
-        "src-dir       " + (if (o.srcDir) "on" else "off"),
+        "src-dir       " + onOff(o.srcDir),
         "import-alias  " + o.importAlias,
-        "emilia        " + (if (o.emilia) "on" else "off"),
+        "emilia        " + onOff(o.emilia),
         "lang          " + o.lang,
-        "dependencies  " + (if (o.libs == "") "git (feat)" else "path " + o.libs),
+        "dependencies  " + dependenciesText(o.libs),
     ].join("\n");
 }

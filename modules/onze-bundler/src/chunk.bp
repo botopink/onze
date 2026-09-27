@@ -206,7 +206,11 @@ pub fn describePlan(plans: Array<ChunkPlan>, linked: Array<string>, reach: Array
         rows.push(p.id.padEnd(20, " ") + " " + chunkFileName(p, linked.at(i).unwrapOr("")).padEnd(22, " ") + " " + p.modules.join(", "));
         i = i + 1;
     };
-    val routes = reach.map({ r -> r._0 + " -> " + (if (plans.any({ p -> p.id == "route:" + r._0 })) "route:" + r._0 else "(none)") });
+    var routes: string[] = [];
+    for (reach) { r ->
+        val target = if (plans.any({ p -> p.id == "route:" + r._0 })) { "route:" + r._0 } else { "(none)" };
+        routes.push(r._0 + " -> " + target);
+    };
     rows.push("routes: " + routes.join(" ; "));
     return rows.join("\n");
 }

@@ -41,6 +41,10 @@ declare fn lifePush(event: string) -> i32;
 #[@External.Erlang("""(fun() -> case get(onze_life) of undefined -> []; __L -> __L end end)()""")]
 declare fn lifeEvents() -> Array<string>;
 
+fn boolText(flag: bool) -> string {
+    return if (flag) "true" else "false";
+}
+
 fn counting(event: string, value: i32) -> i32 {
     lifePush(event);
     return value;
@@ -49,7 +53,7 @@ fn counting(event: string, value: i32) -> i32 {
 fn life(renders: i32) -> Lifecycle {
     lifeReset();
     return Lifecycle(
-        setReady: { ready -> counting("readiness=" + (if (ready) "true" else "false"), 0) },
+        setReady: { ready -> counting("readiness=" + boolText(ready), 0) },
         stopAccepting: { -> counting("stop-accepting", 0) },
         inFlightRenders: { -> counting("drain-renders", renders) },
         pendingAfterTasks: { -> counting("drain-after-tasks", 0) },

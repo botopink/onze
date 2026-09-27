@@ -32,17 +32,21 @@ pub fn decoratorFor(kind: string) -> string {
 
 // The argument of the first `#[<name>("…")]` in `source` for any `<name>` of
 // `decorators` (`|`-separated), `null` when there is none.
+// Split, not `indexOf` + `slice`: a source with a non-ASCII character before
+// the decorator (an em dash in its doc comment) puts the two at odds on the
+// BEAM — `indexOf` answers a byte offset there and `slice` counts code
+// points (a compiler row) — and the argument would lose its first characters.
 pub fn declaredArgument(source: string, decorators: string) -> ?string {
     var found = "";
     var hit = false;
     for (decorators.split("|")) { name ->
         val open = "#[" + name + "(\"";
-        val at = source.indexOf(open);
-        if (hit == false && at >= 0) {
-            val rest = source.slice(at + open.length());
-            val close = rest.indexOf("\"");
-            if (close >= 0) {
-                found = rest.slice(0, close);
+        val parts = source.split(open);
+        if (hit == false && parts.length > 1) {
+            val rest = parts.at(1).unwrapOr("");
+            val closed = rest.split("\"");
+            if (closed.length > 1) {
+                found = closed.at(0).unwrapOr("");
                 hit = true;
             };
         };
@@ -73,7 +77,8 @@ pub fn scanFiles(srcDir: string, appDir: string, files: Array<#(string, string)>
             val missing = needs != "" && found == null;
             val carried = found ?? "";
             val declared = if (needs == "") af.segment else carried;
-            if (missing) problems.push(af.authoredPath + ": a " + af.kind + " file needs #[" + needs.split("|").at(0).unwrapOr(needs) + "(\"" + af.segment + "\")]" + (if (af.kind == "route") " (or another verb's route decorator)" else ""));
+            val routeHint = if (af.kind == "route") { " (or another verb's route decorator)" } else { "" };
+            if (missing) problems.push(af.authoredPath + ": a " + af.kind + " file needs #[" + needs.split("|").at(0).unwrapOr(needs) + "(\"" + af.segment + "\")]" + routeHint);
             entries.push(RouteEntry(pattern: patternOfSegment(af.segment), kind: af.kind, authoredPath: af.authoredPath, modulePath: moduleIdOf(srcDir, af.authoredPath), declared: declared));
         };
     };

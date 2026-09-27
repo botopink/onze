@@ -98,7 +98,8 @@ pub fn googleCssUrl(family: string, opts: GoogleFontOptions) -> string {
     var tuples: string[] = [];
     for (opts.styles) { st ->
         for (opts.weights) { w ->
-            tuples.push(if (italic) (if (st == "italic") "1," else "0,") + w else w);
+            val styleFlag = if (st == "italic") { "1," } else { "0," };
+            tuples.push(if (italic) styleFlag + w else w);
         };
     };
     val axes = if (italic) ":ital,wght@" else ":wght@";
@@ -192,7 +193,8 @@ pub fn googleFontWith(family: string, opts: GoogleFontOptions, build: FontBuild)
     val made = process.run("mkdir", ["-p", dir]);
     var faces: Array<#(string, string, string, string)> = [];
     for (wanted) { f ->
-        val base = slugOfFamily(family) + "-" + f.weight + (if (f.style == "italic") "-italic" else "");
+        val italicSuffix = if (f.style == "italic") { "-italic" } else { "" };
+        val base = slugOfFamily(family) + "-" + f.weight + italicSuffix;
         val tmp = path.join([dir, base + ".download"]);
         val download = build.download;
         try download(f.url, tmp);
@@ -254,7 +256,8 @@ pub fn localFont(family: string, opts: LocalFontOptions, root: string, buildId: 
         val inside = normalized.startsWith(path.normalize(root) + "/") && s.path.contains("..") == false;
         if (inside == false) throw "local font source " + s.path + " is outside the project root";
         if (fs.exists(normalized) == false) throw "local font source " + s.path + " does not exist";
-        val name = slugOfFamily(family) + "-" + s.weight + (if (s.style == "italic") "-italic" else "") + "." + fileHash(normalized) + ".woff2";
+        val italicSuffix = if (s.style == "italic") { "-italic" } else { "" };
+        val name = slugOfFamily(family) + "-" + s.weight + italicSuffix + "." + fileHash(normalized) + ".woff2";
         val copied = try process.run("cp", [normalized, path.join([dir, name])]);
         if (metrics == null) metrics = probe(normalized);
         faces.push(#(s.style, s.weight, "/_onze/static/" + buildId + "/fonts/" + name, ""));

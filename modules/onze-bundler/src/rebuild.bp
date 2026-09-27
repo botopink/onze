@@ -47,7 +47,12 @@ pub fn initialState(setup: BundleSetup, modules: Array<AppModule>, compiled: Arr
 }
 
 fn importShape(refs: Array<ImportRef>) -> string {
-    return refs.map({ r -> r.spec + "{" + r.names.join(",") + "}" + (if (r.isModDecl) "mod" else "") }).join(";");
+    var parts: string[] = [];
+    for (refs) { r ->
+        val modMark = if (r.isModDecl) { "mod" } else { "" };
+        parts.push(r.spec + "{" + r.names.join(",") + "}" + modMark);
+    };
+    return parts.join(";");
 }
 
 // `state` after `path` changed to `source`, `compiledJs` being the compiler's

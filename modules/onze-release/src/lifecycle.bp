@@ -70,5 +70,6 @@ pub fn exitCodeOf(r: DrainReport) -> i32 {
 }
 
 pub fn describeDrain(r: DrainReport) -> string {
-    return "renders=" + r.renders.toString() + " afterTasks=" + r.afterTasks.toString() + " timedOut=" + (if (r.timedOut) "true" else "false") + " exit=" + exitCodeOf(r).toString();
+    val timedOut = if (r.timedOut) { "true" } else { "false" };
+    return "renders=" + r.renders.toString() + " afterTasks=" + r.afterTasks.toString() + " timedOut=" + timedOut + " exit=" + exitCodeOf(r).toString();
 }

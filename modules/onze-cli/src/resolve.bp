@@ -50,7 +50,8 @@ pub fn resolveProject(startDir: string) -> @Result<Project, string> {
     val configResult = loadConfig(manifest, onzeText);
     if (configResult.isError()) {
         val e = configError(configResult);
-        throw e + " (" + (if (e.startsWith("botopink.json")) manifestPath else onzePath) + ")";
+        val at = if (e.startsWith("botopink.json")) { manifestPath } else { onzePath };
+        throw e + " (" + at + ")";
     }
     val aliasResult = loadAliases(manifest);
     if (aliasResult.isError()) throw aliasError(aliasResult) + " (" + manifestPath + ")";
