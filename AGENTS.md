@@ -2,183 +2,116 @@
 
 > Path: `repository/onze/`
 > Parent (workspace): [`../AGENTS.md`](../AGENTS.md) · Sibling (core): [`../botopink-lang/AGENTS.md`](../botopink-lang/AGENTS.md)
-> Docs: [`./docs.md`](docs.md) · Spec: [`../../tasks/v0.beta.8/specs/onze.md`](../../tasks/v0.beta.8/specs/onze.md)
+> Specs: `specs/1.0.10-beta/06-onze/` in the meta repository (`modules.md` is the cut)
 
-> **Retired (decision 79 of botopink 1.0.10-beta).** This repository is archived under the tag
-> `mocking-lib-final`; its surface is std's `mocks` and `asserts` modules, and the name `onze`
-> passes to the orchestrator. `README.md` carries the banner. Change nothing here.
+The **Next.js-style orchestrator**: the one package that imports rakun, jhonstart, the
+`jhonstart-emilia` bridge and emilia together (decision 113) — neither rakun nor jhonstart names
+onze, and every value that crosses between them is handed across by `Onze.run`. Pure `.bp`
+client, zero compiler-core surface, reached via `from "onze"`.
 
-A **Mockito-style mocking + verification library** for botopink unit tests:
-create a mock of a behavior, **stub** what its methods return, exercise the code
-under test, then **verify** the mock was called as expected. Pure `.bp` client —
-**zero** compiler-core surface. It is the proof that the generic annotation-processor
-mechanism (`@Decl` reflection + `@emit`) and host-bound state handle mocking, not
-just DI/routing (sibling: `rakun`). Reached via `from "onze"`.
+The workspace and its eight members exist (front 95, and `onze-server` — decision pending 49-e):
+rakun is erlang-only (decision 117), so the rakun half of the boot lives in the erlang member
+`onze-server` and the core stays on both rows. The name came from the old mocking library, archived
+under the tag `mocking-lib-final` (decision 79); nothing of it is here, and its surface is std's
+`testing.mocks` / `testing.asserts`.
 
 ## Tree
 
 ```text
 onze/
 ├── AGENTS.md          ← you are here
-├── docs.md            ← API reference + the comptime synthesis / host-cell model
-├── botopink.json      ← package metadata (files: onze.bp)
-├── src/
-│   ├── AGENTS.md      ← internals: host cells, the when/verify protocol, #[mock]
-│   ├── root.bp        ← module-tree root: `pub mod onze;` (the public surface)
-│   ├── onze.bp        ← ALL behaviour: externals · matchers · when/verify · #[mock]
-│   └── onze.mjs       ← host runtime (the one mutable seam: call log + stub table)
-├── test/
-│   └── onze_test.bp   ← runtime tests (run by `botopink test` from repository/onze/)
-└── examples/
-    └── mock_synthesis.bp ← `#[mock]` synthesis, shown under `botopink build`
+├── README.md
+├── CHANGELOG.md
+├── botopink.json      ← WORKSPACE: name onze · targets [commonJS, erlang] ·
+│                        workspaces [modules/*, examples/*]. Nothing is importable from it;
+│                        `botopink build/test` here is a refusal naming the members
+├── modules/           ← each: botopink.json (name, entry root.bp, files [root.bp]) + src/root.bp
+│   ├── onze/          ← CORE (front 49) — `from "onze"`: config.bp (OnzeConfig, onze.json,
+│   │                    parsePort, the ONZE_PUBLIC_ rule), types.bp (AliasMap, OnzeProject,
+│   │                    AppFile), integration.bp (the jhonstart half of the boot — the one
+│   │                    file that imports jhonstart and the jhonstart-emilia bridge: bootSite,
+│   │                    siteRender, rakunEntries, responseOver, pageInput). config/types tests
+│   │                    import only std; integration_test.bp renders through the bridge
+│   ├── onze-server/   ← front 49's rakun half — targets ["erlang"] (49-e): server.bp —
+│   │                    `Onze.run(config)` (reads <outDir>/build-id and the manifest, writes
+│   │                    the rakun.* keys, copies jhonstart's UI table into rakun's with one
+│   │                    PageRenderer per page, registers the fingerprinted static root,
+│   │                    bootWeb, the page path, `Rakun.run(App(port, basePath))`),
+│   │                    requestData, responseFor. Depends on rakun, rakun-app, rakun-web,
+│   │                    jhonstart, onze, onze-bundler, onze-assets
+│   ├── onze-test/     ← the `<lib>-test` member: core.bp (assertConfig, assertAppFiles,
+│   │                    assertAlias, assertPublicEnv), fixtures.bp (fixtureTree); the E2E
+│   │                    runner arrives with 53. Depends on onze. Re-exports nothing from std
+│   ├── onze-cli/      ← front 50 — targets ["commonJS"]: resolve.bp, scan.bp, generate.bp
+│   │                    (the check, the staged tree under <outDir>/src/), create.bp,
+│   │                    info.bp, build.bp (`onze build`: the staged server with its
+│   │                    `onze_main` and onze-server, erlc into server/beam/, the styleMap
+│   │                    evaluated on both backends), start.bp (`onze start`, the server's
+│   │                    generated main), main.bp (dispatch; `node out/main.js <cmd>`); dev
+│   │                    answers "not available yet". Depends on onze, onze-bundler,
+│   │                    onze-assets, onze-release
+│   ├── onze-bundler/  ← front 68: manifest.bp (both rows — the one parser the server
+│   │                    reads), scan.bp, graph.bp, refusal.bp (+ the styleMap probe and
+│   │                    `styleParity`), chunk.bp, entry.bp (starters through jhonstart's
+│   │                    `registerStarter`, the payload `s` check),
+│   │                    script.bp, rebuild.bp, hooks.bp (RenderHooks over the tags),
+│   │                    fixture.bp (the frozen fixture app every suite reads) — depends
+│   │                    on onze and jhonstart
+│   ├── onze-assets/   ← fronts 69 (owns root.bp + botopink.json) · 51 · 52: style_module.bp,
+│   │                    stylesheet.bp, assets.bp (the two static roots), preprocess.bp,
+│   │                    head.bp (pageRenderHooks), font_metrics.bp (the committed
+│   │                    table — transcribed, generator owed), font.bp (googleFont over
+│   │                    a FontBuild seam, localFont, fallbackFace, fontHead), image.bp
+│   │                    (Image, the allowlist), image_handler.bp (the encoder port, the
+│   │                    /_onze/image outcome) — depends on onze-bundler and jhonstart
+│   ├── onze-og/       ← front 70 — targets ["erlang"]: card_style.bp (the closed subset —
+│   │                    `style` is taken by jhonstart's element), metrics.bp (front 52's
+│   │                    sidecars), layout.bp, svg.bp, raster.bp (the port; NIF
+│   │                    declared, never shipped), response.bp — depends on jhonstart (it
+│   │                    parses the sidecar text itself, so no onze-assets edge)
+│   └── onze-release/  ← front 71: spec.bp (ReleaseSpec, the build id), otp.bp (.rel,
+│                        sys.config, vm.args, bin/onze, systools), docker.bp, package.bp
+│                        (manifest completeness, the secret scan), lifecycle.bp (readiness,
+│                        the shutdown order over a Lifecycle record), static_export.bp —
+│                        depends on onze and onze-bundler
+├── .gitignore         ← out/, .botopinkbuild/, .onze/ (a build's output)
+├── docs.md            ← the reference: onze.json, the alias map, the four seams, the not-built table
+├── examples/          ← blog/ (53: src/lib/db.bp — the post store —, content/posts/*.md,
+│                        src/components/{nav,post_card}.bp, src/app/ — layout, page, blog/
+│                        layout + page, blog/[slug]/page, (marketing)/about/page —,
+│                        public/, test/{db,tags,render}_test.bp; [slug] and (marketing)
+│                        compile only through `onze build`'s staged tree, and are served
+│                        by `onze start` in onze-cli's start_test); scaffold/ (50: the
+│                        committed output of `onze create scaffold --yes --libs ../../..`,
+│                        diffed by create_test.bp); static-site (71) arrives with its front
+├── scripts/git-hooks/ ← pre-commit: conflict markers, `botopink test` per `modules/*`
+│                        member, `botopink build` per example
+└── .github/workflows/ ← test.yml (`zig build test-libs -- --lib onze`), tag.yml
 ```
 
-## Module tree (`root.bp`)
+## Rules
 
-`src/root.bp` is the explicit module-tree root: `pub mod onze;` declares the
-single public module, so the package builds from the tree, not a deprecated blind
-`src/` scan. `test/` stays a plain suite directory (not a package), and a
-consumer reaches the lib via `import {…} from "onze"` — `#[mock]` and the host
-cells resolve through that exported module.
-
-## Design at a glance
-
-- **Mock = a type that implements the behavior.** Every method funnels through
-  one host call (`onzeInvoke`) that records the invocation and returns the matching
-  stub value, or the **type-default** for its return type (`"" / false / 0 / []`).
-- **`when(mock.m(args)).thenReturn(v) / .thenThrow(msg)`** writes the stub table;
-  **last stub wins**. `verify(mock, spec).m(args)` reads the call log and asserts
-  the count (`atLeastOnce()` / `times(n)` / `never()`).
-- **Argument matchers** (`eq(v)`, `anyInt()`, `anyString()`) return a dummy value of
-  the right type and push a descriptor onto a host matcher stack — Mockito's exact
-  trick, the only way to pass matchers through a statically-typed call. A literal
-  argument means exact equality.
-- **Host-bound mutable state.** The recorder + stub table + matcher stack live in
-  `onze.mjs` behind `#[@External.Node(…)]` declarations on commonJS, and in the
-  process dictionary behind the `@External.Erlang` form of the same declarations on
-  erlang (kept in step with `onze.mjs`: same matching, same verify message) — the one
-  mutable seam, so the mocked code stays ordinary immutable botopink and the **core
-  learns nothing**. The erlang test cell is green — 8/8, measured 2026-09-18 —
-  since a host-backed `declare fn` with an inline erlang template became
-  callable from another module (`onzeInvoke`, `onzeKey` and `onzeNewMock` are
-  declared in `onze.bp` and called from `test/onze_test.bp`); CI's `allow_fail`
-  is gone, and `erlang` is back in `botopink.json` `targets` — without it the
-  lib-test runner **skips** the cell instead of running it.
-- **`#[mock]` synthesis.** A comptime annotation processor reflects a behavior's
-  methods via `@Decl` and `@emit`s the mock type + a `mockXxx()` factory, so the
-  double is generated, never hand-written.
-
-## Status (v1)
-
-| Area | State |
-|---|---|
-| Runtime: record/stub/verify/matchers/thenThrow | **done** — green under `botopink test` |
-| `from "onze"` resolution (generic loader) | **done** — bare-imported fns bind |
-| `#[mock]` synthesis (`@Decl` → `@emit`) | **done** — reflects the behavior, emits `type MockXxx(__id: string) implement Xxx` + `mockXxx()`; `test/onze_test.bp` drives the suite through `#[mock]` under `botopink test` |
-
-The `#[mock]` path depends on two core fixes that landed alongside onze in
-v0.beta.8 (compiler-core commit `671b089`); they are upstream now and do
-not need re-applying when onze is rebased:
-
-1. **Decorators run before body inference** — `@emit`ed decls are spliced before a
-   body that references them (a `test {}` calling `mockXxx()`) is type-checked.
-   Previously decorators ran after bodies, so the reference failed as unbound and
-   `@emit` was silently dead under `botopink test`.
-2. **Interface-level markers run** (`DeclKind.Interface`) — `#[mock]` sits on an
-   behavior; the old pipeline skipped interface-level decorators entirely.
-
-### Known constraints
-
-- **Host path is project-relative.** `#[@External.Node("../../src/onze.mjs", …)]`
-  resolves from `…/.botopinkbuild/test-out/<mod>.js` back to `repository/onze/src/`
-  — correct for onze's own tests. A general consumer story (copying/resolving
-  the host file from a dependency) is future work.
-- **Emitted mock body references host externals.** `@emit`s into the annotated
-  module, so `onzeInvoke`/`onzeKey`/`onzeNewMock` must be in scope there — the
-  consumer imports them (bare in-project, or via `from "onze"`).
-- **No fn overloading / default params**, so `verify` is uniform two-arg:
-  `verify(repo, atLeastOnce())` rather than `verify(repo)`.
-- **`==` on arrays** lowers to JS reference equality (general codegen trait) — tests
-  compare arrays with `.join(",")`.
-
-## Conventions
-
-- **Pure `.bp`, zero core.** `grep -riE "onze" modules/compiler-core/src` must return
-  nothing. All behaviour is in `src/onze.bp`; the host code is `src/onze.mjs` and the
-  `@External.Erlang` templates beside each `onze*` declaration — change both together.
-- **`.bp` over `.d.bp`.** onze ships real, runnable code, not declaration markers.
-- **camelCase** functions (`mockUserRepo`, `anyInt`, `atLeastOnce`).
-- **Comptime-body gotchas** (the `#[mock]` body): `if` is an *expression* (needs
-  `else`, `;`-terminated branches); a bare `if {…}` statement is legal only as the
-  last statement in a block; the body can't call sibling fns (only the decorator fn
-  is lowered into the eval script — inline helpers); avoid `//` comments containing
-  quotes/backticks inside a closure body. See `src/AGENTS.md`.
-
-## Testing
-
-```bash
-cd repository/onze && botopink test                   # test/onze_test.bp through #[mock] (commonJS/node)
-cd repository/onze && botopink test --target erlang   # the same 8 through escript
-```
-
-`examples/mock_synthesis.bp` is a standalone `from "onze"` usage sample.
-
-## CI
-
-`.github/workflows/test.yml` runs `zig build test-libs -- --lib onze
---target <t>` across the four viable targets on linux + macos, plus
-`commonJS` on windows. Every row is a hard cell — the `erlang` rows lost
-`allow_fail` on 2026-09-18. `BOTOPINK_LANG_REF` repo variable pins a specific
-botopink-lang ref (default `feat`).
-
-`botopink.json` `targets` is what the lib-test runner reads to decide which
-cells to RUN: a target left out of it is reported as skipped (`~`), not as a
-pass, so a target must be listed there and in the workflow matrix both.
-
-Bootstrap: check out this lib + `botopink/botopink-lang`, place this
-lib under `botopink-lang/repository/onze/`, then `zig build install &&
-zig build test-libs`.
-
-## Tagging (auto)
-
-`.github/workflows/tag.yml` reads `version` from `botopink.json` and
-tags every push to `feat`/`master`/`main`:
-
-- **feat** → moving `<version>-feat` tag (force-pushed).
-- **master** / **main** → immutable `<version>` tag (no-op on the same
-  SHA; hard error if `version` wasn't bumped — bump it in `botopink.json`
-  to publish a new release).
-
-Set `requires.onze = "feat"` in a consumer's `botopink.json` and run
-`bpmp sync` to preview unreleased work.
+- A member depends on a sibling with `{ "workspace": true }` only; on another library's member by
+  `path` (`{ "rakun": { "path": "../../../rakun/modules/rakun" } }`) — added by the front whose
+  code needs the edge, never ahead of it. A member lists exactly the packages its sources and
+  tests import: dependencies load transitively (decision 143). A bundled package (`std`,
+  `routing`, `actions`, `validation`) is never listed.
+- A member may only **restrict** the workspace's `targets`: `onze-cli` is commonJS, `onze-og` and
+  `onze-server` erlang, the rest inherit both. Nothing on both rows imports rakun (every rakun
+  manifest is `["erlang"]`, decision 117) — that is `onze-server`'s.
+- One module cannot hold two types of one name: an `as` alias of an imported type still binds its
+  declared name (`language-gaps.md`). `onze-server` constructs rakun's `App` and holds
+  jhonstart's only as the core's `SiteRender` function value.
+- The front that adds a module appends its `pub mod` line and its `files` entry in its own commit
+  (`06-onze/modules.md` § Front → submodule ownership names the owner of each `root.bp`).
+- An imported module's body — its `#[page]` / `#[layout]` registrations — runs before the
+  importer's, on every backend (decision 140). The staged app's `onze_routes.bp` imports every
+  decorated convention file, and the server's `onze_main.bp` imports `onze_routes`.
+- A test writes only under `BOTOPINK_TEST_TMPDIR` (each suite's `testTmp()`); a build a test
+  runs moves its `outDir` there, so nothing is written into the checkout.
+- Any code or layout change updates this file in the same commit.
 
 ## Local gate
 
-`scripts/git-hooks/pre-commit` is the tracked pre-commit gate. It is
-self-contained: it sources `scripts/git-hooks/lib/runner-standalone.sh`
-from this repository and reaches nothing outside it, so a standalone
-clone, a checkout inside the botopink meta workspace and a worktree run
-the same gate. Install it once per clone:
-
-```sh
-git config core.hooksPath scripts/git-hooks
-```
-
-`core.hooksPath` is per clone and applies to every worktree of it. The
-gate checks staged files for conflict markers, then runs `botopink test`
-over `src/` + `test/`. The compiler binary is located via (in order)
-`$BOTOPINK_BIN`, the nearest ancestor
-`repository/botopink-lang/zig-out/bin/botopink`, then `$PATH`. If none
-resolve, the gate prints a yellow warning and exits 0 — CI runs the full
-suite and catches any regression there. Never commit with `--no-verify`;
-fix the red instead.
-
-After `botopink test`, the gate builds every `examples/*/` that has a
-`botopink.json` (`runExamplesGate`, each with its own manifest target,
-into a throwaway `--out`); CI runs the same function once per workflow.
-`scripts/known-broken-examples.txt` lists the examples allowed to fail —
-`examples/<name>  <reason>` per line — and cannot rot: a listed example
-that builds, or a listed path that no longer exists, fails the gate too.
-When a fix makes an example build, delete its line in the same commit. The list may be absent,
-empty or hold only `#` comments — each means no example is allowed to fail.
-`examples/onze` builds; nothing is listed (`examples/mock_synthesis.bp` is a single file, not a project, and is not built).
+`git config core.hooksPath scripts/git-hooks` once per clone. The hook runs `botopink test` in
+every `modules/*` member on its manifest target and builds every example.

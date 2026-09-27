@@ -1,59 +1,35 @@
 # onze
 
-[![CI](https://github.com/botopink/onze/actions/workflows/test.yml/badge.svg?branch=feat)](https://github.com/botopink/onze/actions/workflows/test.yml)
+> The Next.js-style orchestrator for botopink: the one package that knows rakun (the server),
+> jhonstart (the UI) and emilia (the styles) together, and wires them into an application.
 
-> **Archived — this library is retired.** Its last code commit is tagged `mocking-lib-final`.
-> The mocking surface lives on in botopink's std as the `mocks` module
-> (`libs/std/src/mocks.bp`, `import {mocks} from "std"`) and the assertion surface as the
-> `asserts` module (`libs/std/src/asserts.bp`, `import {asserts} from "std"`) — both under
-> `testing` once std's tree is regrouped (`import {testing: {mocks, asserts}} from "std"`).
-> The name `onze` now belongs to the Next.js-style orchestrator (decision 79 of botopink
-> 1.0.10-beta); the migration table is `specs/1.0.10-beta/01-std/onze-migration.md` in the
-> botopink meta repository.
+**Status: in progress.** The core (`modules/onze/`, front 49) and the core helpers of
+`modules/onze-test/` are written; the other members land with their track-E fronts of 1.0.10-beta.
+[`docs.md`](docs.md) is the reference: the configuration, the alias map, the four seams, and what
+onze deliberately does not build.
 
-> Mockito-style mocking + verification library for botopink unit tests.
+This repository took the name `onze` from the old mocking library (decision 79 of 1.0.10-beta):
+that library is archived under the tag `mocking-lib-final`, and its surface is std's
+`testing.mocks` and `testing.asserts` (`import {testing: {mocks, asserts}} from "std"`).
 
-`onze` is botopink's test-double layer. Create a **mock** of a behavior,
-**stub** what its methods return, run the code under test, then **verify**
-the mock was called as you expect. Pure `.bp` client — the compiler core
-knows nothing about it.
+## Layout
 
-## Install
+`botopink.json` is a **workspace** (`"workspaces": ["modules/*", "examples/*"]`, decision 75): it
+compiles nothing and ships nothing. Each member is reached by its manifest name:
 
-`onze` is an opt-in package. Inside a `.bp` source file:
+| Member | `from` | Target | Front |
+|---|---|---|---|
+| [`modules/onze/`](modules/onze/) | `"onze"` — config, project vocabulary, alias map, env rule, the boot's jhonstart half | both | 49 |
+| [`modules/onze-server/`](modules/onze-server/) | `"onze-server"` — `Onze.run`, the boot's rakun half | erlang | 49 |
+| [`modules/onze-test/`](modules/onze-test/) | `"onze-test"` — `assert<Subject>(loc, …)` helpers, fixtures, the E2E runner | both | 49 + each front |
+| [`modules/onze-cli/`](modules/onze-cli/) | `"onze-cli"` — `create · dev · build · start · info` | commonJS | 50 |
+| [`modules/onze-bundler/`](modules/onze-bundler/) | `"onze-bundler"` — client graph, refusals, chunks, manifest, hydration entry | both | 68 |
+| [`modules/onze-assets/`](modules/onze-assets/) | `"onze-assets"` — CSS modules, stylesheet, `public/`, `Image`, fonts | both | 69 · 51 · 52 |
+| [`modules/onze-og/`](modules/onze-og/) | `"onze-og"` — `ImageResponse` | erlang | 70 |
+| [`modules/onze-release/`](modules/onze-release/) | `"onze-release"` — build id, OTP release, Dockerfile, static export | both | 71 |
 
-```bp
-import {mock, when, verify, eq, anyInt, times, never, atLeastOnce} from "onze";
-```
+`botopink test` runs inside a member, never at the root.
 
-The package is resolved by botopink's multi-root loader; no extra wiring is
-required when this repo lives under a workspace that also has
-`repository/botopink-lang/`.
-
-## Quick example
-
-```bp
-behavior Greeter {
-    fn hello(name: string) -> string;
-}
-
-test "greeter is greeted by name" {
-    val g = mock(@type(Greeter));
-    when(g.hello(eq("world"))).thenReturn("hi, world");
-
-    assert g.hello("world") == "hi, world";
-    verify(g.hello(eq("world")), times(1));
-}
-```
-
-## Docs
-
-- [AGENTS.md](AGENTS.md) — internals + the comptime synthesis / host-cell model.
-- [docs.md](docs.md) — API reference (matchers, `when`/`verify` protocol,
-  `#[mock]` decorator).
-- `src/` — implementation (`onze.bp` + `onze.mjs` host runtime).
-- `test/` — runnable unit tests.
-
-## License
-
-MIT — see [`LICENSE`](LICENSE). Same license as the rest of the botopink workspace.
+A member lists the packages it imports; their own dependencies load transitively (decision 143).
+The cut and the dependency graph are
+`specs/1.0.10-beta/06-onze/modules.md` in the botopink meta repository.
