@@ -29,7 +29,12 @@ fn scratch() -> string {
     return dir;
 }
 
+// The compiler the fixtures build with: `BOTOPINK_BIN` when the caller names
+// one (the hook and CI do — the same binary that runs this suite), else the
+// ancestor checkout's `repository/botopink-lang/zig-out/bin/botopink`.
 fn botopinkBin() -> string {
+    val named = env.read("BOTOPINK_BIN") ?? "";
+    if (named != "" && fs.exists(named)) return named;
     var dir = process.cwd();
     var found = "";
     var guard = 0;
