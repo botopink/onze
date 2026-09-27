@@ -28,6 +28,7 @@ pub type OnzeConfig(
     dev: bool,
     actionsBodyLimit: i32,
     allowedRedirects: Array<string>,
+    lang: string,
 ) {
     pub fn origin(self: Self) -> string {
         return "http://localhost:" + self.port.toString();
@@ -37,24 +38,16 @@ pub type OnzeConfig(
 // The wire names of a server action (decision 114): onze's defaults, handed
 // to rakun as `rakun.actions.field` / `rakun.actions.header` and to jhonstart
 // as `actionField` / `actionHeader`. Neither library spells them.
-pub fn defaultActionField() -> string {
-    return "__bp_action";
-}
+pub val defaultActionField: string = "__bp_action";
 
-pub fn defaultActionHeader() -> string {
-    return "X-Bp-Action";
-}
+pub val defaultActionHeader: string = "X-Bp-Action";
 
 // rakun front 24's 1 MiB default (decision 117).
-pub fn defaultActionsBodyLimit() -> i32 {
-    return 1048576;
-}
+pub val defaultActionsBodyLimit: i32 = 1048576;
 
 // The URL prefix every onze-served asset lives under (decision 116): appended
 // to `rakun.i18n.exclude` at boot so rakun's locale redirect skips it.
-pub fn assetPrefix() -> string {
-    return "/_onze";
-}
+pub val assetPrefix: string = "/_onze";
 
 pub fn defaultConfig() -> OnzeConfig {
     return OnzeConfig(
@@ -65,38 +58,31 @@ pub fn defaultConfig() -> OnzeConfig {
         publicDir: "public",
         outDir: ".onze",
         dev: false,
-        actionsBodyLimit: defaultActionsBodyLimit(),
+        actionsBodyLimit: defaultActionsBodyLimit,
         allowedRedirects: [],
+        lang: "en",
     );
 }
 
 pub fn withName(base: OnzeConfig, name: string) -> OnzeConfig {
-    return OnzeConfig(name: name, port: base.port, basePath: base.basePath, appDir: base.appDir, publicDir: base.publicDir, outDir: base.outDir, dev: base.dev, actionsBodyLimit: base.actionsBodyLimit, allowedRedirects: base.allowedRedirects);
+    return OnzeConfig(..base, name: name);
 }
 
 pub fn withPort(base: OnzeConfig, port: i32) -> OnzeConfig {
-    return OnzeConfig(name: base.name, port: port, basePath: base.basePath, appDir: base.appDir, publicDir: base.publicDir, outDir: base.outDir, dev: base.dev, actionsBodyLimit: base.actionsBodyLimit, allowedRedirects: base.allowedRedirects);
+    return OnzeConfig(..base, port: port);
 }
 
 pub fn withDev(base: OnzeConfig, dev: bool) -> OnzeConfig {
-    return OnzeConfig(name: base.name, port: base.port, basePath: base.basePath, appDir: base.appDir, publicDir: base.publicDir, outDir: base.outDir, dev: dev, actionsBodyLimit: base.actionsBodyLimit, allowedRedirects: base.allowedRedirects);
+    return OnzeConfig(..base, dev: dev);
 }
 
 fn withText(base: OnzeConfig, key: string, value: string) -> OnzeConfig {
-    val basePath = if (key == "basePath") value else base.basePath;
-    val appDir = if (key == "appDir") value else base.appDir;
-    val publicDir = if (key == "publicDir") value else base.publicDir;
-    val outDir = if (key == "outDir") value else base.outDir;
-    val name = if (key == "name") value else base.name;
-    return OnzeConfig(name: name, port: base.port, basePath: basePath, appDir: appDir, publicDir: publicDir, outDir: outDir, dev: base.dev, actionsBodyLimit: base.actionsBodyLimit, allowedRedirects: base.allowedRedirects);
-}
-
-fn withBodyLimit(base: OnzeConfig, limit: i32) -> OnzeConfig {
-    return OnzeConfig(name: base.name, port: base.port, basePath: base.basePath, appDir: base.appDir, publicDir: base.publicDir, outDir: base.outDir, dev: base.dev, actionsBodyLimit: limit, allowedRedirects: base.allowedRedirects);
-}
-
-fn withRedirects(base: OnzeConfig, allowed: Array<string>) -> OnzeConfig {
-    return OnzeConfig(name: base.name, port: base.port, basePath: base.basePath, appDir: base.appDir, publicDir: base.publicDir, outDir: base.outDir, dev: base.dev, actionsBodyLimit: base.actionsBodyLimit, allowedRedirects: allowed);
+    if (key == "basePath") return OnzeConfig(..base, basePath: value);
+    if (key == "appDir") return OnzeConfig(..base, appDir: value);
+    if (key == "publicDir") return OnzeConfig(..base, publicDir: value);
+    if (key == "outDir") return OnzeConfig(..base, outDir: value);
+    if (key == "lang") return OnzeConfig(..base, lang: value);
+    return OnzeConfig(..base, name: value);
 }
 
 // ── reading `onze.json` ─────────────────────────────────────────────────────
@@ -187,9 +173,24 @@ fn stringsOf(key: string, v: Json) -> @Result<Array<string>, string> {
     return out;
 }
 
+// A port given as text — `PORT` in the environment, `onze start -p` — named
+// by `source` in the refusal: decimal digits only, a value in 1..65535.
+pub fn parsePort(text: string, source: string) -> @Result<i32, string> {
+    val digits = text.trim();
+    val numeric = digits != "" && digits.split("").filter({ c -> "0123456789".contains(c) == false }).length == 0 && (digits == "0" || digits.startsWith("0") == false);
+    if (numeric == false) throw source + ": \"" + text + "\" is not a port number";
+    val v = decode(digits).unwrapOr(Json.Null);
+    val n = case v {
+        Num(value: x) -> truncToI32(x);
+        _ -> 0;
+    };
+    if (n < 1 || n > 65535) throw source + ": " + digits + " is outside 1..65535";
+    return n;
+}
+
 // The keys `onze.json` may carry, each once.
 pub fn configKeys() -> string[] {
-    return ["name", "port", "basePath", "appDir", "publicDir", "outDir", "dev", "actionsBodyLimit", "allowedRedirects"];
+    return ["name", "port", "basePath", "appDir", "publicDir", "outDir", "dev", "actionsBodyLimit", "allowedRedirects", "lang"];
 }
 
 fn applyKey(cfg: OnzeConfig, key: string, v: Json) -> @Result<OnzeConfig, string> {
@@ -199,7 +200,7 @@ fn applyKey(cfg: OnzeConfig, key: string, v: Json) -> @Result<OnzeConfig, string
     }
     if (key == "actionsBodyLimit") {
         val limit = try wholeIn(key, v, 1, 2147483647);
-        return withBodyLimit(cfg, limit);
+        return OnzeConfig(..cfg, actionsBodyLimit: limit);
     }
     if (key == "dev") {
         val isBool = case v {
@@ -215,7 +216,7 @@ fn applyKey(cfg: OnzeConfig, key: string, v: Json) -> @Result<OnzeConfig, string
     }
     if (key == "allowedRedirects") {
         val allowed = try stringsOf(key, v);
-        return withRedirects(cfg, allowed);
+        return OnzeConfig(..cfg, allowedRedirects: allowed);
     }
     if (isString(v) == false) throw wrongKind(key, "a string", v);
     return withText(cfg, key, strOf(v));
@@ -263,6 +264,7 @@ pub fn describeConfig(cfg: OnzeConfig) -> string {
         #("dev", if (cfg.dev) "true" else "false"),
         #("actionsBodyLimit", cfg.actionsBodyLimit.toString()),
         #("allowedRedirects", redirects),
+        #("lang", cfg.lang),
         #("origin", cfg.origin()),
     ];
     return rows.map({ r -> (r._0.padEnd(16, " ") + " = " + r._1).trimEnd() }).join("\n");
@@ -270,15 +272,13 @@ pub fn describeConfig(cfg: OnzeConfig) -> string {
 
 // ── the environment split (seam 4) ──────────────────────────────────────────
 
-pub fn publicEnvPrefix() -> string {
-    return "ONZE_PUBLIC_";
-}
+pub val publicEnvPrefix: string = "ONZE_PUBLIC_";
 
 // True only for a name that begins with `ONZE_PUBLIC_` exactly — the match is
 // case-sensitive, because a case-insensitive one is how a secret named
 // `Onze_Public_Secret` would leak.
 pub fn isPublicEnvName(name: string) -> bool {
-    return name.startsWith(publicEnvPrefix()) && name.length() > publicEnvPrefix().length();
+    return name.startsWith(publicEnvPrefix) && name.length() > publicEnvPrefix.length();
 }
 
 // The public names among `names`, each with its value from the process
@@ -327,7 +327,7 @@ pub fn pairValue(pairs: Array<#(string, string)>, name: string) -> ?string {
 // value (`(unset)` when absent) or `dropped`.
 pub fn describePublicEnv(envPairs: Array<#(string, string)>, names: string[]) -> string {
     val width = widest(names, 0);
-    var rows: string[] = ["prefix = " + publicEnvPrefix()];
+    var rows: string[] = ["prefix = " + publicEnvPrefix];
     for (names) { n ->
         rows.push(n.padEnd(width + 3, " ") + envCell(envPairs, n));
     };

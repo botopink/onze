@@ -9,7 +9,7 @@
 pub type ExportRoute(pattern: string, authoredPath: string, html: string, prerenderable: bool)
 
 pub fn exportPathOf(pattern: string) -> string {
-    return if (pattern == "/") "index.html" else pattern.slice(1, pattern.length()) + "/index.html";
+    return if (pattern == "/") "index.html" else pattern.slice(1) + "/index.html";
 }
 
 // The exported tree, `#(path, text)`, or the refusal naming every route that

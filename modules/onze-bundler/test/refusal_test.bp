@@ -3,7 +3,7 @@
 
 import {parseFixture, ImportRef} from "scan";
 import {AppModule, ClientGraph, GraphNode, loadModules, clientGraph} from "graph";
-import {BuildReport, BuildRefusal, checkBuild, describeReport, refusalMessage, emiliaCallsOf} from "refusal";
+import {BuildReport, BuildRefusal, checkBuild, describeReport, refusalMessage, emiliaCallsOf, StyleProbe, styleProbeSource, parseStyleProbe, styleParity} from "refusal";
 import {AliasMap, OnzeConfig, defaultConfig, loadConfig} from "onze";
 import {testing.snapshots} from "std";
 
@@ -92,6 +92,22 @@ test "refusal: emilia ---- non-literal tokens, a client flush, a hash split" {
         "}",
     ].join("\n"));
     try snapshots.assertAs(@src(), "refusals", describeReport(r));
+}
+
+test "refusal: the styleMap probe ---- its source, and the two backends compared" {
+    val map = [#("components.card#1", "[.Bg.White, .Pad.All.__4, .Text.Bold, Token.Hover([.Bg.Color.Gray.__100])]"), #("components.w#2", "[.Gap.All.4]"), #("components.x#1", "[.Gap.All.2]")];
+    val src = styleProbeSource(map);
+    assert src.contains("import {styleRule, defaultTheme, Token} from \"emilia\";");
+    assert src.contains("val rule = styleRule(tokens, defaultTheme());");
+    assert src.contains("hash.contentHash(rule._1)");
+    assert src.contains("        probe(\"components.card#1\", [.Bg.White, .Pad.All.__4, .Text.Bold, Token.Hover([.Bg.Color.Gray.__100])]),");
+    val js = parseStyleProbe("components.card#1|e_39b87d03|9f00aa11\ncomponents.w#2|e_0000abcd|12345678\nnoise");
+    val beam = parseStyleProbe("components.card#1|e_39b87d03|9f00aa11\ncomponents.w#2|e_0000abcd|87654321");
+    assert js.length == 2;
+    val parity = styleParity(map, js, beam);
+    assert parity._0.map({ c -> c._0 + " " + c._1 }).join(",") == "components.card#1 e_39b87d03";
+    assert parity._1.map({ r -> r.kind + " " + r.moduleId }).join(",") == "emilia-hash-split components.w#2,emilia-unevaluated components.x#1";
+    assert refusalMessage(parity._1.at(0).unwrapOr(BuildRefusal(kind: "", subject: "", moduleId: "", chain: []))).contains("emilia([.Gap.All.4])");
 }
 
 test "refusal: a module outside the client graph is never checked" {

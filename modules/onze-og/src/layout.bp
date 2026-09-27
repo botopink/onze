@@ -14,7 +14,7 @@
 
 import {Element} from "jhonstart";
 import {Style, parseStyle, emptyStyle, pxOf} from "card_style";
-import {FontMetrics, measure, idiv} from "metrics";
+import {FontMetrics, measure} from "metrics";
 
 pub type LayoutBox(
     tag: string,
@@ -75,7 +75,7 @@ pub fn faceFor(faces: Array<FontMetrics>, family: string, weight: i32) -> FontMe
 }
 
 pub fn lineHeightOf(s: Style) -> i32 {
-    return if (s.lineHeight > 0) s.lineHeight else idiv(s.fontSize * 6 + 4, 5);
+    return if (s.lineHeight > 0) s.lineHeight else ((s.fontSize * 6 + 4) / 5);
 }
 
 // Greedy wrapping at spaces; `maxLines > 0` truncates with an ellipsis that
@@ -115,7 +115,7 @@ fn textOfElement(e: Element) -> string {
 // `value` against `whole`: `50%` of it, a px length, or `fallback`.
 fn lengthOf(value: string, whole: i32, fallback: i32) -> i32 {
     if (value == "") return fallback;
-    if (value.endsWith("%")) return idiv(whole * pxOf(value.slice(0, value.length() - 1)), 100);
+    if (value.endsWith("%")) return ((whole * pxOf(value.slice(0, value.length() - 1))) / 100);
     val n = pxOf(value);
     return if (n == 0 - 2147483648) fallback else n;
 }
@@ -196,8 +196,8 @@ pub fn place(e: Element, s: Style, x: i32, y: i32, w: i32, h: i32, faces: Array<
     val main = if (row) cw else ch;
     val free = main - used - (if (n > 1) s.gap * (n - 1) else 0);
     val between = s.justifyContent == "space-between" && n > 1;
-    val step = if (between) s.gap + idiv(free, n - 1) else s.gap;
-    val start = if (s.justifyContent == "center") idiv(free, 2) else if (s.justifyContent == "flex-end") free else 0;
+    val step = if (between) s.gap + (free / (n - 1)) else s.gap;
+    val start = if (s.justifyContent == "center") (free / 2) else if (s.justifyContent == "flex-end") free else 0;
     var offset = start;
     var boxes: Array<LayoutBox> = [];
     var i = 0;
@@ -208,7 +208,7 @@ pub fn place(e: Element, s: Style, x: i32, y: i32, w: i32, h: i32, faces: Array<
         val own = if (row) z._1 else z._0;
         val stretch = s.alignItems == "stretch" && allText(c) == false && (if (row) cs.height else cs.width) == "";
         val size = if (stretch) cross else own;
-        val crossAt = if (s.alignItems == "center") idiv(cross - size, 2) else if (s.alignItems == "flex-end") cross - size else 0;
+        val crossAt = if (s.alignItems == "center") ((cross - size) / 2) else if (s.alignItems == "flex-end") cross - size else 0;
         val bx = if (row) cx + offset else cx + crossAt;
         val by = if (row) cy + crossAt else cy + offset;
         val bw = if (row) z._0 else size;

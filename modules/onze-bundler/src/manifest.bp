@@ -41,16 +41,14 @@ pub type ClientBundleManifest(
     publicEnv: Array<#(string, string)>,
 )
 
-pub fn manifestVersion() -> string {
-    return "1";
-}
+pub val manifestVersion: string = "1";
 
 pub fn emptyChunk() -> ChunkRef {
     return ChunkRef(id: "", url: "", hash: "", bytes: 0);
 }
 
 pub fn emptyManifest(buildId: string) -> ClientBundleManifest {
-    return ClientBundleManifest(version: manifestVersion(), buildId: buildId, entry: emptyChunk(), shared: [], chunks: [], routes: [], styles: [], publicEnv: []);
+    return ClientBundleManifest(version: manifestVersion, buildId: buildId, entry: emptyChunk(), shared: [], chunks: [], routes: [], styles: [], publicEnv: []);
 }
 
 // The URL a static file of this build is served at.
@@ -145,7 +143,7 @@ pub fn parseManifest(text: string) -> @Result<ClientBundleManifest, string> {
             if (version == "" && kind != "V") throw "client-manifest: the first record must be V, not " + kind;
             if (kind == "V") {
                 val v = try pairOf(line, fields);
-                if (v._0 != manifestVersion()) throw "client-manifest version " + v._0 + " is not supported (this reader understands " + manifestVersion() + ")";
+                if (v._0 != manifestVersion) throw "client-manifest version " + v._0 + " is not supported (this reader understands " + manifestVersion + ")";
                 version = v._0;
                 buildId = v._1;
             } else if (kind == "E") {

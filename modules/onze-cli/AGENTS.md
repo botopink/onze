@@ -11,21 +11,27 @@ no parser drops a token.
 |---|---|
 | `src/resolve.bp` | `Project`, `findRoot` (walk up to `botopink.json`), `resolveProject` (config + aliases, errors naming their file) |
 | `src/scan.bp` | `RouteEntry`, `scanFiles` / `scanApp` (routing's `patternOf`, the decorator argument, the three refusals — authored paths only) |
-| `src/generate.bp` | `checkTree`, `stagedPath`, `rewriteImports`, `modFiles`, `routesModule`, `stagedManifest`, `stage` — the staged tree under `<outDir>/src/` |
-| `src/create.bp` | `CreateOpts`, `createDefaults` (the one defaults record), `createHelp`, `parseCreateOpts`, `scaffoldFiles(In)`, `writeScaffold`, `mkdirs` |
+| `src/generate.bp` | `checkTree`, `stagedPath`, `rewriteImports`, `modFiles`, `routesModule` (the undecorated conventions' registrations, and an import of every decorated convention file so a program importing it runs their bodies first — decision 140), `stagedManifest` (relative `path` dependencies made absolute against the project root, extra dependencies added), `stage` / `stageAt` — the staged tree under `<outDir>/src/` |
+| `src/create.bp` | `CreateOpts`, `createDefaults` (the one defaults record), `createHelp`, `parseCreateOpts` (`--src-dir` / `--no-src-dir`, the root layout by default; `--lang` into `onze.json`), `scaffoldLibraries(o)` (what the scaffold imports, and onze), `scaffoldFiles(In)`, `writeScaffold`, `mkdirs` |
 | `src/info.bp` | `infoText`, `dependencyVersions`, `versionAt`, `tools` |
-| `src/build.bp` | `buildProject(project, bin)` — scan, check, the client graph's refusals, the style modules (generated into the staged tree as `styles.<file>`), the staged server package compiled for erlang into `<outDir>/server/`, the staged client package (+ the generated entry) compiled for commonJS, the file-level link, the stylesheet, the build id, `static/<buildId>/`, `client-manifest.txt`, `build-id`; `srcDirOf`, `workspaceMembers` (a `{ "workspace": true }` dependency becomes a path in the staged manifest) |
+| `src/build.bp` | `buildProject(project, bin)` — the app's sources (`sourceOfApp`: no hidden directory, and no `test/` when `src` is the project root), scan, check, the client graph's refusals, the style modules (generated into the staged tree as `styles.<file>`), the staged server package (+ `onze_main.bp` and a dependency on onze-server, `memberBeside`: the member beside the project's `onze`) compiled for erlang into `<outDir>/server/erl/` and by `erlc` into `<outDir>/server/beam/`, the staged client package (+ the generated entry, and dependencies on the `jhonstart-link` / `jhonstart-forms` beside the project's `jhonstart`, which the entry imports) compiled for commonJS, the styleMap's probe run under node and under erl and compared (`BuildResult.styles`), the file-level link, the stylesheet, the build id, `static/<buildId>/`, `client-manifest.txt`, `build-id`; an absolute `outDir` is honoured; `srcDirOf`, `workspaceMembers` (a `{ "workspace": true }` dependency becomes a path in the staged manifest) |
+| `src/start.bp` | `serverMainSource(config)` (the staged server's `main`: the resolved config as a literal, `PORT` over its port, `Onze.run`), `startPort` (`-p`, then `PORT`, then `onze.json`), `serverCommand` (`erl -noshell -pa <outDir>/server/beam -eval '<package>@onze_main':main()` from the project root, output to `<outDir>/server.log`), `builtOutput` (no build → an error naming the directory), `spawnServer` (the background half a test drives), `startProject` (`onze start`, foreground) |
 | `src/main.bp` | `run(cwd, args, version) -> Outcome`, `main()` — `node out/main.js <command> …` after `botopink build` |
 
-`dev` and `start` answer "not available yet": they boot rakun's server (rakun fronts 04, 23).
-`build` runs the compiler through `BOTOPINK_BIN` (or `botopink` on `PATH`). Route-level
-splitting is not done: the generated entry imports every client component, so every island is in
-`shared`; the server half is the `.erl` the compiler emits (no `erlc` pass yet); no prerender
+`dev` answers "not available yet": it is `start` plus reloading changed modules into the running
+node, which is not written. `start` compiles nothing and needs `erl` on `PATH`; `build` runs the
+compiler through `BOTOPINK_BIN` (or `botopink` on `PATH`) and needs `erlc`, and `node` / `erl`
+for the styleMap probe when the client graph calls `emilia(…)`. Route-level splitting is not done:
+the generated entry imports every client component, so every island is in `shared`; no prerender
 (rakun front 60).
 
 Tests (`test/`, commonJS): `scan_test` (scan + resolve), `generate_test` (the check, the staged
 tree, and a round trip that runs `botopink check` over it — the binary is found by walking up to
 `repository/botopink-lang/zig-out/bin/botopink`), `create_test` (flags, help, the refusal, the
 scaffold passing `botopink check`, `examples/scaffold` equal to a fresh `create`, `info`, the
-dispatch), `build_test` (the committed scaffold built twice to the same id — ~18 s a build —, a
-refusal failing a build before anything compiles, a CSS module's accessors compiling).
+dispatch, both layouts checking), `build_test` (the committed scaffold built twice
+to the same id into the run's scratch directory, a refusal failing a build before anything
+compiles, the contract-4 fixture's class out of the styleMap probe, a CSS module's accessors
+compiling), `start_test` (the port's precedence, the refusal of an unbuilt project, `onze build`
+then the server over a real socket — the scaffold's `/`, the blog's `/blog/hello-world` and
+`/about`). Every file a test writes is under `BOTOPINK_TEST_TMPDIR`.

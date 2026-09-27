@@ -26,7 +26,7 @@
 
 import {path, json.Json, json.decode, json.quote} from "std";
 import {AppFile, classifyAppFile, AliasMap, resolveAlias} from "onze";
-import {stagedSegment, stagedStem} from "onze-bundler";
+import {stagedSegment, stagedStem, publicNamesOf} from "onze-bundler";
 import {RouteEntry, decoratorFor} from "scan";
 
 pub fn banner() -> string {
@@ -111,10 +111,25 @@ pub fn modFiles(stagedApp: string, stagedFiles: string[]) -> Array<#(string, str
     return out;
 }
 
-// The registrations of the conventions without a decorator.
-pub fn routesModule(appDir: string, entries: Array<RouteEntry>) -> string {
+// The registrations of the conventions without a decorator, and one import
+// of every decorated convention file (by its first public name, `staged` is
+// the staged tree as `#(path under src/, text)`): a program importing this
+// module runs the bodies — the `#[page]` / `#[layout]` registrations — of
+// every module it imports first (decision 140). `routeModules()` answers how
+// many app modules it imports.
+pub fn routesModule(appDir: string, entries: Array<RouteEntry>, staged: Array<#(string, string)>) -> string {
     var imports: string[] = [];
     var vals: string[] = [];
+    var decorated = 0;
+    for (entries.filter({ e -> decoratorFor(e.kind) != "" })) { e ->
+        val file = e.modulePath.replaceAll(".", "/") + ".bp";
+        val text = staged.filter({ f -> f._0 == file }).map({ f -> f._1 }).join("");
+        val first = publicNamesOf(text).at(0).unwrapOr("");
+        if (first != "") {
+            imports.push("import {" + first + " as onze_" + identOf(e.modulePath) + "} from \"" + e.modulePath + "\";");
+            decorated = decorated + 1;
+        };
+    };
     for (entries) { e ->
         val f = classifyAppFile(appDir, e.authoredPath);
         val seg = f?.segment ?? "";
@@ -130,14 +145,18 @@ pub fn routesModule(appDir: string, entries: Array<RouteEntry>) -> string {
             vals.push("val __onze_" + local + " = jhNotFound(" + quote(seg) + ", { -> " + local + "() });");
         };
     };
+    val count = decorated + vals.length;
     val head = [banner(), "", "import {jhLoading, jhError, jhNotFound, Element, ErrorInfo} from \"jhonstart\";"];
-    return head.append(sortedText(imports)).append([""]).append(sortedText(vals)).join("\n") + "\n";
+    val tail = ["", "pub fn routeModules() -> i32 {", "    return " + count.toString() + ";", "}"];
+    return head.append(sortedText(imports)).append([""]).append(sortedText(vals)).append(tail).join("\n") + "\n";
 }
 
 // The staged package's manifest: the project's own, `src` pointed at the
-// staged tree, each relative `path` dependency re-rooted `depth` levels down
-// (the staged package sits at `<root>/<outDir>/` — one level — or deeper).
-pub fn stagedManifest(manifest: string, files: string[], depth: i32, workspace: Array<#(string, string)>) -> @Result<string, string> {
+// staged tree, each relative `path` dependency made absolute against the
+// project's `root` (the staged package may sit anywhere — `<root>/<outDir>/`,
+// or an `outDir` outside the project), plus `extraDeps` as `#(name, absolute
+// directory)`.
+pub fn stagedManifest(manifest: string, files: string[], root: string, workspace: Array<#(string, string)>, extraDeps: Array<#(string, string)>) -> @Result<string, string> {
     val doc = try decode(manifest);
     val members = case doc {
         Obj(members: ms) -> ms;
@@ -152,31 +171,31 @@ pub fn stagedManifest(manifest: string, files: string[], depth: i32, workspace: 
         } else if (m._0 == "entry") {
             fields.push(quote("entry") + ": " + quote("root.bp"));
         } else if (m._0 == "dependencies") {
-            fields.push(quote("dependencies") + ": " + rerootDeps(m._1, depth, workspace));
+            fields.push(quote("dependencies") + ": " + rerootDeps(m._1, root, workspace, extraDeps));
         } else if (m._0 != "alias") {
             fields.push(quote(m._0) + ": " + jsonText(m._1));
         };
     };
     val hasFiles = members.any({ m -> m._0 == "files" });
     if (hasFiles == false) fields.push(quote("files") + ": [" + files.map({ f -> quote(f) }).join(", ") + "]");
+    val hasDeps = members.any({ m -> m._0 == "dependencies" });
+    if (hasDeps == false && extraDeps.length > 0) fields.push(quote("dependencies") + ": " + rerootDeps(Json.Obj(members: []), root, workspace, extraDeps));
     return "{\n  " + fields.join(",\n  ") + "\n}\n";
 }
 
-fn rerootDeps(v: Json, depth: i32, workspace: Array<#(string, string)>) -> string {
-    val members = case v {
-        Obj(members: ms) -> ms;
-        _ -> [];
-    };
+fn rerootDeps(v: Json, root: string, workspace: Array<#(string, string)>, extraDeps: Array<#(string, string)>) -> string {
     val deps = case v {
         Obj(members: ms) -> ms;
         _ -> [];
     };
-    return "{ " + deps.map({ m -> quote(m._0) + ": " + rerootDep(m._0, m._1, depth, workspace) }).join(", ") + " }";
+    val own = deps.map({ m -> quote(m._0) + ": " + rerootDep(m._0, m._1, root, workspace) });
+    val extra = extraDeps.filter({ d -> deps.any({ m -> m._0 == d._0 }) == false }).map({ d -> quote(d._0) + ": { \"path\": " + quote(d._1) + " }" });
+    return "{ " + own.append(extra).join(", ") + " }";
 }
 
 // A `{ "workspace": true }` dependency becomes a `path` to the member the
 // enclosing workspace names — the staged package is no workspace member.
-fn rerootDep(name: string, v: Json, depth: i32, workspace: Array<#(string, string)>) -> string {
+fn rerootDep(name: string, v: Json, root: string, workspace: Array<#(string, string)>) -> string {
     val members = case v {
         Obj(members: ms) -> ms;
         _ -> [];
@@ -187,11 +206,13 @@ fn rerootDep(name: string, v: Json, depth: i32, workspace: Array<#(string, strin
         val pair = hit.at(0).unwrapOr(#("", ""));
         return "{ \"path\": " + quote(pair._1) + " }";
     }
-    return "{ " + members.map({ m -> quote(m._0) + ": " + (if (m._0 == "path") quote(reroot(textOf(m._1), depth)) else jsonText(m._1)) }).join(", ") + " }";
+    return "{ " + members.map({ m -> quote(m._0) + ": " + (if (m._0 == "path") quote(reroot(textOf(m._1), root)) else jsonText(m._1)) }).join(", ") + " }";
 }
 
-fn reroot(p: string, depth: i32) -> string {
-    return if (p.startsWith("/")) p else "../".repeat(depth) + p;
+// A dependency path against the project root; an absolute one, or any when
+// no root is given, as written.
+fn reroot(p: string, root: string) -> string {
+    return if (p.startsWith("/") || root == "") p else path.normalize(path.join([root, p]));
 }
 
 fn textOf(v: Json) -> string {
@@ -236,12 +257,14 @@ pub fn sortedText(xs: string[]) -> string[] {
 // routes module and the root. `appRel` is the app directory relative to the
 // project's src (`app` for `src/app`). Answers `#(path under <outDir>/, text)`.
 pub fn stage(aliases: AliasMap, appRel: string, appDir: string, sources: Array<#(string, string)>, entries: Array<RouteEntry>, manifest: string) -> @Result<Array<#(string, string)>, string> {
-    return try stageAt(aliases, appRel, appDir, sources, entries, manifest, 1, [], []);
+    return try stageAt(aliases, appRel, appDir, sources, entries, manifest, "", [], [], []);
 }
 
-// `stage`, the package `depth` levels below the project root, with `extraMods`
-// declared by the root beside the app (a generated entry, the style modules).
-pub fn stageAt(aliases: AliasMap, appRel: string, appDir: string, sources: Array<#(string, string)>, entries: Array<RouteEntry>, manifest: string, depth: i32, extraMods: string[], workspace: Array<#(string, string)>) -> @Result<Array<#(string, string)>, string> {
+// `stage` for the project at `root` (its relative dependency paths made
+// absolute against it), with `extraMods` declared by the root beside the app
+// (a generated entry, the style modules, the server's main) and `extraDeps`
+// added to the manifest.
+pub fn stageAt(aliases: AliasMap, appRel: string, appDir: string, sources: Array<#(string, string)>, entries: Array<RouteEntry>, manifest: string, root: string, extraMods: string[], workspace: Array<#(string, string)>, extraDeps: Array<#(string, string)>) -> @Result<Array<#(string, string)>, string> {
     var staged: Array<#(string, string)> = [];
     var rootText = "";
     for (sources) { s ->
@@ -256,15 +279,15 @@ pub fn stageAt(aliases: AliasMap, appRel: string, appDir: string, sources: Array
     };
     val stagedApp = stagedPath(appRel + "/x.bp").split("/").take(appRel.split("/").length).join("/");
     val mods = modFiles(stagedApp, staged.map({ f -> f._0 }));
-    val all = staged.append(mods).append([#("onze_routes.bp", routesModule(appDir, entries))]);
+    val all = staged.append(mods).append([#("onze_routes.bp", routesModule(appDir, entries, staged))]);
     val appTop = stagedApp.split("/").at(0).unwrapOr("app");
     val declaresApp = rootText.split("\n").any({ l -> l.trim() == "pub mod " + appTop + ";" });
     val appLine = if (declaresApp) "" else "pub mod " + appTop + ";\n";
     val extra = extraMods.map({ m -> "pub mod " + m + ";\n" }).join("");
-    val root = rootText.trimEnd() + "\n\n" + banner() + "\n" + appLine + "pub mod onze_routes;\n" + extra;
-    val withRoot = all.append([#("root.bp", root)]);
+    val rootModule = rootText.trimEnd() + "\n\n" + banner() + "\n" + appLine + "pub mod onze_routes;\n" + extra;
+    val withRoot = all.append([#("root.bp", rootModule)]);
     val names = sortedText(withRoot.map({ f -> f._0 }));
-    val manifestText = try stagedManifest(manifest, names, depth, workspace);
+    val manifestText = try stagedManifest(manifest, names, root, workspace, extraDeps);
     var out: Array<#(string, string)> = withRoot.map({ f -> #("src/" + f._0, f._1) });
     out.push(#("botopink.json", manifestText));
     return out;

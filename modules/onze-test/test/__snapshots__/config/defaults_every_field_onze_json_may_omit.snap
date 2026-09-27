@@ -11,4 +11,5 @@ outDir           = .onze
 dev              = false
 actionsBodyLimit = 1048576
 allowedRedirects = (none)
+lang             = en
 origin           = http://localhost:3000

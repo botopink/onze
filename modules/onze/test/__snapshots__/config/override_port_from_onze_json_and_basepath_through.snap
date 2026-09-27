@@ -11,4 +11,5 @@ outDir           = .onze
 dev              = false
 actionsBodyLimit = 1048576
 allowedRedirects = https://auth.example.com
+lang             = en
 origin           = http://localhost:4000

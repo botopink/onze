@@ -1,7 +1,7 @@
 // `botopink test` suite for `src/config.bp` (front 49 steps 2 and 7). Imports
 // only std and the package's own modules, so a red here is onze's.
 
-import {OnzeConfig, defaultConfig, withPort, withDev, loadConfig, describeConfig, publicEnvPrefix, isPublicEnvName, publicEnvFrom, describePublicEnv, defaultActionField, defaultActionHeader, defaultActionsBodyLimit} from "config";
+import {OnzeConfig, defaultConfig, withPort, withDev, loadConfig, describeConfig, publicEnvPrefix, isPublicEnvName, publicEnvFrom, describePublicEnv, defaultActionField, defaultActionHeader, defaultActionsBodyLimit, parsePort} from "config";
 import {testing.snapshots} from "std";
 
 fn lookupIn(pairs: Array<#(string, string)>, name: string) -> ?string {
@@ -33,7 +33,7 @@ test "config: withPort copies every other field" {
     val c = withPort(defaultConfig(), 4000);
     assert c.appDir == defaultConfig().appDir;
     assert c.outDir == ".onze";
-    assert c.actionsBodyLimit == defaultActionsBodyLimit();
+    assert c.actionsBodyLimit == defaultActionsBodyLimit;
     assert c.origin() == "http://localhost:4000";
     assert withDev(c, true).port == 4000;
     assert withDev(c, true).dev;
@@ -65,12 +65,12 @@ test "config: refusals ---- every malformed onze.json names its key" {
 }
 
 test "config: the action wire names are onze's defaults" {
-    assert defaultActionField() == "__bp_action";
-    assert defaultActionHeader() == "X-Bp-Action";
+    assert defaultActionField == "__bp_action";
+    assert defaultActionHeader == "X-Bp-Action";
 }
 
 test "env: the prefix is case-sensitive" {
-    assert publicEnvPrefix() == "ONZE_PUBLIC_";
+    assert publicEnvPrefix == "ONZE_PUBLIC_";
     assert isPublicEnvName("ONZE_PUBLIC_API_URL");
     assert isPublicEnvName("DATABASE_URL") == false;
     assert isPublicEnvName("onze_public_x") == false;
@@ -94,4 +94,14 @@ test "env: public prefix ---- case-sensitive filter" {
         #("DATABASE_URL", "postgres://db"),
     ];
     try snapshots.assertAs(@src(), "env", describePublicEnv(env, ["ONZE_PUBLIC_API_URL", "onze_public_x", "Onze_Public_Secret", "DATABASE_URL", "ONZE_PUBLIC_MISSING"]));
+}
+
+test "config: a port given as text ---- digits in 1..65535, the source named" {
+    assert parsePort("8080", "PORT").unwrapOr(0) == 8080;
+    assert parsePort(" 4000 ", "-p").unwrapOr(0) == 4000;
+    val refusals = ["", "80a", "-1", "0", "65536", "080"].map({ t -> case parsePort(t, "PORT") {
+        Ok(n) -> "ok " + n.toString();
+        Error(e) -> e;
+    } });
+    assert refusals.join("\n") == "PORT: \"\" is not a port number\nPORT: \"80a\" is not a port number\nPORT: \"-1\" is not a port number\nPORT: 0 is outside 1..65535\nPORT: 65536 is outside 1..65535\nPORT: \"080\" is not a port number";
 }

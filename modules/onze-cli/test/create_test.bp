@@ -6,7 +6,15 @@ import {Outcome, run, commands} from "main";
 import {infoText, versionAt} from "info";
 import {Project, resolveProject} from "resolve";
 import {OnzeConfig, AliasMap} from "onze";
-import {io.fs, io.process, io.clock, path, testing.snapshots} from "std";
+import {io.fs, io.process, io.clock, path, testing.snapshots, io.env} from "std";
+
+// The run's own scratch directory — `botopink test` names it in
+// `BOTOPINK_TEST_TMPDIR`, and it is the one place a test writes.
+fn testTmp() -> string {
+    val root = env.read("BOTOPINK_TEST_TMPDIR") ?? "";
+    assert root != "", "BOTOPINK_TEST_TMPDIR is not set: run this suite under `botopink test`";
+    return root;
+}
 
 fn optsError(args: string[]) -> string {
     return case parseCreateOpts(args) {
@@ -16,7 +24,7 @@ fn optsError(args: string[]) -> string {
 }
 
 fn scratch() -> string {
-    val dir = path.join([process.cwd(), ".botopinkbuild", "tmp", "create-" + process.pid().toString() + "-" + clock.nowMillis().toString()]);
+    val dir = path.join([testTmp(), "create-" + clock.nowMillis().toString()]);
     val made = process.run("mkdir", ["-p", dir]);
     return dir;
 }
@@ -42,7 +50,7 @@ test "create: the defaults, --src-dir, --import-alias" {
     val d = try parseCreateOpts(["my-app", "--yes"]);
     assert d.port == 3000;
     assert d.importAlias == "@/";
-    assert d.srcDir;
+    assert d.srcDir == false;
     val s = try parseCreateOpts(["my-app", "--yes", "--src-dir"]);
     val onzeJson = scaffoldFiles(s).filter({ f -> f._0 == "onze.json" }).at(0).unwrapOr(#("", ""))._1;
     assert onzeJson.contains("\"appDir\": \"src/app\"");
@@ -60,7 +68,6 @@ test "create: usage errors ---- no token dropped" {
         optsError(["a", "--port"]),
         optsError(["a", "--port", "99999"]),
         optsError(["My App"]),
-        optsError(["a", "--no-src-dir"]),
     ].join("\n"));
 }
 
@@ -89,6 +96,24 @@ test "create: the scaffold passes botopink check with no edits" {
     if (checked.status != 0) @print(checked.stdout);
     assert checked.status == 0;
     val gone = process.run("rm", ["-rf", dir]);
+}
+
+test "create: the default puts the app at the project root; --src-dir under src/ ---- both check" {
+    val bin = botopinkBin();
+    assert bin != "";
+    val flat = scaffoldFiles(try parseCreateOpts(["flat", "--yes"]));
+    assert flat.any({ f -> f._0 == "app/page.bp" });
+    assert flat.filter({ f -> f._0 == "botopink.json" }).at(0).unwrapOr(#("", ""))._1.contains("\"src\": \".\"");
+    assert flat.filter({ f -> f._0 == "onze.json" }).at(0).unwrapOr(#("", ""))._1.contains("\"appDir\": \"app\"");
+    val nested = scaffoldFiles(try parseCreateOpts(["nested", "--yes", "--src-dir"]));
+    assert nested.any({ f -> f._0 == "src/app/page.bp" });
+    assert nested.filter({ f -> f._0 == "botopink.json" }).at(0).unwrapOr(#("", ""))._1.contains("\"src\": \"src/\"");
+    val dir = scratch();
+    val out = run(dir, ["create", "nested", "--yes", "--src-dir", "--libs", repositoryDir()], "test");
+    assert out.code == 0;
+    val checked = try process.run("sh", ["-c", "cd '" + path.join([dir, "nested"]) + "' && '" + bin + "' check 2>&1"]);
+    if (checked.status != 0) @print(checked.stdout);
+    assert checked.status == 0;
 }
 
 test "main: no arguments and an unknown command exit non-zero" {

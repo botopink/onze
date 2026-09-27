@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+- **What the other libraries now provide, adopted.** `modules/onze-server/` (erlang, decision
+  pending 49-e): `Onze.run(config)` — the `rakun.*` keys through `rkSetProp`, jhonstart's UI table
+  copied into rakun's with one `PageRenderer` per page over rakun's `ChunkWriter`, `RequestData`
+  from rakun's `Request`, the fingerprinted static root through rakun-web's `registerStaticRoot`,
+  `bootWeb`, the page path and `Rakun.run(App(port, basePath))`; 9 tests over a real listener.
+  The bundler's entry registers its starters with jhonstart's `registerStarter` (`globals.starters`),
+  reads `globals.<name>`, spells no `__` name and checks every emilia class an island computes
+  against the payload's `s`; `onze build` evaluates the styleMap with emilia's `styleRule` under
+  node and under erl and refuses a split. `onze build` compiles the server to BEAM with its own
+  `onze_main`, and `onze start` serves it (`-p` / `PORT` / `onze.json`). `onze create` writes the
+  root layout by default (`--src-dir` for `src/`) and the document's `lang` into `onze.json`
+  (`OnzeConfig.lang`, handed to jhonstart's `app(…, lang:)`). Workarounds whose cause is gone are removed: `loadModuleBodies` (decision 140),
+  constants as `pub fn` (`pub val` crosses modules), `idiv` (integer `/` truncates everywhere),
+  the two-argument `slice`, the free function beside `Fixture.read`, the dependency lists in
+  load order (dependencies load transitively, decision 143). Every test writes under
+  `BOTOPINK_TEST_TMPDIR`.
 - **The core (front 49).** `modules/onze/`: `config.bp` — `OnzeConfig` (name, port, basePath,
   appDir, publicDir, outDir, dev, actionsBodyLimit, allowedRedirects), `defaultConfig()`,
   `withPort` / `withDev`, `loadConfig(botopinkJson, onzeJson)` refusing an unknown key, a wrong

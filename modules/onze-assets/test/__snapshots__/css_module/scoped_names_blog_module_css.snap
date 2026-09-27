@@ -7,17 +7,11 @@ bca5b2
 == .onze/styles/app_blog_blog.bp
 // generated from app/blog/blog.module.css by onze build — do not edit
 
-pub fn container() -> string {
-    return "blog_container_bca5b2";
-}
+pub val container: string = "blog_container_bca5b2";
 
-pub fn external() -> string {
-    return "blog_external_bca5b2";
-}
+pub val external: string = "blog_external_bca5b2";
 
-pub fn title() -> string {
-    return "blog_title_bca5b2";
-}
+pub val title: string = "blog_title_bca5b2";
 == rewritten css
 .blog_container_bca5b2 { padding: 24px; }
 .blog_title_bca5b2 { font-size: 2rem; }

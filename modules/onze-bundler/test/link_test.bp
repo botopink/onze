@@ -1,7 +1,15 @@
 // `botopink test` suite for `src/link.bp` (front 68 step 4, files).
 
 import {requiresOf, resolveFrom, esmToFactoryBody, jsClosure, linkFiles, bootLine, clientSubstitutions} from "link";
-import {io.fs, io.process, io.clock, path} from "std";
+import {io.fs, io.process, io.clock, path, io.env} from "std";
+
+// The run's own scratch directory — `botopink test` names it in
+// `BOTOPINK_TEST_TMPDIR`, and it is the one place a test writes.
+fn testTmp() -> string {
+    val root = env.read("BOTOPINK_TEST_TMPDIR") ?? "";
+    assert root != "", "BOTOPINK_TEST_TMPDIR is not set: run this suite under `botopink test`";
+    return root;
+}
 
 #[@External.Node("""(function (__t) { try { (0, eval)(__t); return String(globalThis.__onze_require("entry.js").answer()); } catch (__e) { return "error: " + __e.message; } })($0)""")]
 #[@External.Erlang("""(fun(_) -> <<"no-js-engine">> end)($0)""")]
@@ -27,7 +35,7 @@ test "link: requires, resolution and the ESM sidecar" {
 }
 
 test "link: the closure of a tree links into one chunk that runs without a network" {
-    val dir = path.join([process.cwd(), ".botopinkbuild", "tmp", "link-" + process.pid().toString() + "-" + clock.nowMillis().toString()]);
+    val dir = path.join([testTmp(), "link-" + clock.nowMillis().toString()]);
     put(dir, "entry.js", "const { two } = require(\"./lib/two.js\");\nconst { hook } = require(\"./jhonstart/hooks.js\");\nexports.answer = function () { return two() + hook(); };");
     put(dir, "lib/two.js", "const { one } = require(\"../jhonstart/one.mjs\");\nexports.two = function () { return one() + 1; };");
     put(dir, "jhonstart/one.mjs", "export function one() {\n  return 1;\n}");

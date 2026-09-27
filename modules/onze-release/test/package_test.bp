@@ -6,7 +6,15 @@ import {scanForSecrets, missingAssets, promisedFiles, packageAssets} from "packa
 import {DrainReport, Lifecycle, shutdown, shutdownOrder, readinessChecks, isReady, describeDrain, exitCodeOf} from "lifecycle";
 import {ExportRoute, staticExport} from "static_export";
 import {ClientBundleManifest, ChunkRef, formatManifest, staticUrl} from "onze-bundler";
-import {io.fs, io.process, io.clock, path, testing.snapshots} from "std";
+import {io.fs, io.process, io.clock, path, testing.snapshots, io.env} from "std";
+
+// The run's own scratch directory — `botopink test` names it in
+// `BOTOPINK_TEST_TMPDIR`, and it is the one place a test writes.
+fn testTmp() -> string {
+    val root = env.read("BOTOPINK_TEST_TMPDIR") ?? "";
+    assert root != "", "BOTOPINK_TEST_TMPDIR is not set: run this suite under `botopink test`";
+    return root;
+}
 
 fn manifest() -> ClientBundleManifest {
     return ClientBundleManifest(version: "1", buildId: "b7f2a1", entry: ChunkRef(id: "entry", url: staticUrl("b7f2a1", "entry.9c1d40.js"), hash: "9c1d40", bytes: 10), shared: [ChunkRef(id: "shared", url: staticUrl("b7f2a1", "shared.41ab08.js"), hash: "41ab08", bytes: 10)], chunks: [ChunkRef(id: "route:/blog/[slug]", url: staticUrl("b7f2a1", "r1.7e0055.js"), hash: "7e0055", bytes: 10)], routes: [], styles: [ChunkRef(id: "styles", url: staticUrl("b7f2a1", "app.2b91cc.css"), hash: "2b91cc", bytes: 10)], publicEnv: []);
@@ -87,7 +95,7 @@ test "release: every chunk and stylesheet the manifest names must exist" {
 }
 
 test "release: packageAssets copies the static tree and public/ verbatim" {
-    val dir = path.join([process.cwd(), ".botopinkbuild", "tmp", "rel-" + process.pid().toString() + "-" + clock.nowMillis().toString()]);
+    val dir = path.join([testTmp(), "rel-" + clock.nowMillis().toString()]);
     val staticDir = path.join([dir, "static"]);
     val publicDir = path.join([dir, "public"]);
     val made = process.run("mkdir", ["-p", staticDir, path.join([publicDir, "images"])]);

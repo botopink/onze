@@ -99,7 +99,7 @@ pub fn normalizeUrlPath(p: string) -> ?string {
 
 fn hostMatches(pattern: string, host: string) -> bool {
     if (pattern.startsWith("*.") == false) return pattern == host;
-    val suffix = pattern.slice(1, pattern.length());
+    val suffix = pattern.slice(1);
     if (host.endsWith(suffix) == false) return false;
     val label = host.slice(0, host.length() - suffix.length());
     return label != "" && label.contains(".") == false;

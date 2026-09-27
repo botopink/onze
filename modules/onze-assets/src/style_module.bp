@@ -11,9 +11,9 @@
 //// `scopeName` is the one function that decides a scoped name, which is what
 //// makes "the generated module and the rewritten CSS agree" a test.
 ////
-//// The accessors are `pub fn`, not `pub val`: a `pub val` imported from
-//// another module is `undefined` on commonJS and does not compile on erlang
-//// (front 49's finding F1). `:global(…)` is out of scope for this milestone.
+//// The accessors are `pub val`s (decision 140: a module-level `pub val`
+//// crosses modules on every backend). `:global(…)` is out of scope for this
+//// milestone.
 //// A file containing `</style` is refused — module CSS may reach a `<style>`
 //// body.
 
@@ -193,9 +193,7 @@ pub fn generateStyleModuleSource(m: StyleModule) -> string {
     var lines: string[] = ["// generated from " + m.sourcePath + " by onze build — do not edit"];
     for (m.names) { n ->
         lines.push("");
-        lines.push("pub fn " + n._0.replaceAll("-", "_") + "() -> string {");
-        lines.push("    return \"" + n._1 + "\";");
-        lines.push("}");
+        lines.push("pub val " + n._0.replaceAll("-", "_") + ": string = \"" + n._1 + "\";");
     };
     return lines.join("\n") + "\n";
 }

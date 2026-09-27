@@ -11,7 +11,7 @@
 
 import {escape} from "std";
 import {Style} from "card_style";
-import {FontMetrics, idiv} from "metrics";
+import {FontMetrics} from "metrics";
 import {LayoutBox, ImageSize, faceFor, lineHeightOf} from "layout";
 
 pub type FontRef(family: string, weight: i32, path: string, metricsPath: string)
@@ -49,14 +49,14 @@ fn flatten(b: LayoutBox) -> Array<LayoutBox> {
 
 fn rectOf(b: LayoutBox, fill: string) -> string {
     val rx = if (b.style.borderRadius > 0) " rx=\"" + b.style.borderRadius.toString() + "\"" else "";
-    val op = if (b.style.opacity < 100) " opacity=\"" + idiv(b.style.opacity, 100).toString() + "." + (b.style.opacity - idiv(b.style.opacity, 100) * 100).toString().padStart(2, "0") + "\"" else "";
+    val op = if (b.style.opacity < 100) " opacity=\"" + (b.style.opacity / 100).toString() + "." + (b.style.opacity - (b.style.opacity / 100) * 100).toString().padStart(2, "0") + "\"" else "";
     return "<rect x=\"" + b.x.toString() + "\" y=\"" + b.y.toString() + "\" width=\"" + b.width.toString() + "\" height=\"" + b.height.toString() + "\"" + rx + " fill=\"" + attr(fill) + "\"" + op + "/>";
 }
 
 fn textOf(b: LayoutBox, faces: Array<FontMetrics>) -> string {
     val s = b.style;
     val face = faceFor(faces, s.fontFamily, s.fontWeight);
-    val ascent = if (face.ascent > 0) idiv(s.fontSize * face.ascent, face.unitsPerEm) else idiv(s.fontSize * 4, 5);
+    val ascent = if (face.ascent > 0) ((s.fontSize * face.ascent) / face.unitsPerEm) else ((s.fontSize * 4) / 5);
     val lh = lineHeightOf(s);
     var out: string[] = [];
     var i = 0;

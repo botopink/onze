@@ -6,7 +6,15 @@
 import {ImageProps, RemotePattern, ImageConfig, defaultImageProps, defaultImageConfig, validateSource, validateConfig, validateProps, Image, srcsetOf, refusedImages} from "image";
 import {EncodeRequest, ImageOutcome, encode, encoderArgs, imageResponse, negotiate, cacheKey} from "image_handler";
 import {Element, renderNode} from "jhonstart";
-import {io.fs, io.process, io.clock, path, testing.snapshots} from "std";
+import {io.fs, io.process, io.clock, path, testing.snapshots, io.env} from "std";
+
+// The run's own scratch directory — `botopink test` names it in
+// `BOTOPINK_TEST_TMPDIR`, and it is the one place a test writes.
+fn testTmp() -> string {
+    val root = env.read("BOTOPINK_TEST_TMPDIR") ?? "";
+    assert root != "", "BOTOPINK_TEST_TMPDIR is not set: run this suite under `botopink test`";
+    return root;
+}
 
 fn cdn() -> ImageConfig {
     val d = defaultImageConfig();
@@ -25,7 +33,7 @@ fn withEncoder(cfg: ImageConfig, encoder: string, timeoutMs: i32) -> ImageConfig
 }
 
 fn scratch() -> string {
-    val dir = path.join([process.cwd(), ".botopinkbuild", "tmp", "img-" + process.pid().toString() + "-" + clock.nowMillis().toString()]);
+    val dir = path.join([testTmp(), "img-" + clock.nowMillis().toString()]);
     val made = process.run("mkdir", ["-p", path.join([dir, "public", "images"])]);
     return dir;
 }

@@ -5,7 +5,7 @@
 //// overrides (`PORT`) is marked.
 
 import {io.fs, io.env, io.process, path, json.Json, json.decode} from "std";
-import {OnzeConfig, AliasMap, emptyAliases} from "onze";
+import {OnzeConfig, defaultConfig, AliasMap, emptyAliases} from "onze";
 import {Project} from "resolve";
 
 fn membersOf(v: Json) -> Array<#(string, Json)> {
@@ -67,7 +67,7 @@ pub fn infoText(tools: Array<#(string, string)>, project: ?Project, deps: Array<
     if (project == null) {
         rows.push(row("project", "(none)"));
     } else {
-        val p = project ?? Project(root: "", config: OnzeConfig(name: "", port: 0, basePath: "", appDir: "", publicDir: "", outDir: "", dev: false, actionsBodyLimit: 0, allowedRedirects: []), aliases: emptyAliases());
+        val p = project ?? Project(root: "", config: defaultConfig(), aliases: emptyAliases());
         val c = p.config;
         rows.push(row("project", c.name + "  (" + p.root + ")"));
         rows.push(row("appDir", c.appDir));

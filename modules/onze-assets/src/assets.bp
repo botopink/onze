@@ -16,13 +16,11 @@
 
 pub type AssetRoot(pattern: string, directory: string, immutable: bool, cacheSeconds: i32)
 
-pub fn staticPrefix() -> string {
-    return "/_onze/static/";
-}
+pub val staticPrefix: string = "/_onze/static/";
 
 pub fn staticRoots(publicDir: string, outDir: string, buildId: string) -> Array<AssetRoot> {
     return [
-        AssetRoot(pattern: staticPrefix() + buildId + "/**", directory: outDir + "/static/" + buildId + "/", immutable: true, cacheSeconds: 31536000),
+        AssetRoot(pattern: staticPrefix + buildId + "/**", directory: outDir + "/static/" + buildId + "/", immutable: true, cacheSeconds: 31536000),
         AssetRoot(pattern: "/**", directory: publicDir, immutable: false, cacheSeconds: 0),
     ];
 }

@@ -3,21 +3,23 @@
 //// The entry is GENERATED botopink source, `<outDir>/client/entry.bp`,
 //// compiled and linked like any other client module — so it is type-checked
 //// by the same compiler and a developer can read it. It defines no marker, no
-//// global and no matcher of its own: the island marker is jhonstart front
-//// 29's (`islandAttrOf`), the globals are jhonstart's registry
-//// (`globals().payload` / `.fill` / `.signal`), the router matches with the
-//// bundled `routing` itself, and nothing of rakun is imported. In order, the
-//// generated `main()`:
+//// global, no `__`-prefixed name and no matcher of its own: the island
+//// marker is jhonstart front 29's (`islandAttrOf`), the globals are
+//// jhonstart's registry (`globals.payload` / `.fill` / `.signal` /
+//// `.starters`), the router matches with the bundled `routing` itself, and
+//// nothing of rakun is imported. In order, the generated `main()`:
 ////
 ////   1. sets the browser's validation message source (`setMessageSource`),
-////   2. registers the fill function under `globals().fill` and the signal
-////      function under `globals().signal` (with the configured
+////   2. registers the fill function under `globals.fill` and the signal
+////      function under `globals.signal` (with the configured
 ////      `allowedRedirects`) — before any streamed chunk can arrive,
-////   3. registers one starter per client component in
-////      `globalThis.__jhIslandStarters` (the table jhonstart's `hydrate()`
-////      reads) — each decodes the island's props into the component's
-////      `#[clientProps]` record and renders it under jhonstart's client
-////      runtime,
+////   3. registers one starter per client component with jhonstart's
+////      `registerStarter` (the `globals.starters` table `hydrate()` reads) —
+////      each decodes the island's props into the component's
+////      `#[clientProps]` record, renders it under jhonstart's client runtime
+////      and, before committing the markup, checks every emilia class it
+////      carries against the payload's `s` key (a class the server's
+////      stylesheet does not hold is a hard error naming it),
 ////   4. checks the document against the payload — an island or a hole on one
 ////      side and not the other is a hard error naming its id,
 ////   5. calls jhonstart's `hydrate()`,
@@ -139,6 +141,44 @@ pub fn islandMismatches(domIslands: string[], payloadIslands: string[], domHoles
     return out;
 }
 
+fn isEmiliaClass(name: string) -> bool {
+    if (name.startsWith("e_") == false || name.length() < 3) return false;
+    var hex = true;
+    for (name.slice(2).split("")) { c ->
+        if ("0123456789abcdef".contains(c) == false) hex = false;
+    };
+    return hex;
+}
+
+// The emilia class names (`e_<hex>`) the `class` attributes of `html` carry,
+// in document order, each once.
+pub fn classNamesIn(html: string) -> string[] {
+    var out: string[] = [];
+    var first = true;
+    for (html.split("class=\"")) { piece ->
+        if (first) {
+            first = false;
+        } else {
+            val value = piece.split("\"").at(0).unwrapOr("");
+            for (value.split(" ")) { name ->
+                if (isEmiliaClass(name) && out.contains(name) == false) out.push(name);
+            };
+        };
+    };
+    return out;
+}
+
+// The classes an island computed that the payload's `s` key does not list —
+// the runtime half of the class-name check (contract 4): the server's
+// stylesheet holds no rule for them. Empty when every one is listed.
+pub fn unknownClasses(computed: string[], known: string[]) -> string[] {
+    var out: string[] = [];
+    for (computed) { name ->
+        if (known.contains(name) == false) out.push("class " + name + " is not in the payload's s key - the server's stylesheet has no rule for it");
+    };
+    return out;
+}
+
 fn itemsOf(v: Json) -> Array<Json> {
     return case v {
         Arr(items: xs) -> xs;
@@ -227,6 +267,45 @@ pub fn islandMismatchesSource() -> string {
     ].join("\n");
 }
 
+// The generated twin of `isEmiliaClass` / `classNamesIn` / `unknownClasses`
+// — the entry imports nothing of onze; the entry suite asserts the two agree.
+pub fn classCheckSource() -> string {
+    return [
+        "fn isEmiliaClass(name: string) -> bool {",
+        "    if (name.startsWith(\"e_\") == false || name.length() < 3) return false;",
+        "    var hex = true;",
+        "    for (name.slice(2).split(\"\")) { c ->",
+        "        if (\"0123456789abcdef\".contains(c) == false) hex = false;",
+        "    };",
+        "    return hex;",
+        "}",
+        "",
+        "fn classNamesIn(html: string) -> string[] {",
+        "    var out: string[] = [];",
+        "    var first = true;",
+        "    for (html.split(\"class=\\\"\")) { piece ->",
+        "        if (first) {",
+        "            first = false;",
+        "        } else {",
+        "            val value = piece.split(\"\\\"\").at(0).unwrapOr(\"\");",
+        "            for (value.split(\" \")) { name ->",
+        "                if (isEmiliaClass(name) && out.contains(name) == false) out.push(name);",
+        "            };",
+        "        };",
+        "    };",
+        "    return out;",
+        "}",
+        "",
+        "fn unknownClasses(computed: string[], known: string[]) -> string[] {",
+        "    var out: string[] = [];",
+        "    for (computed) { name ->",
+        "        if (known.contains(name) == false) out.push(\"class \" + name + \" is not in the payload's s key - the server's stylesheet has no rule for it\");",
+        "    };",
+        "    return out;",
+        "}",
+    ].join("\n");
+}
+
 // The entry module's source.
 pub fn generateEntry(components: Array<ClientComponent>, config: EntryConfig) -> string {
     val redirects = "[" + config.allowedRedirects.map({ r -> quote(r) }).join(", ") + "]";
@@ -234,7 +313,7 @@ pub fn generateEntry(components: Array<ClientComponent>, config: EntryConfig) ->
     var lines: string[] = [
         "// GENERATED by onze build — do not edit.",
         "",
-        "import {globals, readPayload, registerFill, registerSignal, hydrate, propsOf, clientRender, renderNode, Element} from \"jhonstart\";",
+        "import {globals, registerFill, registerSignal, registerStarter, hydrate, propsOf, clientRender, renderNode, Element} from \"jhonstart\";",
         "import {linkMount} from \"jhonstart-link\";",
         "import {formMount} from \"jhonstart-forms\";",
         "import {setMessageSource, builtInOnly} from \"validation\";",
@@ -244,25 +323,22 @@ pub fn generateEntry(components: Array<ClientComponent>, config: EntryConfig) ->
     };
     lines = lines.append([
         "",
-        "#[@External.Node(\"\"\"((globalThis.__jhIslandStarters = globalThis.__jhIslandStarters || {})[$0] = function (__el, __props) { return ($1)(__props, function (__html) { __el.innerHTML = __html; return 0; }); }, 0)\"\"\")]",
-        "declare fn registerStarter(name: string, start: fn(raw: string, commit: fn(html: string) -> i32) -> i32) -> i32;",
-        "",
-        "#[@External.Node(\"\"\"(globalThis.document ? Array.from(globalThis.document.querySelectorAll(\"[\" + $0 + \"]\")).map(function (__e) { return __e.getAttribute($0); }) : [])\"\"\")]",
+        "#[@External.Node(\"\"\"(globalThis.document ? Array.from(globalThis.document.querySelectorAll(\"[\" + $0 + \"]\")).map(function (onzeNode) { return onzeNode.getAttribute($0); }) : [])\"\"\")]",
         "declare fn domIds(attr: string) -> string[];",
         "",
-        "#[@External.Node(\"\"\"(function (__p) { var __v = globalThis[__p]; return __v && Array.isArray(__v[$1]) ? __v[$1].map(function (__r) { return String(Array.isArray(__r) ? __r[0] : __r); }) : []; })($0)\"\"\")]",
+        "#[@External.Node(\"\"\"(function (onzeName) { var onzeValue = globalThis[onzeName]; return onzeValue && Array.isArray(onzeValue[$1]) ? onzeValue[$1].map(function (onzeRow) { return String(Array.isArray(onzeRow) ? onzeRow[0] : onzeRow); }) : []; })($0)\"\"\")]",
         "declare fn payloadIds(payload: string, key: string) -> string[];",
         "",
-        "#[@External.Node(\"\"\"(function (__s, __f) { if (!globalThis.document) return 0; var __t = globalThis.document.createElement(\"script\"); __t.src = __s; if (__f) __t.onload = function () { if (typeof globalThis[__f] === \"function\") globalThis[__f](); }; globalThis.document.body.appendChild(__t); return 0; })($0, $1)\"\"\")]",
+        "#[@External.Node(\"\"\"(function (onzeSrc, onzeOnLoad) { if (!globalThis.document) return 0; var onzeTag = globalThis.document.createElement(\"script\"); onzeTag.src = onzeSrc; if (onzeOnLoad) onzeTag.onload = function () { if (typeof globalThis[onzeOnLoad] === \"function\") globalThis[onzeOnLoad](); }; globalThis.document.body.appendChild(onzeTag); return 0; })($0, $1)\"\"\")]",
         "declare fn scheduleNow(src: string, onLoad: string) -> i32;",
         "",
-        "#[@External.Node(\"\"\"(function (__s, __f) { if (!globalThis.document) return 0; var __go = function () { var __t = globalThis.document.createElement(\"script\"); __t.src = __s; if (__f) __t.onload = function () { if (typeof globalThis[__f] === \"function\") globalThis[__f](); }; globalThis.document.body.appendChild(__t); }; if (globalThis.document.readyState === \"complete\") __go(); else globalThis.addEventListener(\"load\", __go); return 0; })($0, $1)\"\"\")]",
+        "#[@External.Node(\"\"\"(function (onzeSrc, onzeOnLoad) { if (!globalThis.document) return 0; var onzeGo = function () { var onzeTag = globalThis.document.createElement(\"script\"); onzeTag.src = onzeSrc; if (onzeOnLoad) onzeTag.onload = function () { if (typeof globalThis[onzeOnLoad] === \"function\") globalThis[onzeOnLoad](); }; globalThis.document.body.appendChild(onzeTag); }; if (globalThis.document.readyState === \"complete\") onzeGo(); else globalThis.addEventListener(\"load\", onzeGo); return 0; })($0, $1)\"\"\")]",
         "declare fn scheduleLazy(src: string, onLoad: string) -> i32;",
         "",
         "#[@External.Node(\"\"\"(typeof globalThis.Worker === \"function\" ? (new globalThis.Worker($0), 0) : 0)\"\"\")]",
         "declare fn startWorker(src: string) -> i32;",
         "",
-        "#[@External.Node(\"\"\"(function (__m) { if (__m.length > 0) throw new Error(__m[0]); return 0; })($0)\"\"\")]",
+        "#[@External.Node(\"\"\"(function (onzeProblems) { if (onzeProblems.length > 0) throw new Error(onzeProblems[0]); return 0; })($0)\"\"\")]",
         "declare fn raiseFirst(problems: string[]) -> i32;",
         "",
         "#[@External.Node(\"\"\"(parseInt($0, 10) || 0)\"\"\")]",
@@ -279,10 +355,14 @@ pub fn generateEntry(components: Array<ClientComponent>, config: EntryConfig) ->
         "}",
         "",
         "fn commitTree(commit: fn(html: string) -> i32, tree: Element) {",
-        "    val done = commit(renderNode(tree));",
+        "    val html = renderNode(tree);",
+        "    raiseFirst(unknownClasses(classNamesIn(html), payloadIds(globals.payload, \"s\")));",
+        "    val done = commit(html);",
         "}",
         "",
         islandMismatchesSource(),
+        "",
+        classCheckSource(),
     ]);
     for (components) { c ->
         lines.push("");
@@ -292,15 +372,14 @@ pub fn generateEntry(components: Array<ClientComponent>, config: EntryConfig) ->
         "",
         "pub fn onzeEntryMain() {",
         "    setMessageSource(builtInOnly());",
-        "    val g = globals();",
-        "    registerFill(g.fill, payloadIds(g.payload, \"h\"));",
-        "    registerSignal(g.signal, " + redirects + ");",
+        "    registerFill(globals.fill, payloadIds(globals.payload, \"h\"));",
+        "    registerSignal(globals.signal, " + redirects + ");",
     ]);
     for (components) { c ->
         lines.push("    registerStarter(" + quote(c.name) + ", { raw, commit -> start" + c.name + "(raw, commit) });");
     };
     lines = lines.append([
-        "    raiseFirst(islandMismatches(domIds(" + quote(attr) + "), payloadIds(g.payload, \"i\"), domIds(\"data-jh-h\"), payloadIds(g.payload, \"h\")));",
+        "    raiseFirst(islandMismatches(domIds(" + quote(attr) + "), payloadIds(globals.payload, \"i\"), domIds(\"data-jh-h\"), payloadIds(globals.payload, \"h\")));",
         "    hydrate();",
         "    linkMount();",
         "    formMount(" + quote(config.actionHeader) + ");",

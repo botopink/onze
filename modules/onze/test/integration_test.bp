@@ -133,6 +133,16 @@ test "boot: a redirect answers 307 through the writer with no onze code on the p
     assert recEvents().contains("setHeader location /login");
 }
 
+test "boot: the document's lang is onze.json's, through jhonstart's app(…, lang:)" {
+    val d = defaultConfig();
+    val site = bootSite(OnzeConfig(..d, lang: "pt-BR"), defaultHooks());
+    val input = pageInput("b1", "/", "/", "", "", "P|/", [], ["/"], { -> StyledHome() }, [], []);
+    val out = await site.renderStream(input, req(), writer());
+    assert outcomeText(out) == "ok";
+    assert document().contains("<html lang=\"pt-BR\">");
+    val drained = await flush();
+}
+
 test "boot: boot returns the app and the rakun entries together" {
     val b = boot(defaultConfig(), defaultHooks(), []);
     assert b.rakun.length == 5;

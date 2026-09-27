@@ -25,12 +25,6 @@ pub type EncodeRequest(inputPath: string, outputPath: string, width: i32, qualit
 pub type ImageOutcome(status: i32, headers: Array<#(string, string)>, file: string, message: string)
 
 // The argument vector for `encoder`.
-// Integer division, truncating: `i32 / i32` is a float division on commonJS
-// and an integer one on erlang (front 49's finding F7), so onze divides here.
-#[@External.Node("""Math.trunc($0 / $1)""")]
-#[@External.Erlang("""($0 div $1)""")]
-declare fn idiv(a: i32, b: i32) -> i32;
-
 pub fn encoderArgs(encoder: string, req: EncodeRequest) -> Array<string> {
     if (encoder == "magick") return [req.inputPath, "-resize", req.width.toString(), "-quality", req.quality.toString(), req.outputPath];
     return ["thumbnail", req.inputPath, req.outputPath + "[Q=" + req.quality.toString() + "]", req.width.toString()];
@@ -57,7 +51,7 @@ pub fn encoderAvailable(encoder: string) -> bool {
 // Runs the encoder under `timeout`. `Ok(0)` when it wrote the output.
 pub fn encode(cfg: ImageConfig, req: EncodeRequest) -> @Result<i32, string> {
     if (encoderAvailable(cfg.encoder) == false) throw "images: encoder \"" + cfg.encoder + "\" is not installed - optimization is off, originals are served";
-    val seconds = idiv(cfg.encoderTimeoutMs + 999, 1000).toString();
+    val seconds = ((cfg.encoderTimeoutMs + 999) / 1000).toString();
     val ran = process.run("timeout", ["-s", "KILL", seconds, cfg.encoder].append(encoderArgs(cfg.encoder, req)));
     val exit = ran.unwrapOr(Exit(status: 0 - 1, stdout: "", stderr: "could not start timeout"));
     if (exit.status == 124 || exit.status == 137) throw "images: " + cfg.encoder + " exceeded " + cfg.encoderTimeoutMs.toString() + " ms and was killed";
@@ -120,7 +114,7 @@ pub fn imageResponse(cfg: ImageConfig, query: Array<#(string, string)>, accept: 
     if (q < 1 || q > 100) return bad("q=" + pairValue(query, "q") + " is outside 1..100");
     val clean = checked.unwrapOr(src);
     if (clean.startsWith("/") == false) return ImageOutcome(status: 501, headers: [], file: "", message: "remote sources are fetched by the build's download seam, not in this handler yet");
-    val input = path.join([root, publicDir, clean.slice(1, clean.length())]);
+    val input = path.join([root, publicDir, clean.slice(1)]);
     if (fs.exists(input) == false) return ImageOutcome(status: 404, headers: [], file: "", message: "no such image " + clean);
     val format = negotiate(cfg, pairValue(query, "f"), accept);
     val immutable = #("cache-control", "public, max-age=31536000, immutable");

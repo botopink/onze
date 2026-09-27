@@ -6,7 +6,9 @@
 ////
 ////     <outDir>/
 ////       src/, botopink.json     the staged server package the compiler sees
-////       server/                 its BEAM modules
+////                               (the app, the style modules, `onze_main`,
+////                               and a dependency on onze-server)
+////       server/erl/, server/beam/  its Erlang modules and their BEAM files
 ////       client/                 the staged client package (+ the generated entry)
 ////       client-js/              its compiled JavaScript
 ////       static/<buildId>/       the content-hashed chunks and the stylesheet
@@ -24,15 +26,18 @@
 //// splitting needs.
 
 import {io.fs, io.process, io.env, path, hash, json.Json, json.decode} from "std";
-import {OnzeConfig, AliasMap, emptyAliases, defaultActionHeader} from "onze";
-import {SourceFile, ImportRef, AppModule, ClientGraph, GraphNode, loadModules, clientGraph, BuildRefusal, BuildReport, checkBuild, describeReport, ClientComponent, EntryConfig, clientComponents, generateEntry, ChunkRef, ClientBundleManifest, formatManifest, staticUrl, manifestVersion, jsClosure, linkFiles, bootLine, clientSubstitutions} from "onze-bundler";
+import {OnzeConfig, AliasMap, emptyAliases, defaultActionHeader, packageName} from "onze";
+import {SourceFile, ImportRef, AppModule, ClientGraph, GraphNode, loadModules, clientGraph, BuildRefusal, BuildReport, checkBuild, describeReport, ClientComponent, EntryConfig, clientComponents, generateEntry, ChunkRef, ClientBundleManifest, formatManifest, staticUrl, manifestVersion, jsClosure, linkFiles, bootLine, clientSubstitutions, StyleProbe, styleProbeModule, styleProbeSource, parseStyleProbe, styleParity, refusalMessage} from "onze-bundler";
 import {StyleModule, compileStyleModule, generateStyleModuleSource, buildStylesheet, styleChunk, stylesheetFile} from "onze-assets";
 import {generateBuildId} from "onze-release";
 import {Project} from "resolve";
 import {RouteEntry, scanFiles} from "scan";
 import {checkTree, stageAt, sortedText} from "generate";
+import {serverMainSource, outDirOf} from "start";
 
-pub type BuildResult(buildId: string, manifest: string, staged: Array<string>, chunks: Array<string>, stylesheet: string)
+// `styles` is the evaluated styleMap: `#(call site, class)` per literal
+// `emilia(…)` call of the client graph.
+pub type BuildResult(buildId: string, manifest: string, staged: Array<string>, chunks: Array<string>, stylesheet: string, styles: Array<#(string, string)>)
 
 fn membersOf(v: Json) -> Array<#(string, Json)> {
     return case v {
@@ -78,6 +83,16 @@ fn envValue(name: string) -> string {
     return env.read(name) ?? "";
 }
 
+// Whether a file the walk of the package's `src` found belongs to the app:
+// never under a hidden directory (`.onze/`, `.botopinkbuild/`), and — when
+// `src` is the project root (`--no-src-dir`) — never under `test/`, which
+// holds the project's suites, not its modules.
+pub fn sourceOfApp(src: string, rel: string) -> bool {
+    val hidden = rel.split("/").any({ seg -> seg.startsWith(".") });
+    val suite = src == "." && rel.startsWith("test/");
+    return hidden == false && suite == false;
+}
+
 // Builds the project into its `outDir`. `bin` is the `botopink` binary.
 pub fn buildProject(p: Project, bin: string) -> @Result<BuildResult, string> {
     val manifest = try fs.readText(path.join([p.root, "botopink.json"]));
@@ -87,7 +102,8 @@ pub fn buildProject(p: Project, bin: string) -> @Result<BuildResult, string> {
     if (appDir.startsWith(prefix) == false) throw "onze build: appDir \"" + appDir + "\" is not under the package's src \"" + src + "\"";
     val appRel = appDir.slice(prefix.length(), appDir.length());
     val srcPath = path.join([p.root, src]);
-    val rel = try fs.walk(srcPath);
+    val walked = try fs.walk(srcPath);
+    val rel = walked.filter({ r -> sourceOfApp(src, r) });
     var sources: Array<#(string, string)> = [];
     var styles: Array<#(string, string)> = [];
     for (rel) { r ->
@@ -121,22 +137,36 @@ pub fn buildProject(p: Project, bin: string) -> @Result<BuildResult, string> {
     val styleMod = if (styleSources.length == 0) [] else [#("styles/mod.bp", sortedText(styleSources.map({ s -> "pub mod " + s._0.slice(7, s._0.length() - 3) + ";" })).join("\n") + "\n")];
     val extraMods = if (styleSources.length == 0) [] else ["styles"];
 
-    // stage and compile the server
-    val outDir = path.join([p.root, p.config.outDir]);
+    // the styleMap's probe, staged into both packages (refusal 3)
+    val probing = report.styleMap.length > 0;
+    val probeFiles: Array<#(string, string)> = if (probing) [#(styleProbeModule() + ".bp", styleProbeSource(report.styleMap))] else [];
+    val probeMods: string[] = if (probing) [styleProbeModule()] else [];
+    val pkg = try packageName(manifest);
+
+    // stage and compile the server: the app, its main, onze-server
+    val outDir = outDirOf(p);
     val workspace = workspaceMembers(p.root);
-    val serverFiles = try stageAt(p.aliases, appRel, appDir, sources.append(styleSources).append(styleMod), entries, manifest, 1, extraMods, workspace);
+    val serverDir = try memberBeside(manifest, p.root, workspace, "onze", "onze-server");
+    val serverFiles = try stageAt(p.aliases, appRel, appDir, sources.append(styleSources).append(styleMod).append(probeFiles).append([#("onze_main.bp", serverMainSource(p.config))]), entries, manifest, p.root, extraMods.append(probeMods).append(["onze_main"]), workspace, [#("onze-server", serverDir)]);
     val cleaned = process.run("rm", ["-rf", outDir]);
     try writeAll(outDir, serverFiles);
     try run(outDir, bin, ["build", "--target", "erlang", "--out", path.join([outDir, "server"])]);
+    try compileBeam(path.join([outDir, "server"]));
 
     // the client package: the same tree plus the generated entry
     val components = clientComponents(graph, modules);
-    val entrySource = generateEntry(components, EntryConfig(allowedRedirects: p.config.allowedRedirects, actionHeader: defaultActionHeader(), scripts: []));
+    val entrySource = generateEntry(components, EntryConfig(allowedRedirects: p.config.allowedRedirects, actionHeader: defaultActionHeader, scripts: []));
     val clientDir = path.join([outDir, "client"]);
-    val clientFiles = try stageAt(p.aliases, appRel, appDir, sources.append(styleSources).append(styleMod).append([#("onze_entry.bp", entrySource)]), entries, manifest, 2, extraMods.append(["onze_entry"]), workspace);
+    val linkDir = try memberBeside(manifest, p.root, workspace, "jhonstart", "jhonstart-link");
+    val formsDir = try memberBeside(manifest, p.root, workspace, "jhonstart", "jhonstart-forms");
+    val clientFiles = try stageAt(p.aliases, appRel, appDir, sources.append(styleSources).append(styleMod).append(probeFiles).append([#("onze_entry.bp", entrySource)]), entries, manifest, p.root, extraMods.append(probeMods).append(["onze_entry"]), workspace, [#("jhonstart-link", linkDir), #("jhonstart-forms", formsDir)]);
     try writeAll(clientDir, clientFiles.map({ f -> if (f._0 == "botopink.json") #(f._0, restrictToCommonJs(f._1)) else f }));
     val jsDir = path.join([outDir, "client-js"]);
     try run(clientDir, bin, ["build", "--target", "commonJS", "--out", jsDir]);
+
+    // the styleMap, evaluated by both backends and compared
+    var evaluated: Array<#(string, string)> = [];
+    if (probing) evaluated = try evaluateStyles(report.styleMap, pkg, path.join([outDir, "server"]), jsDir);
 
     // link: the entry's closure is shared; the entry chunk runs it
     val closure = try jsClosure(jsDir, ["onze_entry.js"], clientSubstitutions());
@@ -159,7 +189,7 @@ pub fn buildProject(p: Project, bin: string) -> @Result<BuildResult, string> {
     val sheetName = stylesheetFile(sheet._1);
     try writeAll(staticDir, [#(sharedName, sharedText), #(entryName, entryText), #(sheetName, sheet._0)]);
     val m = ClientBundleManifest(
-        version: manifestVersion(),
+        version: manifestVersion,
         buildId: buildId,
         entry: ChunkRef(id: "entry", url: staticUrl(buildId, entryName), hash: chunkHashOf(entryText), bytes: entryText.length()),
         shared: [ChunkRef(id: "shared", url: staticUrl(buildId, sharedName), hash: chunkHashOf(sharedText), bytes: sharedText.length())],
@@ -170,7 +200,54 @@ pub fn buildProject(p: Project, bin: string) -> @Result<BuildResult, string> {
     );
     val manifestText = formatManifest(m);
     try writeAll(outDir, [#("client-manifest.txt", manifestText), #("build-id", buildId + "\n")]);
-    return BuildResult(buildId: buildId, manifest: manifestText, staged: serverFiles.map({ f -> f._0 }), chunks: [sharedName, entryName, sheetName], stylesheet: sheet._0);
+    return BuildResult(buildId: buildId, manifest: manifestText, staged: serverFiles.map({ f -> f._0 }), chunks: [sharedName, entryName, sheetName], stylesheet: sheet._0, styles: evaluated);
+}
+
+// Runs the styleMap's probe under node (the client package's JavaScript) and
+// under erl (the server package's BEAM) and compares the two: the classes
+// they agree on, or the build's refusal naming every site they do not.
+fn evaluateStyles(styleMap: Array<#(string, string)>, pkg: string, server: string, jsDir: string) -> @Result<Array<#(string, string)>, string> {
+    val js = try process.run("node", ["-e", "process.stdout.write(require(process.argv[1]).onzeStyleRules())", path.join([jsDir, styleProbeModule() + ".js"])]);
+    if (js.status != 0) throw "onze build: the styleMap probe failed under node:\n" + js.stdout.trim() + js.stderr.trim();
+    val beam = try process.run("erl", ["-noshell", "-pa", path.join([server, "beam"]), "-eval", "io:put_chars('" + pkg + "@" + styleProbeModule() + "':onzeStyleRules()), halt()."]);
+    if (beam.status != 0) throw "onze build: the styleMap probe failed under erl:\n" + beam.stdout.trim();
+    val parity = styleParity(styleMap, parseStyleProbe(js.stdout), parseStyleProbe(beam.stdout));
+    if (parity._1.length > 0) throw parity._1.map({ r -> "refused: " + refusalMessage(r).trimEnd() }).join("\n");
+    return parity._0;
+}
+
+// `erlc` over the server's Erlang modules into `<server>/beam/` — what
+// `onze start` loads. A refusal fails the build with erlc's own message.
+fn compileBeam(server: string) -> @Result<void, string> {
+    val r = try process.run("sh", ["-c", "cd '" + server + "' && mkdir -p beam && erlc -o beam erl/*.erl 2>&1"]);
+    if (r.status != 0) throw "erlc failed in " + server + ":\n" + r.stdout.trim();
+    return;
+}
+
+// The directory of the dependency `name` the project names — a workspace
+// member or a `path` — or an error naming the manifest.
+pub fn dependencyDir(manifest: string, root: string, workspace: Array<#(string, string)>, name: string) -> @Result<string, string> {
+    val deps = membersOf(decode(manifest).unwrapOr(Json.Null)).filter({ m -> m._0 == "dependencies" }).map({ m -> membersOf(m._1) }).at(0).unwrapOr([]);
+    val hit = deps.filter({ d -> d._0 == name });
+    if (hit.length == 0) throw "onze build: " + path.join([root, "botopink.json"]) + " does not depend on " + name;
+    val spec = membersOf(hit.at(0).unwrapOr(#("", Json.Null))._1);
+    val fromWorkspace = spec.any({ f -> f._0 == "workspace" });
+    val rel = textOf(spec.filter({ f -> f._0 == "path" }).at(0).unwrapOr(#("", Json.Null))._1);
+    val member = workspace.filter({ w -> w._0 == name }).map({ w -> w._1 }).at(0).unwrapOr("");
+    val dir = if (fromWorkspace) member else if (rel.startsWith("/")) rel else if (rel == "") "" else path.normalize(path.join([root, rel]));
+    if (dir == "") throw "onze build: the `" + name + "` dependency names no directory (a git dependency is not staged yet)";
+    return dir;
+}
+
+// The member `member` of the library workspace holding the project's
+// dependency `name`: the server package depends on onze-server beside the
+// project's `onze`, the client package on jhonstart-link and jhonstart-forms
+// beside its `jhonstart` (the generated entry imports them).
+pub fn memberBeside(manifest: string, root: string, workspace: Array<#(string, string)>, name: string, member: string) -> @Result<string, string> {
+    val dir = try dependencyDir(manifest, root, workspace, name);
+    val beside = path.join([path.dirname(dir), member]);
+    if (fs.exists(path.join([beside, "botopink.json"])) == false) throw "onze build: no " + member + " beside " + dir + " (" + beside + ")";
+    return beside;
 }
 
 // The members of the workspace enclosing `root` (the first ancestor whose

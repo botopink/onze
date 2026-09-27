@@ -4,7 +4,15 @@
 import {RouteEntry, scanFiles} from "scan";
 import {checkTree, stage, stagedPath, rewriteImports, modFiles, routesModule, banner} from "generate";
 import {AliasMap} from "onze";
-import {io.fs, io.process, io.clock, path, testing.snapshots} from "std";
+import {io.fs, io.process, io.clock, path, testing.snapshots, io.env} from "std";
+
+// The run's own scratch directory — `botopink test` names it in
+// `BOTOPINK_TEST_TMPDIR`, and it is the one place a test writes.
+fn testTmp() -> string {
+    val root = env.read("BOTOPINK_TEST_TMPDIR") ?? "";
+    assert root != "", "BOTOPINK_TEST_TMPDIR is not set: run this suite under `botopink test`";
+    return root;
+}
 
 fn aliases() -> AliasMap {
     return AliasMap(entries: [#("@/components", "components"), #("@/lib", "lib")]);
@@ -88,7 +96,7 @@ test "generate: round trip ---- stage, write, botopink check" {
     assert bin != "";
     val es = try entries();
     val staged = try stage(aliases(), "app", "src/app", sources(), es, manifest());
-    val dir = path.join([process.cwd(), ".botopinkbuild", "tmp", "gen-" + process.pid().toString() + "-" + clock.nowMillis().toString()]);
+    val dir = path.join([testTmp(), "gen-" + clock.nowMillis().toString()]);
     for (staged) { f ->
         val made = process.run("mkdir", ["-p", path.dirname(path.join([dir, f._0]))]);
         val w = fs.writeText(path.join([dir, f._0]), f._1);

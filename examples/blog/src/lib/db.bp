@@ -16,6 +16,7 @@
 //// Server-only: front 68 fails the build if a `#[client]` module imports it.
 
 import {path, io.fs} from "std";
+import {serverOnly} from "jhonstart";
 
 pub type Post(
     slug: string,

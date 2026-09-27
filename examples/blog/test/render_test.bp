@@ -7,12 +7,14 @@
 
 import {Element, ElementBase, RequestData, Response, RenderHooks, defaultHooks, PageContext, LayoutProps} from "jhonstart";
 import {defaultConfig} from "onze";
-import {bootSite, pageInput, responseOver, loadModuleBodies} from "onze";
+import {bootSite, pageInput, responseOver} from "onze";
 import {rootLayout} from "app.layout";
 import {home} from "app.page";
 import {blogLayout} from "app.blog.layout";
 import {blogIndex} from "app.blog.page";
 import {listPosts} from "lib.db";
+import {dashboardLayout} from "app.dashboard.layout";
+import {newPostPage, newPostRenders} from "app.dashboard.posts.new.page";
 
 #[@External.Node("""(globalThis.__blogRec = [], 0)""")]
 #[@External.Erlang("""(fun() -> put(blog_rec, []), 0 end)()""")]
@@ -55,31 +57,27 @@ fn req(path: string) -> RequestData {
     return RequestData(method: "GET", path: path, params: [], query: [], headers: [], cookies: []);
 }
 
-fn ctx(path: string, pattern: string) -> PageContext {
-    return PageContext(pathname: path, pattern: pattern, params: [], query: [], rest: []);
+fn reqWith(path: string, cookies: Array<#(string, string)>) -> RequestData {
+    return RequestData(method: "GET", path: path, params: [], query: [], headers: [], cookies: cookies);
 }
 
-val table = "L|/\nL|/blog\nP|/\nP|/blog\nP|/blog/[slug]\nP|/about";
+fn ctx(path: string, pattern: string) -> PageContext {
+    return PageContext(pathname: path, pattern: pattern, params: [], rest: []);
+}
+
+val table = "L|/\nL|/blog\nL|/dashboard\nP|/\nP|/blog\nP|/blog/[slug]\nP|/about\nP|/login\nP|/dashboard\nP|/dashboard/posts/new";
 
 fn styleCount(doc: string) -> i32 {
     return doc.split("<style>").length - 1;
 }
 
-// On erlang an imported module's registrations are its '_botopink_init'/0,
-// which the boot runs (onze's loadModuleBodies); on node requiring ran them.
-fn registered() -> i32 {
-    return loadModuleBodies(["blog@app@layout", "blog@app@page", "blog@app@blog@layout", "blog@app@blog@page"]);
-}
-
 fn renderHome() -> @Task<string> {
-    val loaded = registered();
     val site = bootSite(defaultConfig(), defaultHooks());
     val out = await site.renderStream(pageInput("b1", "/", "/", "", "", table, [], ["/"], { -> home(ctx("/", "/")) }, [], []), req("/"), writer());
     return document();
 }
 
 fn renderBlog() -> @Task<string> {
-    val loaded = registered();
     val site = bootSite(defaultConfig(), defaultHooks());
     val out = await site.renderStream(pageInput("b1", "/blog", "/blog", "", "", table, [], ["/", "/blog"], { -> blogIndex(ctx("/blog", "/blog")) }, [], []), req("/blog"), writer());
     return document();
@@ -113,4 +111,29 @@ test "read path: two consecutive requests both carry a non-empty <style>" {
     val sheet2 = second.split("<style>").at(1).unwrapOr("").split("</style>").at(0).unwrapOr("");
     assert sheet1.contains(".e_");
     assert sheet2.contains(".e_");
+}
+
+fn renderNewPost(jar: Array<#(string, string)>) -> @Task<string> {
+    val site = bootSite(defaultConfig(), defaultHooks());
+    val out = await site.renderStream(pageInput("b1", "/dashboard/posts/new", "/dashboard/posts/new", "", "", table, [], ["/", "/dashboard", "/dashboard/posts/new"], { -> newPostPage(ctx("/dashboard/posts/new", "/dashboard/posts/new")) }, [], []), reqWith("/dashboard/posts/new", jar), writer());
+    return document();
+}
+
+test "write path: the dashboard layout is the gate ---- no session, 307 to /login, no chunk, the page never runs" {
+    val before = newPostRenders();
+    val doc = await renderNewPost([]);
+    assert doc == "";
+    assert recEvents().contains("status 307");
+    assert recEvents().contains("header location");
+    assert recEvents().filter({ e -> e.startsWith("write ") }).length == 0;
+    assert newPostRenders() == before;
+}
+
+test "write path: with a session cookie the dashboard renders the page" {
+    val before = newPostRenders();
+    val doc = await renderNewPost([#("session", "s1")]);
+    assert doc.contains("<h1>New post</h1>");
+    assert doc.contains("class=\"dashboard\"");
+    assert recEvents().at(0).unwrapOr("") == "status 200";
+    assert newPostRenders() == before + 1;
 }

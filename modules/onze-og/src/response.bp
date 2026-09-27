@@ -5,8 +5,7 @@
 //// they could have: the rasterizer writes a file and the HTTP layer streams
 //// it). `size` / `contentType` default to 1200×630 and `image/png`
 //// (`NEXTJS-DOCS.md § 18`). They are functions a route exports (`pub fn
-//// size()`), not `pub val`s — a `pub val` does not cross modules today
-//// (front 49's finding F1), the answer front 32's `metadata` gives too.
+//// size()`), the answer front 32's `metadata` gives too.
 ////
 //// A card is rendered once: its key is the content hash of the route
 //// pattern, the params, the SVG document, the face set and the size — hashing

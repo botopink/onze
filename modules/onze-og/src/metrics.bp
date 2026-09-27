@@ -17,12 +17,6 @@ declare fn intOf(s: string) -> i32;
 #[@External.Erlang("""unicode:characters_to_list($0, utf8)""")]
 declare fn codePoints(s: string) -> Array<i32>;
 
-// Integer division, truncating: `i32 / i32` is a float division on commonJS
-// and an integer one on erlang (front 49's finding F7), so onze divides here.
-#[@External.Node("""Math.trunc($0 / $1)""")]
-#[@External.Erlang("""($0 div $1)""")]
-pub declare fn idiv(a: i32, b: i32) -> i32;
-
 pub fn parseMetrics(family: string, weight: i32, text: string) -> FontMetrics {
     var upm = 1000;
     var ascent = 0;
@@ -59,5 +53,5 @@ pub fn measure(m: FontMetrics, text: string, fontSize: i32) -> i32 {
     for (codePoints(text)) { c ->
         units = units + advanceOf(m, c);
     };
-    return idiv(units * fontSize + m.unitsPerEm - 1, m.unitsPerEm);
+    return ((units * fontSize + m.unitsPerEm - 1) / m.unitsPerEm);
 }

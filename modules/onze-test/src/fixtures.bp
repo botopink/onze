@@ -8,10 +8,9 @@ pub type FixtureFile(path: string, content: string)
 
 pub type Fixture(files: Array<FixtureFile>) {
     // The content of `path`, `""` when the fixture has no such file.
-    // (A free function: `at(i).unwrapOr(d)` inside a record method is not
-    // lowered — `06-onze/49-onze-stand-up/README.md` § Compiler findings.)
     pub fn read(self: Self, path: string) -> string {
-        return fileContent(self.files, path);
+        val hit = self.files.filter({ f -> f.path == path });
+        return hit.at(0).unwrapOr(FixtureFile(path: "", content: "")).content;
     }
 
     pub fn paths(self: Self) -> string[] {
@@ -19,10 +18,6 @@ pub type Fixture(files: Array<FixtureFile>) {
     }
 }
 
-fn fileContent(files: Array<FixtureFile>, path: string) -> string {
-    val hit = files.filter({ f -> f.path == path });
-    return hit.at(0).unwrapOr(FixtureFile(path: "", content: "")).content;
-}
 
 pub fn fixtureTree(text: string) -> Fixture {
     var files: Array<FixtureFile> = [];

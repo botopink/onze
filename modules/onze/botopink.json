@@ -15,9 +15,6 @@
     "jhonstart": {
       "path": "../../../jhonstart/modules/jhonstart"
     },
-    "jhonstart-link": {
-      "path": "../../../jhonstart/modules/jhonstart-link"
-    },
     "jhonstart-forms": {
       "path": "../../../jhonstart/modules/jhonstart-forms"
     },

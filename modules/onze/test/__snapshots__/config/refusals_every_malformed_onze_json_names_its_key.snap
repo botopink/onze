@@ -3,7 +3,7 @@ test: config: refusals ---- every malformed onze.json names its key
 subject: errors
 
 { "prot": 4000 }
-  onze.json: unknown key "prot" (known: name, port, basePath, appDir, publicDir, outDir, dev, actionsBodyLimit, allowedRedirects)
+  onze.json: unknown key "prot" (known: name, port, basePath, appDir, publicDir, outDir, dev, actionsBodyLimit, allowedRedirects, lang)
 { "port": "4000" }
   onze.json: "port" must be a whole number, not a string
 { "port": 70000 }

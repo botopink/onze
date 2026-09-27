@@ -1,10 +1,18 @@
 // `botopink test` suite for `src/preprocess.bp` (front 69 step 4).
 
 import {preprocess} from "preprocess";
-import {io.fs, io.process, io.clock, path} from "std";
+import {io.fs, io.process, io.clock, path, io.env} from "std";
+
+// The run's own scratch directory — `botopink test` names it in
+// `BOTOPINK_TEST_TMPDIR`, and it is the one place a test writes.
+fn testTmp() -> string {
+    val root = env.read("BOTOPINK_TEST_TMPDIR") ?? "";
+    assert root != "", "BOTOPINK_TEST_TMPDIR is not set: run this suite under `botopink test`";
+    return root;
+}
 
 fn scratchFile(text: string) -> string {
-    val dir = path.join([".botopinkbuild", "tmp", "pre-" + process.pid().toString() + "-" + clock.nowMillis().toString()]);
+    val dir = path.join([testTmp(), "pre-" + clock.nowMillis().toString()]);
     val made = process.run("mkdir", ["-p", dir]);
     val file = path.join([dir, "a.scss"]);
     val w = fs.writeText(file, text);
@@ -34,7 +42,7 @@ test "preprocess: a missing command fails naming it" {
 }
 
 test "preprocess: a non-zero exit fails with the command's output attached" {
-    val f = path.join([".botopinkbuild", "tmp", "does-not-exist.scss"]);
+    val f = path.join([testTmp(), "does-not-exist.scss"]);
     val msg = errorOf(preprocess("cat", f));
     assert msg.startsWith("preprocessor \"cat\" exited 1 on ");
     assert msg.contains(": cat: ");

@@ -5,5 +5,5 @@ import {emilia, Token} from "emilia";
 #[layout("")]
 pub fn rootLayout(props: LayoutProps) -> @Component<ElementBase, Element> {
     val shell = emilia([.Gap.All.4]);
-    return main([props.children], attrs: [#("lang", "en"), #("class", shell)]);
+    return main([props.children], attrs: [#("class", shell)]);
 }

@@ -19,11 +19,11 @@ Five things, and nothing that duplicates a rakun or jhonstart definition:
 
 | Piece | Where | What |
 |---|---|---|
-| `OnzeConfig` | `modules/onze/src/config.bp` | the project configuration `onze.json` holds — `defaultConfig()`, `withPort` / `withDev`, `loadConfig(botopinkJson, onzeJson)` (an unknown key, a wrong kind or a port outside `1..65535` is an `Error` naming the key), `describeConfig` (the table `onze info` prints) |
+| `OnzeConfig` | `modules/onze/src/config.bp` | the project configuration `onze.json` holds — `defaultConfig()`, `withPort` / `withDev`, `loadConfig(botopinkJson, onzeJson)` (an unknown key, a wrong kind or a port outside `1..65535` is an `Error` naming the key), `parsePort(text, source)` (a `PORT` / `-p` value), `describeConfig` (the table `onze info` prints) |
 | the import alias map | `modules/onze/src/types.bp` | `AliasMap`, `loadAliases(botopinkJson)` (a target that escapes the package root is refused at load, naming the entry), `resolveAlias(map, spec)` (longest prefix first, at a module boundary) |
 | the routing-file vocabulary | `modules/onze/src/types.bp` | `OnzeProject`, `AppFile(authoredPath, segment, kind)`, `appFileKinds()`, `classifyAppFile(appDir, path)` |
-| the environment rule | `modules/onze/src/config.bp` | `publicEnvPrefix()`, `isPublicEnvName`, `publicEnv` |
-| the boot adapter | `modules/onze/src/integration.bp` | `bootSite`, `rakunEntries`, `responseOver`, `chainFor`, `pageInput`, `boot` |
+| the environment rule | `modules/onze/src/config.bp` | `publicEnvPrefix`, `isPublicEnvName`, `publicEnv` |
+| the boot adapter | `modules/onze/src/integration.bp` (both rows) and `modules/onze-server/src/server.bp` (erlang) | the jhonstart half — `bootSite`, `siteRender`, `rakunEntries`, `responseOver`, `chainFor`, `pageInput`, `boot` — and the rakun half: `Onze.run(config)`, `requestData`, `responseFor`, `registerPages`, `registerRoots` |
 
 ### `onze.json`
 
@@ -38,6 +38,7 @@ Five things, and nothing that duplicates a rakun or jhonstart definition:
 | `dev` | `false` | development mode |
 | `actionsBodyLimit` | `1048576` | bytes; written into rakun as `rakun.actions.bodyLimit` (decision 117) |
 | `allowedRedirects` | `[]` | absolute redirect targets jhonstart accepts; handed to `app(allowedRedirects: …)` |
+| `lang` | `"en"` | the document's `<html lang>`; handed to `app(lang: …)`, which refuses a value that is not a language tag |
 
 ### The import alias map
 
@@ -48,7 +49,7 @@ Five things, and nothing that duplicates a rakun or jhonstart definition:
 `import {PostCard} from "@/components.post_card";` resolves to `components.post_card`. The
 mechanism is textual and build-time: `onze-cli`'s scan rewrites the prefix before the compiler
 sees the import. **The compiler does not know aliases exist**, so an alias is visible through
-`onze dev` / `onze build` only — a bare `botopink check` on the source tree does not resolve it.
+`onze build` only — a bare `botopink check` on the source tree does not resolve it.
 
 ## The four seams
 
@@ -84,23 +85,31 @@ rakun serves and jhonstart renders; the boot hands each what it needs from the o
   (`__bp_action`), `rakun.actions.header` (`X-Bp-Action`), `rakun.actions.bodyLimit` and
   `rakun.i18n.exclude` with `/_onze` appended once — every key rakun reads is a `rakun.*` key
   (decision 115), and neither library spells an action wire name (decision 114);
-- **per request**, the renderer onze registers for a page pattern builds the `PageInput` with
-  `pageInput(…)` — the segment chain is `chainFor(patterns)`, one `UiSegment` per ancestor pattern
-  rakun's layout chain names, each as jhonstart's UI registry holds it (`segmentFor`) — and wraps
-  rakun's `ChunkWriter` in jhonstart's `Response` with `responseOver`, which maps `status` /
-  `header` / `write` / `close` onto `setStatus` / `setHeader` / `write` / `close` one to one:
+- **the pages**: `onze-server`'s `registerPages` copies jhonstart's UI table (`uiTable()`) into
+  rakun's — every record but a page stored as written (`rkAppStoreEntry`), every page through
+  rakun's `page(pattern, render)` with one opaque `PageRenderer`;
+- **per request**, that renderer builds the `PageInput` with `pageInput(…)` — the segment chain is
+  `chainFor(patterns)`, one `UiSegment` per layout pattern rakun's chain names plus the page's own,
+  each as jhonstart's UI registry holds it (`segmentFor`) — builds `RequestData` from rakun's
+  `Request` (`requestData`: the method, the path, the parameters rakun matched, the cookies of the
+  `cookie` header; rakun's page `Request` enumerates neither its query nor its headers, so those two
+  are empty), and wraps rakun's `ChunkWriter` in jhonstart's `Response` (`responseFor` over the
+  core's `responseOver`), which maps `status` / `header` / `write` / `close` onto `setStatus` /
+  `setHeader` / `write` / `close` one to one:
 
   ```bp
   // one PageRenderer per page pattern — rakun front 23's `page(pattern, render)`
-  page(route, fn(req: Request, out: ChunkWriter) -> @Task<@Result<void, string>> {
-      return site.renderStream(pageInput(…), requestData(req), responseOver(
-          { c -> out.setStatus(c) }, { n, v -> out.setHeader(n, v) },
-          { chunk -> out.write(chunk) }, { -> out.close() },
-      ));
-  });
+  rakunPage(pattern, { req, out -> renderPage(render, build, table, pattern, req, out) });
+  // renderPage: render(pageInput(…), requestData(req), responseFor(out))
   ```
 
-  jhonstart never sees the `ChunkWriter`, and rakun never sees the `Response`.
+  jhonstart never sees the `ChunkWriter`, and rakun never sees the `Response`;
+- **the listener**: `Onze.run(config)` reads `<outDir>/build-id` and `client-manifest.txt` (a missing
+  one is a failure naming the file), writes the `rakun.*` entries with rakun's `rkSetProp`, boots
+  the jhonstart app with the bundle's head and body tags (`pageRenderHooks`), registers the pages
+  and the static roots, installs rakun-web's static entry and chain (`bootWeb`) and the page path
+  (`servePages`), and calls `Rakun.run(App(port: config.port, basePath: config.basePath))` —
+  `basePath` unchanged.
 
 **Navigation signals never reach onze.** A page, layout or template that calls jhonstart's
 `notFound()` or `redirect(url)` is handled inside jhonstart's render (decision 117): before the
@@ -196,12 +205,21 @@ error. One parser, both targets.
 installs them. `afterInteractive` and `lazyOnload` scripts are scheduled by the entry, `worker`
 scripts started by it (a worker cannot declare `onLoad`).
 
-**The entry** is generated botopink source: it sets the validation message source, registers
-`globals().fill` and `globals().signal` (with `allowedRedirects`), registers one starter per
-client component in `globalThis.__jhIslandStarters` (decoding the island's props into the
-component's `#[clientProps]` record from its source), raises on an island or a hole present on one
-side of the document/payload only, then calls `hydrate()`, `linkMount()` and
+**The entry** is generated botopink source and spells no `__`-prefixed name: it sets the validation
+message source, registers `globals.fill` and `globals.signal` (with `allowedRedirects`), registers
+one starter per client component with jhonstart's `registerStarter` (the `globals.starters` table
+`hydrate()` reads; each starter decodes the island's props into the component's `#[clientProps]`
+record from its source and, before committing the markup, raises on an emilia class the payload's
+`s` key does not list — the server's stylesheet has no rule for it), raises on an island or a hole
+present on one side of the document/payload only, then calls `hydrate()`, `linkMount()` and
 `formMount(actionHeader)`. It imports nothing from `routing` and nothing of rakun.
+
+**The styleMap is evaluated on both backends.** Each literal `emilia(…)` call of the client graph is
+compiled into a probe module (`onze_styles`) in the client package and in the server package;
+`onze build` runs it under node and under erl — emilia's own `styleRule(tokens, defaultTheme())`,
+the rule body hashed with std's `contentHash` — and a call whose class or body hash differs between
+the two fails the build (`emilia-hash-split`, naming the token list). The classes the two agree on
+are the build's `styles`.
 
 **Dev.** A body edit relinks only the chunks containing the module; an import edit re-walks the
 graph; a refusal fails dev with the build's own report; the manifest is written before the push.
@@ -216,8 +234,7 @@ restates none of it.
 **CSS Modules.** `app/blog/blog.module.css` becomes the generated `.onze/styles/app_blog_blog.bp`,
 one accessor per class the file defines (a class that begins a selector), renamed
 `<file>_<class>_<hash>` (six hex digits of std's `contentHash` of the file) in the selectors only.
-The accessors are functions — `import {container} from "styles.app_blog_blog"; … container()` —
-because a `pub val` does not cross modules today. A class used but not defined is left as written
+The accessors are `pub val`s — `import {container} from "styles.app_blog_blog"; … container`. A class used but not defined is left as written
 and reported once; `:global(…)` is not supported; a file containing `</style` is refused.
 
 **The stylesheet.** The global CSS (`app/globals.css`), then every module's rewritten CSS, in one
@@ -226,16 +243,18 @@ change per request). Its `Y` record goes into the client manifest. `pageRenderHo
 is the head fragment (the stylesheet `<link>`s, then the `beforeInteractive` scripts) and the body
 tags as jhonstart's `RenderHooks`.
 
-**Exactly two static roots**, served by rakun-web front 82 (onze serves no file), and no
-configuration adds a third:
+**Two static roots**, served by rakun-web front 82 (onze serves no file), and no configuration
+adds a third:
 
 | Root | Directory | Cache |
 |---|---|---|
 | `/_onze/static/<buildId>/**` | `<outDir>/static/<buildId>/` | `public, max-age=31536000, immutable` |
 | `/**` | `public/` | `no-cache` |
 
-Every other directory — `app/`, `src/`, `content/`, `lib/`, `.onze/` — is unreachable over HTTP.
-An app that wants a file published copies it into `public/`.
+`Onze.run` registers the first with rakun-web's `registerStaticRoot`. The second is not registered
+yet: rakun-web answers every request its pattern admits and a miss is a 404, so a `/**` root would
+answer every page's URL (decision pending 69-b). Every other directory — `app/`, `src/`,
+`content/`, `lib/`, `.onze/` — is unreachable over HTTP.
 
 **Preprocessors.** `preprocess(command, inputPath)` runs the configured command with the input path
 and takes its stdout; no command means the file as written; a missing command or a non-zero exit
@@ -355,10 +374,23 @@ SVG, the faces and the size, so a template change invalidates it with no version
 | `ActionResponse<S>(state, success, message)` | rakun's `ActionResult` (the bundled `actions`' envelope) is the action envelope |
 | `RouteSegmentConfig(dynamic, revalidate)` | rakun front 60's `SegmentConfig(dynamic, dynamicParams, revalidate, fetchCache)` |
 
+## The commands
+
+`onze build` stages the app twice — the server package (the app, the style modules, `onze_main.bp`,
+a dependency on `onze-server`) compiled for erlang and by `erlc` into `<outDir>/server/beam/`, and
+the client package (the app and the generated entry) compiled for commonJS — then links the client
+chunks, writes the stylesheet, the build id, `static/<buildId>/` and `client-manifest.txt`. The
+generated `onze_routes.bp` imports every decorated convention file, so the server program runs
+their `#[page]` / `#[layout]` registrations before `main` (decision 140).
+
+`onze start [-p <port>]` compiles nothing: with no `<outDir>/build-id` it exits non-zero naming the
+directory; otherwise it runs `erl -noshell -pa <outDir>/server/beam -eval
+'<package>@onze_main':main()` from the project root, the server's output in `<outDir>/server.log`.
+The port is `-p`, else `PORT`, else `onze.json`'s `port`.
+
 ## What is not wired yet
 
-The rakun half of the boot is data and adapters today: rakun's `ChunkWriter` with `setStatus` /
-`setHeader`, `PageRenderer` and `page(pattern, render)` (rakun front 23 step 1), the core on
-`["erlang"]` (front 04), rakun-web's `registerStaticRoot` (front 82) and a way to apply the
-`rakun.*` entries from a library do not exist yet, so `Onze.run(config)` — `Rakun.run(App(port,
-basePath))` after the boot — lands with them.
+`onze dev` (the build `start` serves, with changed modules reloaded into the running node); the
+public root (69-b); `RequestData`'s query and headers (rakun's page `Request` enumerates neither);
+the action wire names reach rakun as `rakun.actions.field` / `.header` and nothing in rakun reads
+them yet (rakun front 24); prerendering (rakun front 60).

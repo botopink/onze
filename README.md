@@ -19,7 +19,8 @@ compiles nothing and ships nothing. Each member is reached by its manifest name:
 
 | Member | `from` | Target | Front |
 |---|---|---|---|
-| [`modules/onze/`](modules/onze/) | `"onze"` — config, project vocabulary, alias map, env rule, boot adapter | both | 49 |
+| [`modules/onze/`](modules/onze/) | `"onze"` — config, project vocabulary, alias map, env rule, the boot's jhonstart half | both | 49 |
+| [`modules/onze-server/`](modules/onze-server/) | `"onze-server"` — `Onze.run`, the boot's rakun half | erlang | 49 |
 | [`modules/onze-test/`](modules/onze-test/) | `"onze-test"` — `assert<Subject>(loc, …)` helpers, fixtures, the E2E runner | both | 49 + each front |
 | [`modules/onze-cli/`](modules/onze-cli/) | `"onze-cli"` — `create · dev · build · start · info` | commonJS | 50 |
 | [`modules/onze-bundler/`](modules/onze-bundler/) | `"onze-bundler"` — client graph, refusals, chunks, manifest, hydration entry | both | 68 |
@@ -29,7 +30,6 @@ compiles nothing and ships nothing. Each member is reached by its manifest name:
 
 `botopink test` runs inside a member, never at the root.
 
-A member that depends on `onze` lists the jhonstart chain before it, in dependency order
-(`jhonstart`, `jhonstart-link`, `jhonstart-forms`, `emilia`, `jhonstart-emilia`): the compiler
-follows no dependency's own `dependencies` and loads the list in the order written. The cut and the dependency graph are
+A member lists the packages it imports; their own dependencies load transitively (decision 143).
+The cut and the dependency graph are
 `specs/1.0.10-beta/06-onze/modules.md` in the botopink meta repository.

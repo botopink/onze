@@ -40,13 +40,13 @@ import {OnzeConfig, defaultActionField, defaultActionHeader, assetPrefix} from "
 pub fn rakunEntries(config: OnzeConfig, i18nExclude: string[]) -> Array<#(string, string)> {
     var exclude: string[] = [];
     for (i18nExclude) { e ->
-        if (e != assetPrefix()) exclude.push(e);
+        if (e != assetPrefix) exclude.push(e);
     };
-    exclude.push(assetPrefix());
+    exclude.push(assetPrefix);
     return [
         #("rakun.appDir", config.appDir),
-        #("rakun.actions.field", defaultActionField()),
-        #("rakun.actions.header", defaultActionHeader()),
+        #("rakun.actions.field", defaultActionField),
+        #("rakun.actions.header", defaultActionHeader),
         #("rakun.actions.bodyLimit", config.actionsBodyLimit.toString()),
         #("rakun.i18n.exclude", exclude.join(",")),
     ];
@@ -60,12 +60,24 @@ pub fn bundleHooks(headTags: fn(route: string) -> string, bodyTags: fn(route: st
 }
 
 // jhonstart's app for this project: the emilia bridge registered, the
-// redirect allow-list handed over, the bundle tags installed and the action
-// wire names set — the same two names `rakunEntries` hands rakun.
+// redirect allow-list and the document's language (`<html lang>`; a value
+// that is not a language tag fails `app`, naming it) handed over, the bundle
+// tags installed and the action wire names set — the same two names
+// `rakunEntries` hands rakun.
 pub fn bootSite(config: OnzeConfig, hooks: RenderHooks) -> App {
-    setWireNames(defaultActionField(), defaultActionHeader());
+    setWireNames(defaultActionField, defaultActionHeader);
     setHooks(hooks);
-    return app(plugins: [emiliaPlugin()], allowedRedirects: config.allowedRedirects);
+    return app(plugins: [emiliaPlugin()], allowedRedirects: config.allowedRedirects, lang: config.lang);
+}
+
+// The booted app's render as a function value: what a server hands one
+// request's input, request data and response to. onze-server holds this
+// rather than jhonstart's `App`, because it also constructs rakun's `App` and
+// one module cannot hold two types of one name (language-gaps.md).
+pub type SiteRender = fn(input: PageInput, data: RequestData, res: Response) -> @Task<@Result<void, string>>;
+
+pub fn siteRender(site: App) -> SiteRender {
+    return { input, data, res -> site.renderStream(input, data, res) };
 }
 
 // jhonstart's `Response` over a server's chunk writer: `status` / `header` /
@@ -128,22 +140,4 @@ pub type OnzeBoot(site: App, rakun: Array<#(string, string)>)
 
 pub fn boot(config: OnzeConfig, hooks: RenderHooks, i18nExclude: string[]) -> OnzeBoot {
     return OnzeBoot(site: bootSite(config, hooks), rakun: rakunEntries(config, i18nExclude));
-}
-
-// ── module bodies on the BEAM ───────────────────────────────────────────────
-//
-// A decorator's registration (`#[page]`, `#[layout]`, …) is a module-level
-// `val`; on node it runs when the module is required, on erlang it is the
-// module's `'_botopink_init'/0`, which nothing calls for a module that is only
-// imported (front 49's finding F10). The boot runs them: `modules` are the
-// erlang module atoms (`<package>@app@layout`, …); a module without a body
-// is skipped. On node this is a no-op — the requires already ran them.
-#[@External.Node("""((void $0), 0)""")]
-#[@External.Erlang("""(fun(__Ms) -> lists:foldl(fun(__N, __A) -> __M = binary_to_atom(__N, utf8), case code:ensure_loaded(__M) of {module, __M} -> case erlang:function_exported(__M, '_botopink_init', 0) of true -> __M:'_botopink_init'(), __A + 1; false -> __A end; _ -> __A end end, 0, __Ms) end)($0)""")]
-declare fn runModuleBodies(modules: string[]) -> i32;
-
-// Runs the module bodies of `modules` (erlang atoms) once; answers how many
-// ran (always 0 on node, where requiring a module runs its body).
-pub fn loadModuleBodies(modules: string[]) -> i32 {
-    return runModuleBodies(modules);
 }

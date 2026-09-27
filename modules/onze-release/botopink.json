@@ -15,28 +15,10 @@
     "static_export.bp"
   ],
   "dependencies": {
-    "jhonstart": {
-      "path": "../../../jhonstart/modules/jhonstart"
-    },
-    "jhonstart-link": {
-      "path": "../../../jhonstart/modules/jhonstart-link"
-    },
-    "jhonstart-forms": {
-      "path": "../../../jhonstart/modules/jhonstart-forms"
-    },
-    "emilia": {
-      "path": "../../../emilia/modules/emilia"
-    },
-    "jhonstart-emilia": {
-      "path": "../../../jhonstart/modules/jhonstart-emilia"
-    },
     "onze": {
       "workspace": true
     },
     "onze-bundler": {
-      "workspace": true
-    },
-    "onze-assets": {
       "workspace": true
     }
   }

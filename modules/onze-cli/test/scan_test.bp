@@ -4,7 +4,15 @@
 import {RouteEntry, scanFiles, scanApp, declaredArgument, describeScan, collisions} from "scan";
 import {Project, resolveProject, findRoot} from "resolve";
 import {OnzeConfig, AliasMap} from "onze";
-import {io.fs, io.process, io.clock, path, testing.snapshots} from "std";
+import {io.fs, io.process, io.clock, path, testing.snapshots, io.env} from "std";
+
+// The run's own scratch directory — `botopink test` names it in
+// `BOTOPINK_TEST_TMPDIR`, and it is the one place a test writes.
+fn testTmp() -> string {
+    val root = env.read("BOTOPINK_TEST_TMPDIR") ?? "";
+    assert root != "", "BOTOPINK_TEST_TMPDIR is not set: run this suite under `botopink test`";
+    return root;
+}
 
 fn page(seg: string) -> string {
     return "#[page(\"" + seg + "\")] pub fn p(route: PageContext) -> @Component<ElementBase, Element> { return div([]); }";
@@ -25,7 +33,7 @@ fn projectError(r: @Result<Project, string>) -> string {
 }
 
 fn scratch() -> string {
-    val dir = path.join([process.cwd(), ".botopinkbuild", "tmp", "cli-" + process.pid().toString() + "-" + clock.nowMillis().toString()]);
+    val dir = path.join([testTmp(), "cli-" + clock.nowMillis().toString()]);
     val made = process.run("mkdir", ["-p", dir]);
     return dir;
 }

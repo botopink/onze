@@ -3,9 +3,17 @@
 
 import {ReleaseSpec, releaseSpec, withErts} from "spec";
 import {relFileText, sysConfigText, vmArgsText, bootScriptText, defaultSysConfig, shellVar, installedVersion, assembleRelease} from "otp";
-import {io.fs, io.process, io.clock, path} from "std";
+import {io.fs, io.process, io.clock, path, io.env} from "std";
 import {generateDockerfile, generateDockerignore, runnerStage} from "docker";
 import {testing.snapshots} from "std";
+
+// The run's own scratch directory — `botopink test` names it in
+// `BOTOPINK_TEST_TMPDIR`, and it is the one place a test writes.
+fn testTmp() -> string {
+    val root = env.read("BOTOPINK_TEST_TMPDIR") ?? "";
+    assert root != "", "BOTOPINK_TEST_TMPDIR is not set: run this suite under `botopink test`";
+    return root;
+}
 
 fn spec() -> ReleaseSpec {
     return releaseSpec("blog", "0.1.0", "b7f2a1");
@@ -54,7 +62,7 @@ test "release: systools assembles a boot script from the generated .rel" {
         val stdlib = try installedVersion("stdlib");
         val s = ReleaseSpec(name: "probe", version: "0.1.0", buildId: "b1", apps: [], includeErts: false, ertsVersion: erts.unwrapOr(""), otpRelease: "", outDir: "");
         val rel = "{release, {\"probe\", \"0.1.0\"}, {erts, \"" + s.ertsVersion + "\"}, [{kernel, \"" + kernel + "\"}, {stdlib, \"" + stdlib + "\"}]}.\n";
-        val dir = path.join([process.cwd(), ".botopinkbuild", "tmp", "systools-" + process.pid().toString() + "-" + clock.nowMillis().toString()]);
+        val dir = path.join([testTmp(), "systools-" + clock.nowMillis().toString()]);
         val made = process.run("mkdir", ["-p", dir]);
         val w = fs.writeText(path.join([dir, "onze.rel"]), rel);
         val boot = try assembleRelease(dir, []);

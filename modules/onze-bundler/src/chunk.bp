@@ -181,7 +181,7 @@ pub fn manifestOf(buildId: string, plans: Array<ChunkPlan>, linked: Array<string
         i = i + 1;
     };
     val routes = reach.filter({ r -> plans.any({ p -> p.id == "route:" + r._0 }) }).map({ r -> #(r._0, "route:" + r._0) });
-    return ClientBundleManifest(version: manifestVersion(), buildId: buildId, entry: entry, shared: shared, chunks: chunks, routes: routes, styles: [], publicEnv: publicEnv);
+    return ClientBundleManifest(version: manifestVersion, buildId: buildId, entry: entry, shared: shared, chunks: chunks, routes: routes, styles: [], publicEnv: publicEnv);
 }
 
 // Writes one linked chunk under `<outDir>/static/<buildId>/`, reading each

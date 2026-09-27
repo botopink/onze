@@ -2,7 +2,8 @@
   "name": "scaffold",
   "port": 3000,
   "basePath": "",
-  "appDir": "src/app",
+  "appDir": "app",
   "publicDir": "public",
-  "outDir": ".onze"
+  "outDir": ".onze",
+  "lang": "en"
 }
