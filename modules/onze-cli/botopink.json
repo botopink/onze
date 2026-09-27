@@ -1,13 +1,10 @@
 {
   "name": "onze-cli",
   "version": "0.0.1",
-  "description": "onze-cli — `onze create · dev · build · start · info` (front 50) — commonJS",
+  "description": "onze-cli — `onze create · dev · build · start · info` (front 50) — commonJS and erlang",
   "src": "src/",
   "entry": "root.bp",
   "target": "commonJS",
-  "targets": [
-    "commonJS"
-  ],
   "files": [
     "root.bp",
     "resolve.bp",

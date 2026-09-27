@@ -1,13 +1,10 @@
 {
   "name": "onze-og",
   "version": "0.0.1",
-  "description": "onze-og — ImageResponse: style parse, layout, SVG and the rasterizer port (front 70) — erlang",
+  "description": "onze-og — ImageResponse: style parse, layout, SVG and the rasterizer port (front 70) — commonJS and erlang",
   "src": "src/",
   "entry": "root.bp",
   "target": "erlang",
-  "targets": [
-    "erlang"
-  ],
   "files": [
     "root.bp",
     "card_style.bp",

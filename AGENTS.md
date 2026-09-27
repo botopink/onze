@@ -42,7 +42,7 @@ onze/
 │   ├── onze-test/     ← the `<lib>-test` member: core.bp (assertConfig, assertAppFiles,
 │   │                    assertAlias, assertPublicEnv), fixtures.bp (fixtureTree); the E2E
 │   │                    runner arrives with 53. Depends on onze. Re-exports nothing from std
-│   ├── onze-cli/      ← front 50 — targets ["commonJS"]: resolve.bp, scan.bp, generate.bp
+│   ├── onze-cli/      ← front 50 — both rows: resolve.bp, scan.bp, generate.bp
 │   │                    (the check, the staged tree under <outDir>/src/), create.bp,
 │   │                    info.bp, build.bp (`onze build`: the staged server with its
 │   │                    `onze_main` and onze-server, erlc into server/beam/, the styleMap
@@ -64,7 +64,7 @@ onze/
 │   │                    a FontBuild seam, localFont, fallbackFace, fontHead), image.bp
 │   │                    (Image, the allowlist), image_handler.bp (the encoder port, the
 │   │                    /_onze/image outcome) — depends on onze-bundler and jhonstart
-│   ├── onze-og/       ← front 70 — targets ["erlang"]: card_style.bp (the closed subset —
+│   ├── onze-og/       ← front 70 — both rows: card_style.bp (the closed subset —
 │   │                    `style` is taken by jhonstart's element), metrics.bp (front 52's
 │   │                    sidecars), layout.bp, svg.bp, raster.bp (the port; NIF
 │   │                    declared, never shipped), response.bp — depends on jhonstart (it
@@ -96,9 +96,13 @@ onze/
   code needs the edge, never ahead of it. A member lists exactly the packages its sources and
   tests import: dependencies load transitively (decision 143). A bundled package (`std`,
   `routing`, `actions`, `validation`) is never listed.
-- A member may only **restrict** the workspace's `targets`: `onze-cli` is commonJS, `onze-og` and
-  `onze-server` erlang, the rest inherit both. Nothing on both rows imports rakun (every rakun
-  manifest is `["erlang"]`, decision 117) — that is `onze-server`'s.
+- A member may only **restrict** the workspace's `targets`, and only structurally (gate-d): the
+  excluded target's `botopink build` must fail on a host binding (`has no #[@External.<Target>]`),
+  never on a checker error, and a member that builds there runs there. Today one member
+  restricts: `onze-server` is `["erlang"]` — its commonJS build fails on rakun's hosts (`rkReqLive`,
+  `rkBeanStore`, … `have no #[@External] for the node backend`); the rest, `onze-cli` and `onze-og`
+  included, run on both rows. Nothing on both rows imports rakun (every rakun manifest is
+  `["erlang"]`, decision 117) — that is `onze-server`'s.
 - One module cannot hold two types of one name: an `as` alias of an imported type still binds its
   declared name (`language-gaps.md`). `onze-server` constructs rakun's `App` and holds
   jhonstart's only as the core's `SiteRender` function value.
