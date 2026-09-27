@@ -10,7 +10,7 @@
 //// `start` compiles nothing. With no `<outDir>/build-id` it exits non-zero
 //// naming the directory; otherwise it runs
 ////
-////     erl -noshell -pa <outDir>/server/beam -eval '<package>@onze_main':main()
+////     erl -noshell -pa <outDir>/server/beam -eval '<package>@onze_main':main([])
 ////
 //// from the project root with `PORT` set — `-p`, else `PORT`, else
 //// `onze.json`'s `port` (`startPort`) — and the server's output in
@@ -107,10 +107,14 @@ pub fn packageOf(p: Project) -> string {
 }
 
 // The command line that serves the build: from the project root, `PORT`
-// set, the server's output into `<outDir>/server.log`.
+// set, the server's output into `<outDir>/server.log`. The entry is
+// `main/1`, the one `botopink run` calls (`main([])`): on the BEAM it runs
+// every imported module's body — the `#[page]` / `#[layout]` registrations
+// `onze_routes` imports for — before `main`; a bare `main()` (`main/0`) runs
+// none of them and every page is a 404.
 pub fn serverCommand(p: Project, port: i32) -> string {
     val out = outDirOf(p);
-    val entry = "'" + packageOf(p) + "@onze_main':main()";
+    val entry = "'" + packageOf(p) + "@onze_main':main([])";
     return "cd " + shellQuote(p.root) + " && PORT=" + port.toString() + " exec erl -noshell -pa " + shellQuote(path.join([out, "server", "beam"])) + " -eval " + shellQuote(entry) + " > " + shellQuote(path.join([out, "server.log"])) + " 2>&1";
 }
 
