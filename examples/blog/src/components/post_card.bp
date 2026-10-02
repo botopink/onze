@@ -4,7 +4,7 @@
 import {Element, article, h2, p, text, timeTag} from "jhonstart";
 import {Link, linkProps} from "jhonstart-link";
 import {emilia, Token} from "emilia";
-import {Post} from "lib.db";
+import {lib.db.Post};
 
 // Token order is class identity (`contracts.md § 4`), so the list lives in
 // one function.

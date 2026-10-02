@@ -8,10 +8,10 @@ import {globals, registerFill, registerSignal, registerStarter, hydrate, propsOf
 import {linkMount} from "jhonstart-link";
 import {formMount} from "jhonstart-forms";
 import {setMessageSource, builtInOnly} from "validation";
-import {Nav} from "components.nav";
-import {NavProps} from "components.props";
-import {LikeButton} from "components.like_button";
-import {LikeProps} from "components.props";
+import {components.nav.Nav};
+import {components.props.NavProps};
+import {components.like_button.LikeButton};
+import {components.props.LikeProps};
 
 #[@External.Node("""(globalThis.document ? Array.from(globalThis.document.querySelectorAll("[" + $0 + "]")).map(function (onzeNode) { return onzeNode.getAttribute($0); }) : [])""")]
 declare fn domIds(attr: string) -> string[];

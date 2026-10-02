@@ -1,10 +1,10 @@
 // `botopink test` suite for `src/package.bp`, `src/lifecycle.bp` and
 // `src/static_export.bp` (front 71 steps 3, 6 and 7).
 
-import {ReleaseSpec, releaseSpec} from "spec";
-import {scanForSecrets, missingAssets, promisedFiles, packageAssets} from "package";
-import {DrainReport, Lifecycle, shutdown, shutdownOrder, readinessChecks, isReady, describeDrain, exitCodeOf} from "lifecycle";
-import {ExportRoute, staticExport} from "static_export";
+import {spec.ReleaseSpec, spec.releaseSpec};
+import {package.scanForSecrets, package.missingAssets, package.promisedFiles, package.packageAssets};
+import {lifecycle.DrainReport, lifecycle.Lifecycle, lifecycle.shutdown, lifecycle.shutdownOrder, lifecycle.readinessChecks, lifecycle.isReady, lifecycle.describeDrain, lifecycle.exitCodeOf};
+import {static_export.ExportRoute, static_export.staticExport};
 import {ClientBundleManifest, ChunkRef, formatManifest, staticUrl} from "onze-bundler";
 import {io.fs, io.process, io.clock, path, testing.snapshots, io.env} from "std";
 

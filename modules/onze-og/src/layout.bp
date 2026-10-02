@@ -13,8 +13,8 @@
 //// Deterministic: integers throughout.
 
 import {Element} from "jhonstart";
-import {Style, parseStyle, emptyStyle, pxOf} from "card_style";
-import {FontMetrics, measure} from "metrics";
+import {card_style.Style, card_style.parseStyle, card_style.emptyStyle, card_style.pxOf};
+import {metrics.FontMetrics, metrics.measure};
 
 pub type LayoutBox(
     tag: string,

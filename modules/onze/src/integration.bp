@@ -30,7 +30,7 @@
 import {App, app, RenderPlugin, RequestData, ErrorInfo, LayoutProps, PageContext, OpenGraph, TwitterCard, Icons, Response, PageInput, RenderHooks, setHooks, UiSegment, segmentFor, Element, ElementBase, Metadata, Viewport} from "jhonstart";
 import {setWireNames} from "jhonstart-forms";
 import {plugin as emiliaPlugin} from "jhonstart-emilia";
-import {OnzeConfig, defaultActionField, defaultActionHeader, assetPrefix} from "config";
+import {config.OnzeConfig, config.defaultActionField, config.defaultActionHeader, config.assetPrefix};
 
 // ── the rakun half, as data ─────────────────────────────────────────────────
 

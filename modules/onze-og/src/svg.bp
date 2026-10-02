@@ -10,9 +10,9 @@
 //// byte-identical, which the cache key relies on.
 
 import {escape} from "std";
-import {Style} from "card_style";
-import {FontMetrics} from "metrics";
-import {LayoutBox, ImageSize, faceFor, lineHeightOf} from "layout";
+import {card_style.Style};
+import {metrics.FontMetrics};
+import {layout.LayoutBox, layout.ImageSize, layout.faceFor, layout.lineHeightOf};
 
 pub type FontRef(family: string, weight: i32, path: string, metricsPath: string)
 

@@ -51,9 +51,13 @@ onze/
 │   │                    answers "not available yet". Depends on onze, onze-bundler,
 │   │                    onze-assets, onze-release
 │   ├── onze-bundler/  ← front 68: manifest.bp (both rows — the one parser the server
-│   │                    reads), scan.bp, graph.bp, refusal.bp (+ the styleMap probe and
+│   │                    reads), scan.bp, graph.bp (an edge per `from "<alias>…"`, per
+│   │                    `mod` line, per item naming an app module by its path inside the
+│   │                    braces — `lib.db.Post`, decision 206 — and per shorthand sibling),
+│   │                    refusal.bp (+ the styleMap probe and
 │   │                    `styleParity`), chunk.bp, entry.bp (starters through jhonstart's
-│   │                    `registerStarter`, the payload `s` check),
+│   │                    `registerStarter`, the payload `s` check; components imported by
+│   │                    their path inside the braces),
 │   │                    script.bp, rebuild.bp, hooks.bp (RenderHooks over the tags),
 │   │                    fixture.bp (the frozen fixture app every suite reads) — depends
 │   │                    on onze and jhonstart

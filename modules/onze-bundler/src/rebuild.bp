@@ -10,10 +10,10 @@
 //// a rebuild never serves a URL the manifest does not name.
 
 import {AliasMap, OnzeConfig} from "onze";
-import {ImportRef, importsOf, isClientModule} from "scan";
-import {AppModule, ClientGraph, GraphNode, clientGraph} from "graph";
-import {BuildRefusal, BuildReport, checkBuild, describeReport} from "refusal";
-import {ChunkPlan, planChunks, routeReach, linkChunk, chunkFileName} from "chunk";
+import {scan.ImportRef, scan.importsOf, scan.isClientModule};
+import {graph.AppModule, graph.ClientGraph, graph.GraphNode, graph.clientGraph};
+import {refusal.BuildRefusal, refusal.BuildReport, refusal.checkBuild, refusal.describeReport};
+import {chunk.ChunkPlan, chunk.planChunks, chunk.routeReach, chunk.linkChunk, chunk.chunkFileName};
 
 pub type BundleState(
     modules: Array<AppModule>,

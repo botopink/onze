@@ -4,11 +4,11 @@
 // `/blog/hello-world` and `/about` (front 53 step 2), over a real socket.
 // Every build goes under the run's `BOTOPINK_TEST_TMPDIR`.
 
-import {buildProject} from "build";
-import {Project, resolveProject} from "resolve";
-import {startPort, spawnServer, serverCommand, pidOf, serverMainSource} from "start";
+import {build.buildProject};
+import {resolve.Project, resolve.resolveProject};
+import {start.startPort, start.spawnServer, start.serverCommand, start.pidOf, start.serverMainSource};
 import {OnzeConfig, AliasMap, defaultConfig} from "onze";
-import {Outcome, run} from "main";
+import {main.Outcome, main.run};
 import {io.fs, io.process, io.env, path} from "std";
 
 fn testTmp() -> string {
@@ -85,7 +85,7 @@ test "start: the server's main ---- the config build resolved, PORT over it" {
     val src = serverMainSource(defaultConfig());
     assert src.contains("OnzeConfig(name: \"\", port: 3000, basePath: \"\", appDir: \"app\", publicDir: \"public\", outDir: \".onze\", dev: false, actionsBodyLimit: 1048576, allowedRedirects: [], lang: \"en\")");
     assert src.contains("import {Onze} from \"onze-server\";");
-    assert src.contains("import {routeModules} from \"onze_routes\";");
+    assert src.contains("import {onze_routes.routeModules};");
     assert src.contains("Onze.run(withPort(c, portOr(c.port)));");
 }
 

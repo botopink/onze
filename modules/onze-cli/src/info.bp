@@ -6,7 +6,7 @@
 
 import {io.fs, io.env, io.process, path, json.Json, json.decode} from "std";
 import {OnzeConfig, defaultConfig, AliasMap, emptyAliases} from "onze";
-import {Project} from "resolve";
+import {resolve.Project};
 
 fn membersOf(v: Json) -> Array<#(string, Json)> {
     return case v {

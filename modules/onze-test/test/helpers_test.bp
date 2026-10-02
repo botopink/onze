@@ -1,7 +1,7 @@
 // `botopink test` suite for onze-test's own helpers (front 49).
 
-import {assertConfig, assertAppFiles, assertAlias, assertPublicEnv} from "core";
-import {fixtureTree} from "fixtures";
+import {core.assertConfig, core.assertAppFiles, core.assertAlias, core.assertPublicEnv};
+import {fixtures.fixtureTree};
 
 test "helpers: fixtureTree splits on == headers" {
     val f = fixtureTree("== a.bp\nline 1\nline 2\n== b/c.bp\n\n== empty");

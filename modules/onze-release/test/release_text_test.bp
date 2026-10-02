@@ -1,10 +1,10 @@
 // `botopink test` suite for `src/otp.bp` and `src/docker.bp` (front 71 steps
 // 2, 4 and 5) — the generated text, on both rows.
 
-import {ReleaseSpec, releaseSpec, withErts} from "spec";
-import {relFileText, sysConfigText, vmArgsText, bootScriptText, defaultSysConfig, shellVar, installedVersion, assembleRelease} from "otp";
+import {spec.ReleaseSpec, spec.releaseSpec, spec.withErts};
+import {otp.relFileText, otp.sysConfigText, otp.vmArgsText, otp.bootScriptText, otp.defaultSysConfig, otp.shellVar, otp.installedVersion, otp.assembleRelease};
 import {io.fs, io.process, io.clock, path, io.env} from "std";
-import {generateDockerfile, generateDockerignore, runnerStage} from "docker";
+import {docker.generateDockerfile, docker.generateDockerignore, docker.runnerStage};
 import {testing.snapshots} from "std";
 
 // The run's own scratch directory — `botopink test` names it in

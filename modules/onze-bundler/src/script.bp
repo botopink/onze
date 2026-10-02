@@ -9,7 +9,7 @@
 ////
 //// An unknown strategy is refused, naming it and listing the four.
 
-import {ChunkRef} from "manifest";
+import {manifest.ChunkRef};
 
 pub type ScriptDecl(id: string, src: string, strategy: string, onLoad: string)
 

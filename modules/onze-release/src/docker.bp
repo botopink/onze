@@ -4,7 +4,7 @@
 //// With `includeErts` the release carries its own runtime and the runner is
 //// plain `alpine`; without it the runner is an `erlang:` image.
 
-import {ReleaseSpec} from "spec";
+import {spec.ReleaseSpec};
 
 pub fn generateDockerfile(spec: ReleaseSpec) -> string {
     val runner = if (spec.includeErts) "alpine:3.20" else "erlang:" + spec.otpRelease + "-alpine";

@@ -1,12 +1,12 @@
 // `botopink test` suite for `src/entry.bp` and `src/script.bp` (front 68
 // steps 6 and 7).
 
-import {parseFixture, ImportRef} from "scan";
-import {AppModule, ClientGraph, GraphNode, loadModules, clientGraph} from "graph";
-import {ClientComponent, EntryConfig, clientComponents, generateEntry, islandMismatches, parseIslands, recordFieldsOf, islandMismatchesSource, classNamesIn, unknownClasses, classCheckSource} from "entry";
-import {ScriptDecl, ScriptPlan, planScripts, describeScripts} from "script";
-import {ChunkRef} from "manifest";
-import {fixtureApp} from "fixture";
+import {scan.parseFixture, scan.ImportRef};
+import {graph.AppModule, graph.ClientGraph, graph.GraphNode, graph.loadModules, graph.clientGraph};
+import {entry.ClientComponent, entry.EntryConfig, entry.clientComponents, entry.generateEntry, entry.islandMismatches, entry.parseIslands, entry.recordFieldsOf, entry.islandMismatchesSource, entry.classNamesIn, entry.unknownClasses, entry.classCheckSource};
+import {script.ScriptDecl, script.ScriptPlan, script.planScripts, script.describeScripts};
+import {manifest.ChunkRef};
+import {fixture.fixtureApp};
 import {AliasMap} from "onze";
 import {islandAttr, globals, Island} from "jhonstart";
 import {testing.snapshots} from "std";

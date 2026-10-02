@@ -3,8 +3,8 @@
 // of one Google CSS response, and a download seam that writes a stand-in
 // file, so the suite never reaches the network.
 
-import {Font, GoogleFontOptions, GoogleFace, FontBuild, LocalFontSource, LocalFontOptions, googleFontWith, googleCssUrl, parseGoogleCss, fallbackFace, fontHead, localFont} from "font";
-import {FontMetrics, MetricsRow, metricsOf, metricsSidecar} from "font_metrics";
+import {font.Font, font.GoogleFontOptions, font.GoogleFace, font.FontBuild, font.LocalFontSource, font.LocalFontOptions, font.googleFontWith, font.googleCssUrl, font.parseGoogleCss, font.fallbackFace, font.fontHead, font.localFont};
+import {font_metrics.FontMetrics, font_metrics.MetricsRow, font_metrics.metricsOf, font_metrics.metricsSidecar};
 import {io.fs, io.process, io.clock, path, testing.snapshots, io.env} from "std";
 
 // The run's own scratch directory — `botopink test` names it in

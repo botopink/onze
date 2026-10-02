@@ -32,8 +32,8 @@
 //// Every refusal of a build is reported, never only the first.
 
 import {isPublicEnvName, OnzeConfig} from "onze";
-import {ImportRef, importsServerOnly, requestScopeImports} from "scan";
-import {AppModule, ClientGraph, GraphNode, chainOf, chainText} from "graph";
+import {scan.ImportRef, scan.importsServerOnly, scan.requestScopeImports};
+import {graph.AppModule, graph.ClientGraph, graph.GraphNode, graph.chainOf, graph.chainText};
 
 pub type BuildRefusal(kind: string, subject: string, moduleId: string, chain: Array<string>)
 

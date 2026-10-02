@@ -11,7 +11,7 @@
 //// every refusal prints.
 
 import {AliasMap, resolveAlias, classifyAppFile} from "onze";
-import {SourceFile, ImportRef, importsOf, moduleIdOf, isClientModule, publicNamesOf} from "scan";
+import {scan.SourceFile, scan.ImportRef, scan.importsOf, scan.moduleIdOf, scan.isClientModule, scan.publicNamesOf};
 
 pub type AppModule(id: string, path: string, source: string, refs: Array<ImportRef>, client: bool)
 
@@ -60,12 +60,34 @@ pub fn edgesOf(modules: Array<AppModule>, aliases: AliasMap, origin: AppModule, 
         return if (hasModule(modules, id)) [id] else [];
     }
     if (r.spec == "") {
+        // A dotted item names a module of the app by its path inside the
+        // braces (decision 206): `lib.db.listPosts` is `lib.db`'s, and
+        // `lib.db` alone is the module itself (the namespace form).
+        var named: string[] = [];
+        for (r.names) { item ->
+            val path = leafPathOf(item);
+            if (path.contains(".")) {
+                val parts = path.split(".");
+                val owner = parts.take(parts.length - 1).join(".");
+                val hit = if (hasModule(modules, owner)) owner else if (hasModule(modules, path)) path else "";
+                if (hit != "" && named.contains(hit) == false) named.push(hit);
+            };
+        };
+        val bare = r.names.filter({ n -> leafPathOf(n).contains(".") == false });
         val dir = dirIdOf(origin);
         val siblings = modules.filter({ m -> m.id != origin.id && dirIdOf(m) == dir });
-        return siblings.filter({ m -> publicNamesOf(m.source).any({ n -> r.names.contains(n) }) }).map({ m -> m.id });
+        val shorthand = siblings.filter({ m -> publicNamesOf(m.source).any({ n -> bare.contains(n) }) }).map({ m -> m.id });
+        return named.append(shorthand.filter({ id -> named.contains(id) == false }));
     }
     val target = resolveAlias(aliases, r.spec).replaceAll("/", ".");
     return if (hasModule(modules, target)) [target] else [];
+}
+
+// An import item's path, its `as` alias and `*` dropped: `lib.db.Post as P`
+// → `lib.db.Post`.
+fn leafPathOf(item: string) -> string {
+    val noAlias = if (item.contains(" as ")) item.slice(0, item.indexOf(" as ")) else item;
+    return noAlias.replaceAll("*", "").trim();
 }
 
 fn allEdges(modules: Array<AppModule>, aliases: AliasMap, origin: AppModule) -> string[] {

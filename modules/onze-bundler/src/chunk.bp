@@ -18,9 +18,9 @@
 
 import {hash, path, io.fs} from "std";
 import {AliasMap, classifyAppFile} from "onze";
-import {ImportRef} from "scan";
-import {AppModule, ClientGraph, GraphNode, rootsFrom, graphOfRoots} from "graph";
-import {ChunkRef, ClientBundleManifest, staticUrl, manifestVersion} from "manifest";
+import {scan.ImportRef};
+import {graph.AppModule, graph.ClientGraph, graph.GraphNode, graph.rootsFrom, graph.graphOfRoots};
+import {manifest.ChunkRef, manifest.ClientBundleManifest, manifest.staticUrl, manifest.manifestVersion};
 
 pub type ChunkPlan(id: string, base: string, modules: Array<string>)
 

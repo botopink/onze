@@ -10,7 +10,7 @@
 //// cookie and then `exec`s the VM so the container's PID 1 is the VM.
 
 import {io.process, io.process.Exit} from "std";
-import {ReleaseSpec} from "spec";
+import {spec.ReleaseSpec};
 
 fn quote(s: string) -> string {
     return "\"" + s + "\"";

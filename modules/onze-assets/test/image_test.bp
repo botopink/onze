@@ -3,8 +3,8 @@
 // the output), a failing one and a slow one, so the port protocol and the
 // failure paths are asserted without `vips` installed.
 
-import {ImageProps, RemotePattern, ImageConfig, defaultImageProps, defaultImageConfig, validateSource, validateConfig, validateProps, Image, srcsetOf, refusedImages} from "image";
-import {EncodeRequest, ImageOutcome, encode, encoderArgs, imageResponse, negotiate, cacheKey} from "image_handler";
+import {image.ImageProps, image.RemotePattern, image.ImageConfig, image.defaultImageProps, image.defaultImageConfig, image.validateSource, image.validateConfig, image.validateProps, image.Image, image.srcsetOf, image.refusedImages};
+import {image_handler.EncodeRequest, image_handler.ImageOutcome, image_handler.encode, image_handler.encoderArgs, image_handler.imageResponse, image_handler.negotiate, image_handler.cacheKey};
 import {Element, renderNode} from "jhonstart";
 import {io.fs, io.process, io.clock, path, testing.snapshots, io.env} from "std";
 

@@ -21,7 +21,7 @@
 //// is logged once, naming the family.
 
 import {io.fs, io.process, path, hash} from "std";
-import {FontMetrics, MetricsRow, metricsOf, metricsSidecar} from "font_metrics";
+import {font_metrics.FontMetrics, font_metrics.MetricsRow, font_metrics.metricsOf, font_metrics.metricsSidecar};
 
 pub type Font(family: string, className: string, variable: string, css: string, preload: string, style: string)
 

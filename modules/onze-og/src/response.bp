@@ -13,8 +13,8 @@
 
 import {hash, io.fs} from "std";
 import {Element} from "jhonstart";
-import {ImageSize} from "layout";
-import {FontRef} from "svg";
+import {layout.ImageSize};
+import {svg.FontRef};
 
 pub type ImageResponse(tree: Element, size: ImageSize, contentType: string, fonts: Array<FontRef>)
 

@@ -6,7 +6,7 @@
 //// script stays its own, before them.
 
 import {RenderHooks} from "jhonstart";
-import {ClientBundleManifest, ChunkRef, headScriptTags, scriptTags} from "manifest";
+import {manifest.ClientBundleManifest, manifest.ChunkRef, manifest.headScriptTags, manifest.scriptTags};
 
 pub fn bundleRenderHooks(m: ClientBundleManifest) -> RenderHooks {
     return RenderHooks(headExtra: { route -> headScriptTags(m) }, bodyExtra: { route -> scriptTags(m, route) });

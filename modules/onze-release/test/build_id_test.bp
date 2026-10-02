@@ -1,6 +1,6 @@
 // `botopink test` suite for `src/spec.bp` (front 71 step 1) — both rows.
 
-import {ReleaseSpec, releaseSpec, generateBuildId, validateBuildId, verifyBuildId} from "spec";
+import {spec.ReleaseSpec, spec.releaseSpec, spec.generateBuildId, spec.validateBuildId, spec.verifyBuildId};
 import {testing.snapshots} from "std";
 
 fn shown(problems: Array<string>) -> string {

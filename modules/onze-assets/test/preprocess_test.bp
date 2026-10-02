@@ -1,6 +1,6 @@
 // `botopink test` suite for `src/preprocess.bp` (front 69 step 4).
 
-import {preprocess} from "preprocess";
+import {preprocess.preprocess};
 import {io.fs, io.process, io.clock, path, io.env} from "std";
 
 // The run's own scratch directory — `botopink test` names it in

@@ -2,10 +2,10 @@
 // over the committed scaffold, twice, and a refusal that fails the build
 // before anything compiles.
 
-import {BuildResult, buildProject, srcDirOf, workspaceMembers} from "build";
-import {Project, resolveProject} from "resolve";
+import {build.BuildResult, build.buildProject, build.srcDirOf, build.workspaceMembers};
+import {resolve.Project, resolve.resolveProject};
 import {OnzeConfig, AliasMap} from "onze";
-import {Outcome, run} from "main";
+import {main.Outcome, main.run};
 import {io.fs, io.process, io.clock, path, io.env} from "std";
 
 // The run's own scratch directory — `botopink test` names it in
@@ -86,7 +86,7 @@ test "build: a client module reading a non-public variable fails the build, nami
     assert created.code == 0;
     val app = path.join([dir, "leaky"]);
     val c = fs.writeText(path.join([app, "src", "app", "widget.bp"]), "import {Element, p} from \"jhonstart\";\nimport {io.env} from \"std\";\n\n#[client]\npub fn Widget() -> Element {\n    val secret = env.read(\"DATABASE_URL\");\n    return p([], attrs: []);\n}\n");
-    val pg = fs.writeText(path.join([app, "src", "app", "page.bp"]), "import {page, jhPage, ctxParam, ctxRest, PageContext, Element, ElementBase, h1, text} from \"jhonstart\";\nimport {Widget} from \"app.widget\";\n\n#[page(\"\")]\npub fn home(route: PageContext) -> @Component<ElementBase, Element> {\n    return h1([text(\"x\", attrs: [])], attrs: []);\n}\n");
+    val pg = fs.writeText(path.join([app, "src", "app", "page.bp"]), "import {page, jhPage, ctxParam, ctxRest, PageContext, Element, ElementBase, h1, text} from \"jhonstart\";\nimport {app.widget.Widget};\n\n#[page(\"\")]\npub fn home(route: PageContext) -> @Component<ElementBase, Element> {\n    return h1([text(\"x\", attrs: [])], attrs: []);\n}\n");
     val p = try resolveProject(app);
     val msg = failure(buildProject(p, botopinkBin()));
     assert msg.contains("env-non-public");
@@ -103,7 +103,7 @@ test "build: a client emilia call is evaluated by both backends ---- the contrac
     assert created.code == 0;
     val app = path.join([dir, "probed"]);
     val card = fs.writeText(path.join([app, "src", "app", "card.bp"]), "import {Element, p, text} from \"jhonstart\";\nimport {emilia, Token} from \"emilia\";\n\n#[client]\npub fn Card() -> Element {\n    val cls = emilia([.Bg.White, .Pad.All.__4, .Text.Bold, Token.Hover([.Bg.Color.Gray.__100])]);\n    return p([text(\"card\", attrs: [])], attrs: [#(\"class\", cls)]);\n}\n");
-    val pg = fs.writeText(path.join([app, "src", "app", "page.bp"]), "import {page, jhPage, ctxParam, ctxRest, PageContext, Element, ElementBase, h1, text} from \"jhonstart\";\nimport {Card} from \"app.card\";\n\n#[page(\"\")]\npub fn home(route: PageContext) -> @Component<ElementBase, Element> {\n    return h1([text(\"x\", attrs: [])], attrs: []);\n}\n");
+    val pg = fs.writeText(path.join([app, "src", "app", "page.bp"]), "import {page, jhPage, ctxParam, ctxRest, PageContext, Element, ElementBase, h1, text} from \"jhonstart\";\nimport {app.card.Card};\n\n#[page(\"\")]\npub fn home(route: PageContext) -> @Component<ElementBase, Element> {\n    return h1([text(\"x\", attrs: [])], attrs: []);\n}\n");
     val p = try resolveProject(app);
     val b = try buildProject(p, botopinkBin());
     assert b.styles.map({ s -> s._0 + " " + s._1 }).join(",") == "app.card#1 e_39b87d03";
@@ -145,7 +145,7 @@ test "build: a CSS module's generated accessors compile and its rules reach the 
     val app = path.join([dir, "styled"]);
     val css = fs.writeText(path.join([app, "src", "app", "home.module.css"]), ".card { padding: 8px; }\n");
     val globals = fs.writeText(path.join([app, "src", "app", "globals.css"]), "body { margin: 0; }\n");
-    val pg = fs.writeText(path.join([app, "src", "app", "page.bp"]), "import {page, jhPage, ctxParam, ctxRest, PageContext, Element, ElementBase, h1, text} from \"jhonstart\";\nimport {card} from \"styles.app_home\";\n\n#[page(\"\")]\npub fn home(route: PageContext) -> @Component<ElementBase, Element> {\n    return h1([text(\"x\", attrs: [])], attrs: [#(\"class\", card)]);\n}\n");
+    val pg = fs.writeText(path.join([app, "src", "app", "page.bp"]), "import {page, jhPage, ctxParam, ctxRest, PageContext, Element, ElementBase, h1, text} from \"jhonstart\";\nimport {styles.app_home.card};\n\n#[page(\"\")]\npub fn home(route: PageContext) -> @Component<ElementBase, Element> {\n    return h1([text(\"x\", attrs: [])], attrs: [#(\"class\", card)]);\n}\n");
     val p = try resolveProject(app);
     val b = try buildProject(p, botopinkBin());
     assert b.stylesheet.startsWith("body { margin: 0; }\n.home_card_");
