@@ -54,17 +54,54 @@ test "head: the stylesheet link precedes the head scripts" {
 
 // The front's gate (decision 113): no onze source calls emilia's `flush()` or
 // defines a style sink — the flush moments are jhonstart's render's.
-test "gate: no onze module calls flush() or defines a sink" {
-    val files = fs.walk("..").unwrapOr([]).filter({ f -> f.contains("/src/") && f.endsWith(".bp") });
-    assert files.length > 10;
-    var hits: string[] = [];
-    for (files) { f ->
-        val text = fs.readText(path.join(["..", f])).unwrapOr("");
-        for (text.split("\n")) { line ->
-            val call = line.contains("await flush()") || line.contains("= flush()") || line.trim().startsWith("flush(");
-            val sink = line.contains("fn styleSink") || line.contains("type StyleSink");
-            if (call || sink) hits.push(f + ": " + line.trim());
+//
+// The gate reads only tracked sources: each sibling member that carries a
+// `botopink.json` contributes the `.bp` files under its own `src/`. It never
+// walks `..` itself — sibling cells running in parallel write and delete their
+// `.botopinkbuild/` trees there, and a walk that crosses them answers another
+// cell's generated files (or a dangling-link `Error` for one deleted mid-walk).
+fn memberSources(modulesDir: string) -> @Result<string[], string> {
+    var out: string[] = [];
+    for (try fs.list(modulesDir)) { m ->
+        val root = path.join([modulesDir, m]);
+        val src = path.join([root, "src"]);
+        if (fs.exists(path.join([root, "botopink.json"])) && fs.exists(src)) {
+            for (try fs.walk(src)) { f ->
+                if (f.endsWith(".bp")) out.push(m + "/src/" + f);
+            };
         };
     };
+    return out;
+}
+
+fn flushHits(file: string, text: string) -> string[] {
+    var hits: string[] = [];
+    for (text.split("\n")) { line ->
+        val call = line.contains("await flush()") || line.contains("= flush()") || line.trim().startsWith("flush(");
+        val sink = line.contains("fn styleSink") || line.contains("type StyleSink");
+        if (call || sink) hits.push(file + ": " + line.trim());
+    };
+    return hits;
+}
+
+test "gate: no onze module calls flush() or defines a sink" {
+    val files = try memberSources("..");
+    assert files.length > 10;
+    assert files.filter({ f -> f.contains(".botopinkbuild") || f.contains("node_modules") || f.contains("/out/") }).length == 0;
+    var hits: string[] = [];
+    for (files) { f ->
+        val read = fs.readText(path.join(["..", f]));
+        if (read.isError()) hits.push(f + ": unreadable");
+        for (flushHits(f, read.unwrapOr(""))) { h -> hits.push(h); };
+    };
     assert hits.length == 0;
+}
+
+test "gate: the flush scan catches a call and a sink" {
+    assert flushHits("x/src/a.bp", "    await flush();").length == 1;
+    assert flushHits("x/src/a.bp", "val r = flush();").length == 1;
+    assert flushHits("x/src/a.bp", "  flush(sheet);").length == 1;
+    assert flushHits("x/src/a.bp", "pub fn styleSink() {}").length == 1;
+    assert flushHits("x/src/a.bp", "type StyleSink = string;").length == 1;
+    assert flushHits("x/src/a.bp", "val flushed = flushAll();\n// no call here").length == 0;
 }

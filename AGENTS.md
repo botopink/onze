@@ -129,6 +129,10 @@ onze/
   decorated convention file, and the server's `onze_main.bp` imports `onze_routes`.
 - A test writes only under `BOTOPINK_TEST_TMPDIR` (each suite's `testTmp()`); a build a test
   runs moves its `outDir` there, so nothing is written into the checkout.
+- A test reads only tracked sources, never a tree another cell writes: the gate's cells run side by
+  side, each member's `.botopinkbuild/` appearing and vanishing under the others. A scan over the
+  members lists `modules/` and walks each member's own `src/` (`onze-assets`'s flush gate,
+  `memberSources` in `test/stylesheet_test.bp`) — never a recursive walk of `..` or the root.
 - Any code or layout change updates this file in the same commit.
 
 ## Local gate
