@@ -7,6 +7,11 @@
   vector and kills it at `encoderTimeoutMs` — `spawnSync`'s `timeout` on commonJS, the port's OS
   process group on erlang. The preprocess test's failing command is a script of its own: coreutils
   9.4 names itself by its full `argv[0]` (`/usr/bin/cat: …`), which a port spawn makes absolute.
+- **The deadline kills the encoder's process group.** On commonJS `runWithin` no longer leaks what
+  a timed-out encoder started (a `spawnSync` timeout kills only the direct child): a supervisor
+  `node`, still run synchronously, spawns the encoder `detached` and `process.kill(-pid)`s the
+  group at the deadline and after the exit; the erlang side also kills the group after the exit.
+  A test asserts a child the encoder started is gone after the timeout.
 - **What the other libraries now provide, adopted.** `modules/onze-server/` (erlang, decision
   pending 49-e): `Onze.run(config)` — the `rakun.*` keys through `rkSetProp`, jhonstart's UI table
   copied into rakun's with one `PageRenderer` per page over rakun's `ChunkWriter`, `RequestData`
