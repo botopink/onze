@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **The image encoder's deadline is the VM's own.** `encode` no longer runs the encoder under GNU
+  `timeout` (absent on macOS, so every encode there failed): `runWithin` spawns it with an argument
+  vector and kills it at `encoderTimeoutMs` — `spawnSync`'s `timeout` on commonJS, the port's OS
+  process group on erlang. The preprocess test's failing command is a script of its own: coreutils
+  9.4 names itself by its full `argv[0]` (`/usr/bin/cat: …`), which a port spawn makes absolute.
 - **What the other libraries now provide, adopted.** `modules/onze-server/` (erlang, decision
   pending 49-e): `Onze.run(config)` — the `rakun.*` keys through `rkSetProp`, jhonstart's UI table
   copied into rakun's with one `PageRenderer` per page over rakun's `ChunkWriter`, `RequestData`

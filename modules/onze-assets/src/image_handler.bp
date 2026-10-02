@@ -2,8 +2,8 @@
 //// steps 4 and 5).
 ////
 //// The pixels never enter the VM: one external encoder (`vips` by default,
-//// `magick` accepted), spawned through std's `process.run` with an argument
-//// vector — never a shell string — under `timeout`, so a slow encoder is
+//// `magick` accepted), spawned with an argument vector — never a shell
+//// string — under a deadline the VM keeps (`runWithin`), so a slow encoder is
 //// killed and one request fails, not a scheduler. No NIF, anywhere. A missing
 //// encoder is found once, remembered, and turns the optimizer into
 //// pass-through (the original file, logged once): an image encoder is an
@@ -48,13 +48,33 @@ pub fn encoderAvailable(encoder: string) -> bool {
     return status == 0;
 }
 
-// Runs the encoder under `timeout`. `Ok(0)` when it wrote the output.
+// `process.run` with a deadline: `cmd` (looked up on `PATH` when it has no
+// `/`) with `args`, no shell, killed with SIGKILL once `ms` have passed. A
+// process that ran is `Ok` whatever its status; one killed by a signal is
+// `128 + signal` — the deadline's kill is 137. `Error` means it could not be
+// started. The deadline is the VM's own, not an external `timeout`: GNU
+// coreutils' `timeout` is not on macOS (nor on every Linux image), and an
+// optimizer that silently loses its bound there is not bounded.
+// Node: `child_process.spawnSync` with `timeout` and `killSignal: 'SIGKILL'`.
+// Erlang: `open_port({spawn_executable, Path}, …)` gathered until
+// `exit_status` or the deadline; at the deadline the port's OS process group
+// is killed (`erl_child_setup` makes the child a group leader, so what the
+// encoder spawned goes with it) and the port is closed.
+#[@External.Node("""(() => { const __r = require('child_process').spawnSync($0, $1, { encoding: 'utf8', timeout: $2, killSignal: 'SIGKILL' }); const __out = { stdout: __r.stdout ?? '', stderr: __r.stderr ?? '' }; if (__r.error && __r.error.code === 'ETIMEDOUT') return { ok: { status: 137, ...__out } }; if (__r.error) return { error: String(__r.error.message ?? __r.error) }; return { ok: { status: __r.status ?? (128 + (require('os').constants.signals[__r.signal] ?? 0)), ...__out } }; })()""")]
+#[@External.Erlang("""(fun(__C, __A, __Ms) -> __X = case string:find(__C, <<"/">>) of nomatch -> os:find_executable(binary_to_list(__C)); _ -> binary_to_list(__C) end, case __X of false -> {error, iolist_to_binary([<<"not found: ">>, __C])}; _ -> try open_port({spawn_executable, __X}, [binary, exit_status, stderr_to_stdout, {args, [binary_to_list(__Y) || __Y <- __A]}]) of __P -> __Deadline = erlang:monotonic_time(millisecond) + __Ms, __L = fun __F(__Acc) -> __Left = erlang:max(0, __Deadline - erlang:monotonic_time(millisecond)), receive {__Q, {data, __D}} when __Q =:= __P -> __F([__D | __Acc]); {__Q, {exit_status, __S}} when __Q =:= __P -> {__S, iolist_to_binary(lists:reverse(__Acc))} after __Left -> case erlang:port_info(__P, os_pid) of {os_pid, __Pid} -> os:cmd("kill -9 -" ++ integer_to_list(__Pid) ++ " 2>/dev/null; kill -9 " ++ integer_to_list(__Pid) ++ " 2>/dev/null"); _ -> ok end, catch port_close(__P), __Drain = fun __G() -> receive {__R, _} when __R =:= __P -> __G() after 0 -> ok end end, __Drain(), {137, iolist_to_binary(lists:reverse(__Acc))} end end, {__St, __Out} = __L([]), {ok, #{status => __St, stdout => __Out, stderr => <<>>}} catch _:__E -> {error, iolist_to_binary(io_lib:format("~p", [__E]))} end end end)($0, $1, $2)""")]
+declare fn runWithin(cmd: string, args: Array<string>, ms: i32) -> @Result<Exit, string>;
+
+// Runs the encoder under a `cfg.encoderTimeoutMs` deadline. `Ok(0)` when it
+// wrote the output.
 pub fn encode(cfg: ImageConfig, req: EncodeRequest) -> @Result<i32, string> {
     if (encoderAvailable(cfg.encoder) == false) throw "images: encoder \"" + cfg.encoder + "\" is not installed - optimization is off, originals are served";
-    val seconds = ((cfg.encoderTimeoutMs + 999) / 1000).toString();
-    val ran = process.run("timeout", ["-s", "KILL", seconds, cfg.encoder].append(encoderArgs(cfg.encoder, req)));
-    val exit = ran.unwrapOr(Exit(status: 0 - 1, stdout: "", stderr: "could not start timeout"));
-    if (exit.status == 124 || exit.status == 137) throw "images: " + cfg.encoder + " exceeded " + cfg.encoderTimeoutMs.toString() + " ms and was killed";
+    val ran = runWithin(cfg.encoder, encoderArgs(cfg.encoder, req), cfg.encoderTimeoutMs);
+    val exit = case ran {
+        Ok(e) -> e;
+        Error(message) -> Exit(status: 0 - 1, stdout: "", stderr: message);
+    };
+    if (exit.status == 0 - 1) throw "images: " + cfg.encoder + " could not run: " + exit.stderr;
+    if (exit.status == 137) throw "images: " + cfg.encoder + " exceeded " + cfg.encoderTimeoutMs.toString() + " ms and was killed";
     if (exit.status != 0) throw "images: " + cfg.encoder + " exited " + exit.status.toString() + ": " + (exit.stderr + exit.stdout).trim().slice(0, 300);
     return 0;
 }

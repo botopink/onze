@@ -338,8 +338,8 @@ refused at config load; `data:` and `file:` URLs are refused. A refused source r
 is reported, never fetched unoptimized.
 
 **No NIF.** Pixels never enter the VM: the handler spawns one external encoder (`vips` by default,
-`magick` accepted) with an argument vector under `timeout`; a slow encoder is killed and fails one
-request. **A missing encoder degrades to pass-through** — the original file is served, and the
+`magick` accepted) with an argument vector under a deadline the VM keeps (`encoderTimeoutMs`, no
+external `timeout` tool); a slow encoder is killed and fails one request. **A missing encoder degrades to pass-through** — the original file is served, and the
 handler says optimization is off — because an encoder is an operational dependency; this is the one
 place onze degrades instead of failing. Encoded files are keyed by the hash of `src`, `w`, `q`,
 `f` and the encoder version, served `public, max-age=31536000, immutable` with that hash as
