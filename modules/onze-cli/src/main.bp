@@ -6,12 +6,12 @@
 //// the dispatch is testable without a process.
 
 import {io.env, io.process} from "std";
-import {resolveProject, Project} from "resolve";
+import {resolve.resolveProject, resolve.Project};
 import {OnzeConfig, defaultConfig, AliasMap} from "onze";
-import {parseCreateOpts, scaffoldFiles, scaffoldFilesIn, insideOnzeWorkspace, writeScaffold, describeCreate, createHelp, CreateOpts} from "create";
-import {infoText, tools, dependencyVersions} from "info";
-import {BuildResult, buildProject} from "build";
-import {startProject} from "start";
+import {create.parseCreateOpts, create.scaffoldFiles, create.scaffoldFilesIn, create.insideOnzeWorkspace, create.writeScaffold, create.describeCreate, create.createHelp, create.CreateOpts};
+import {info.infoText, info.tools, info.dependencyVersions};
+import {build.BuildResult, build.buildProject};
+import {start.startProject};
 import {io.fs, path} from "std";
 
 pub type Outcome(code: i32, text: string)

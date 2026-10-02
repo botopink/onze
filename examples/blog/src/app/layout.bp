@@ -3,7 +3,7 @@
 
 import {page, layout, jhPage, jhLayout, ctxParam, ctxRest, PageContext, LayoutProps, Element, ElementBase, main, section, article, h1, h2, p, text, notFound} from "jhonstart";
 import {emilia, Token} from "emilia";
-import {siteNav} from "components.nav";
+import {components.nav.siteNav};
 
 #[layout("")]
 pub fn rootLayout(props: LayoutProps) -> @Component<ElementBase, Element> {

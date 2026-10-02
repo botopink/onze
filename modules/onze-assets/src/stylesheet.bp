@@ -11,7 +11,7 @@
 
 import {escape} from "std";
 import {ChunkRef, staticUrl, escapeField} from "onze-bundler";
-import {StyleModule, shortHash} from "style_module";
+import {style_module.StyleModule, style_module.shortHash};
 
 pub fn buildStylesheet(globalCss: string, modules: Array<StyleModule>) -> @Result<#(string, string), string> {
     if (globalCss.toLower().contains("</style")) throw "the global stylesheet contains \"</style\"";

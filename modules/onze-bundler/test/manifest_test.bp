@@ -2,9 +2,9 @@
 // the same literals: the build host writes the manifest and the BEAM server
 // reads it back.
 
-import {ChunkRef, ClientBundleManifest, formatManifest, parseManifest, chunkFor, headScriptTags, scriptTags, sameManifest, staticUrl, emptyChunk} from "manifest";
+import {manifest.ChunkRef, manifest.ClientBundleManifest, manifest.formatManifest, manifest.parseManifest, manifest.chunkFor, manifest.headScriptTags, manifest.scriptTags, manifest.sameManifest, manifest.staticUrl, manifest.emptyChunk};
 import {testing.snapshots} from "std";
-import {bundleRenderHooks} from "hooks";
+import {hooks.bundleRenderHooks};
 import {RenderHooks} from "jhonstart";
 
 fn ref(id: string, file: string, hash: string, bytes: i32) -> ChunkRef {

@@ -11,7 +11,7 @@
 //// `onze dev` / `onze build` only, never to a bare `botopink check`.
 
 import {json.Json, json.decode} from "std";
-import {OnzeConfig, membersOf, isObject, isString, strOf, kindName, widest} from "config";
+import {config.OnzeConfig, config.membersOf, config.isObject, config.isString, config.strOf, config.kindName, config.widest};
 
 // ── the alias map (step 6) ──────────────────────────────────────────────────
 

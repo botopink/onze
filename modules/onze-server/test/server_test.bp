@@ -12,7 +12,7 @@ import {staticRootCount} from "rakun-web";
 import {page, layout, jhPage, jhLayout, ctxParam, ctxRest, PageContext, LayoutProps, Element, ElementBase, main, p, text, redirect} from "jhonstart";
 import {OnzeConfig, defaultConfig} from "onze";
 import {formatManifest, emptyManifest} from "onze-bundler";
-import {Onze, paramPairs, cookiePairs, uiRecords, staticRootOf, servedRoots, readBuild, rakunApp} from "server";
+import {server.Onze, server.paramPairs, server.cookiePairs, server.uiRecords, server.staticRootOf, server.servedRoots, server.readBuild, server.rakunApp};
 import {AssetRoot} from "onze-assets";
 
 // ── the app ─────────────────────────────────────────────────────────────────

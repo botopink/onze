@@ -1,7 +1,7 @@
 // `botopink test` suite for `src/config.bp` (front 49 steps 2 and 7). Imports
 // only std and the package's own modules, so a red here is onze's.
 
-import {OnzeConfig, defaultConfig, withPort, withDev, loadConfig, describeConfig, publicEnvPrefix, isPublicEnvName, publicEnvFrom, describePublicEnv, defaultActionField, defaultActionHeader, defaultActionsBodyLimit, parsePort} from "config";
+import {config.OnzeConfig, config.defaultConfig, config.withPort, config.withDev, config.loadConfig, config.describeConfig, config.publicEnvPrefix, config.isPublicEnvName, config.publicEnvFrom, config.describePublicEnv, config.defaultActionField, config.defaultActionHeader, config.defaultActionsBodyLimit, config.parsePort};
 import {testing.snapshots} from "std";
 
 fn lookupIn(pairs: Array<#(string, string)>, name: string) -> ?string {

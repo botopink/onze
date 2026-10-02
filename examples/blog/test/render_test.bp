@@ -8,13 +8,13 @@
 import {Element, ElementBase, RequestData, Response, RenderHooks, defaultHooks, PageContext, LayoutProps} from "jhonstart";
 import {defaultConfig} from "onze";
 import {bootSite, pageInput, responseOver} from "onze";
-import {rootLayout} from "app.layout";
-import {home} from "app.page";
-import {blogLayout} from "app.blog.layout";
-import {blogIndex} from "app.blog.page";
-import {listPosts} from "lib.db";
-import {dashboardLayout} from "app.dashboard.layout";
-import {newPostPage, newPostRenders} from "app.dashboard.posts.new.page";
+import {app.layout.rootLayout};
+import {app.page.home};
+import {app.blog.layout.blogLayout};
+import {app.blog.page.blogIndex};
+import {lib.db.listPosts};
+import {app.dashboard.layout.dashboardLayout};
+import {app.dashboard.posts.new.page.newPostPage, app.dashboard.posts.new.page.newPostRenders};
 
 #[@External.Node("""(globalThis.__blogRec = [], 0)""")]
 #[@External.Erlang("""(fun() -> put(blog_rec, []), 0 end)()""")]

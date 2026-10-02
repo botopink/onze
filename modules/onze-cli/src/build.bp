@@ -30,10 +30,10 @@ import {OnzeConfig, AliasMap, emptyAliases, defaultActionHeader, packageName} fr
 import {SourceFile, ImportRef, AppModule, ClientGraph, GraphNode, loadModules, clientGraph, BuildRefusal, BuildReport, checkBuild, describeReport, ClientComponent, EntryConfig, clientComponents, generateEntry, ChunkRef, ClientBundleManifest, formatManifest, staticUrl, manifestVersion, jsClosure, linkFiles, bootLine, clientSubstitutions, StyleProbe, styleProbeModule, styleProbeSource, parseStyleProbe, styleParity, refusalMessage} from "onze-bundler";
 import {StyleModule, compileStyleModule, generateStyleModuleSource, buildStylesheet, styleChunk, stylesheetFile} from "onze-assets";
 import {generateBuildId} from "onze-release";
-import {Project} from "resolve";
-import {RouteEntry, scanFiles} from "scan";
-import {checkTree, stageAt, sortedText} from "generate";
-import {serverMainSource, outDirOf} from "start";
+import {resolve.Project};
+import {scan.RouteEntry, scan.scanFiles};
+import {generate.checkTree, generate.stageAt, generate.sortedText};
+import {start.serverMainSource, start.outDirOf};
 
 // `styles` is the evaluated styleMap: `#(call site, class)` per literal
 // `emilia(…)` call of the client graph.

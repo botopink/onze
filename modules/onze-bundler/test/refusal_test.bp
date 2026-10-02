@@ -1,9 +1,9 @@
 // `botopink test` suite for `src/refusal.bp` (front 68 step 3), over fixture
 // source strings.
 
-import {parseFixture, ImportRef} from "scan";
-import {AppModule, ClientGraph, GraphNode, loadModules, clientGraph} from "graph";
-import {BuildReport, BuildRefusal, checkBuild, describeReport, refusalMessage, emiliaCallsOf, StyleProbe, styleProbeSource, parseStyleProbe, styleParity} from "refusal";
+import {scan.parseFixture, scan.ImportRef};
+import {graph.AppModule, graph.ClientGraph, graph.GraphNode, graph.loadModules, graph.clientGraph};
+import {refusal.BuildReport, refusal.BuildRefusal, refusal.checkBuild, refusal.describeReport, refusal.refusalMessage, refusal.emiliaCallsOf, refusal.StyleProbe, refusal.styleProbeSource, refusal.parseStyleProbe, refusal.styleParity};
 import {AliasMap, OnzeConfig, defaultConfig, loadConfig} from "onze";
 import {testing.snapshots} from "std";
 

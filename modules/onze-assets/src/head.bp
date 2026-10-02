@@ -5,7 +5,7 @@
 
 import {RenderHooks} from "jhonstart";
 import {ClientBundleManifest, ChunkRef, headScriptTags, scriptTags} from "onze-bundler";
-import {stylesheetLinks} from "stylesheet";
+import {stylesheet.stylesheetLinks};
 
 pub fn headFragment(m: ClientBundleManifest) -> string {
     return [stylesheetLinks(m.styles), headScriptTags(m)].filter({ s -> s != "" }).join("\n");

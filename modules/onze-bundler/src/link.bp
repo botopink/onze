@@ -14,7 +14,7 @@
 //// step") — `substitutions` maps a compiled path to the file that replaces it.
 
 import {io.fs, path} from "std";
-import {prelude} from "chunk";
+import {chunk.prelude};
 
 // The relative specs `require("…")` names in `js`, in order.
 pub fn requiresOf(js: string) -> string[] {

@@ -46,9 +46,11 @@ Five things, and nothing that duplicates a rakun or jhonstart definition:
 { "name": "blog", "alias": { "@/components": "components", "@/lib": "lib" } }
 ```
 
-`import {PostCard} from "@/components.post_card";` resolves to `components.post_card`. The
-mechanism is textual and build-time: `onze-cli`'s scan rewrites the prefix before the compiler
-sees the import. **The compiler does not know aliases exist**, so an alias is visible through
+`import {PostCard} from "@/components.post_card";` resolves to `components.post_card`, a module of
+the app, and is staged as `import {components.post_card.PostCard};` — the compiler's `from` names a
+package only (decision 206), and a module of the package is imported by its path inside the
+braces, which is also how an app module imports another without an alias. The mechanism is textual
+and build-time: `onze-cli`'s staging rewrites the import before the compiler sees it. **The compiler does not know aliases exist**, so an alias is visible through
 `onze build` only — a bare `botopink check` on the source tree does not resolve it.
 
 ## The four seams
@@ -234,7 +236,8 @@ restates none of it.
 **CSS Modules.** `app/blog/blog.module.css` becomes the generated `.onze/styles/app_blog_blog.bp`,
 one accessor per class the file defines (a class that begins a selector), renamed
 `<file>_<class>_<hash>` (six hex digits of std's `contentHash` of the file) in the selectors only.
-The accessors are `pub val`s — `import {container} from "styles.app_blog_blog"; … container`. A class used but not defined is left as written
+The accessors are `pub val`s of a module of the staged app — `import {styles.app_blog_blog.container};
+… container`. A class used but not defined is left as written
 and reported once; `:global(…)` is not supported; a file containing `</style` is refused.
 
 **The stylesheet.** The global CSS (`app/globals.css`), then every module's rewritten CSS, in one

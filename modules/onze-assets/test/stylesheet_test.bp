@@ -1,12 +1,12 @@
 // `botopink test` suite for `src/stylesheet.bp` and `src/assets.bp` (front 69
 // steps 2 and 3).
 
-import {StyleModule, compileStyleModule} from "style_module";
-import {buildStylesheet, styleRecords, styleChunk, stylesheetFile, stylesheetLinks} from "stylesheet";
-import {AssetRoot, staticRoots, describeRoots} from "assets";
+import {style_module.StyleModule, style_module.compileStyleModule};
+import {stylesheet.buildStylesheet, stylesheet.styleRecords, stylesheet.styleChunk, stylesheet.stylesheetFile, stylesheet.stylesheetLinks};
+import {assets.AssetRoot, assets.staticRoots, assets.describeRoots};
 import {ChunkRef, parseManifest, formatManifest, emptyManifest, ClientBundleManifest} from "onze-bundler";
 import {testing.snapshots, io.fs, path} from "std";
-import {pageRenderHooks, headFragment} from "head";
+import {head.pageRenderHooks, head.headFragment};
 import {RenderHooks} from "jhonstart";
 
 fn modules() -> @Result<Array<StyleModule>, string> {

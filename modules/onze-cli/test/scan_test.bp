@@ -1,8 +1,8 @@
 // `botopink test` suite for `src/scan.bp` and `src/resolve.bp` (front 50
 // steps 2 and 3) — commonJS, the CLI's one row.
 
-import {RouteEntry, scanFiles, scanApp, declaredArgument, describeScan, collisions} from "scan";
-import {Project, resolveProject, findRoot} from "resolve";
+import {scan.RouteEntry, scan.scanFiles, scan.scanApp, scan.declaredArgument, scan.describeScan, scan.collisions};
+import {resolve.Project, resolve.resolveProject, resolve.findRoot};
 import {OnzeConfig, AliasMap} from "onze";
 import {io.fs, io.process, io.clock, path, testing.snapshots, io.env} from "std";
 

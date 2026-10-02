@@ -2,11 +2,11 @@
 // fixture app and stand-in compiled sources (one line per module), so the
 // hashes are reproducible without the compiler.
 
-import {parseFixture, ImportRef, SourceFile} from "scan";
-import {AppModule, ClientGraph, GraphNode, loadModules, clientGraph} from "graph";
-import {ChunkPlan, planChunks, routeReach, linkChunk, chunkFileName, describePlan, manifestOf, prelude, patternOfSegment} from "chunk";
-import {ClientBundleManifest, ChunkRef, formatManifest} from "manifest";
-import {fixtureApp} from "fixture";
+import {scan.parseFixture, scan.ImportRef, scan.SourceFile};
+import {graph.AppModule, graph.ClientGraph, graph.GraphNode, graph.loadModules, graph.clientGraph};
+import {chunk.ChunkPlan, chunk.planChunks, chunk.routeReach, chunk.linkChunk, chunk.chunkFileName, chunk.describePlan, chunk.manifestOf, chunk.prelude, chunk.patternOfSegment};
+import {manifest.ClientBundleManifest, manifest.ChunkRef, manifest.formatManifest};
+import {fixture.fixtureApp};
 import {AliasMap} from "onze";
 import {testing.snapshots} from "std";
 

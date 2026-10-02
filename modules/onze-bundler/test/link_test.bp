@@ -1,6 +1,6 @@
 // `botopink test` suite for `src/link.bp` (front 68 step 4, files).
 
-import {requiresOf, resolveFrom, esmToFactoryBody, jsClosure, linkFiles, bootLine, clientSubstitutions} from "link";
+import {link.requiresOf, link.resolveFrom, link.esmToFactoryBody, link.jsClosure, link.linkFiles, link.bootLine, link.clientSubstitutions};
 import {io.fs, io.process, io.clock, path, io.env} from "std";
 
 // The run's own scratch directory — `botopink test` names it in

@@ -1,6 +1,6 @@
 // `botopink test` suite for `lib/db.bp` (front 53 step 1), both rows.
 
-import {Post, listPosts, listPostsIn, readPost, readPostIn, writePostIn, postsDir, parsePost, postText} from "lib.db";
+import {lib.db.Post, lib.db.listPosts, lib.db.listPostsIn, lib.db.readPost, lib.db.readPostIn, lib.db.writePostIn, lib.db.postsDir, lib.db.parsePost, lib.db.postText};
 import {io.fs, io.process, io.clock, path, io.env} from "std";
 
 // The run's own scratch directory — `botopink test` names it in

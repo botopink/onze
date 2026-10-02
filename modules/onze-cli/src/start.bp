@@ -18,7 +18,7 @@
 
 import {io.fs, io.env, io.process, path, json.quote} from "std";
 import {OnzeConfig, parsePort, packageName} from "onze";
-import {Project} from "resolve";
+import {resolve.Project};
 
 // The configuration as botopink source: an `OnzeConfig(…)` literal.
 pub fn configLiteral(c: OnzeConfig) -> string {
@@ -35,7 +35,7 @@ pub fn serverMainSource(c: OnzeConfig) -> string {
         "import {io.env} from \"std\";",
         "import {OnzeConfig, withPort, parsePort} from \"onze\";",
         "import {Onze} from \"onze-server\";",
-        "import {routeModules} from \"onze_routes\";",
+        "import {onze_routes.routeModules};",
         "",
         "pub fn onzeConfig() -> OnzeConfig {",
         "    return " + configLiteral(c) + ";",

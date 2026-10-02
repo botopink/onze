@@ -11,7 +11,7 @@
 //// render with its output attached and the partial file removed.
 
 import {io.fs, io.process, io.process.Exit, path} from "std";
-import {ImageSize} from "layout";
+import {layout.ImageSize};
 
 pub type Rasterizer(kind: string, command: string)
 

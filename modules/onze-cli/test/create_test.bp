@@ -1,10 +1,10 @@
 // `botopink test` suite for `src/create.bp`, `src/info.bp` and `src/main.bp`
 // (front 50 steps 1, 5 and 9).
 
-import {CreateOpts, createDefaults, parseCreateOpts, scaffoldFiles, scaffoldFilesIn, insideOnzeWorkspace, writeScaffold, createHelp} from "create";
-import {Outcome, run, commands} from "main";
-import {infoText, versionAt} from "info";
-import {Project, resolveProject} from "resolve";
+import {create.CreateOpts, create.createDefaults, create.parseCreateOpts, create.scaffoldFiles, create.scaffoldFilesIn, create.insideOnzeWorkspace, create.writeScaffold, create.createHelp};
+import {main.Outcome, main.run, main.commands};
+import {info.infoText, info.versionAt};
+import {resolve.Project, resolve.resolveProject};
 import {OnzeConfig, AliasMap} from "onze";
 import {io.fs, io.process, io.clock, path, testing.snapshots, io.env} from "std";
 

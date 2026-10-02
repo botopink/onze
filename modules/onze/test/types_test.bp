@@ -1,6 +1,6 @@
 // `botopink test` suite for `src/types.bp` (front 49 steps 3 and 6).
 
-import {AppFile, appFileKinds, classifyAppFile, describeAppFiles, AliasMap, loadAliases, resolveAlias, describeAliases} from "types";
+import {types.AppFile, types.appFileKinds, types.classifyAppFile, types.describeAppFiles, types.AliasMap, types.loadAliases, types.resolveAlias, types.describeAliases};
 import {testing.snapshots} from "std";
 
 fn aliasError(r: @Result<AliasMap, string>) -> string {

@@ -10,7 +10,7 @@
 import {io.fs, io.process, path} from "std";
 import {ClientBundleManifest, ChunkRef, parseManifest} from "onze-bundler";
 import {isPublicEnvName} from "onze";
-import {ReleaseSpec} from "spec";
+import {spec.ReleaseSpec};
 
 // The file name of a chunk URL: its last path segment.
 pub fn fileOfUrl(url: string) -> string {

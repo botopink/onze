@@ -34,8 +34,8 @@
 
 import {json.Json, json.decode} from "std";
 import {islandAttrOf, Island, propsOf} from "jhonstart";
-import {AppModule, ClientGraph, GraphNode} from "graph";
-import {ImportRef} from "scan";
+import {graph.AppModule, graph.ClientGraph, graph.GraphNode};
+import {scan.ImportRef};
 
 pub type ClientComponent(moduleId: string, name: string, propsType: string, propsModule: string, fields: Array<#(string, string)>)
 
@@ -232,11 +232,14 @@ fn starterOf(c: ClientComponent) -> string {
 fn importsOfComponents(cs: Array<ClientComponent>) -> string[] {
     var out: string[] = [];
     for (cs) { c ->
+        // A component's module is one of the application's own: imported by
+        // its path inside the braces (decision 206 — `from` names a package).
+        val at = c.moduleId.replaceAll("/", ".") + ".";
         val together = c.propsType != "" && c.propsModule == c.moduleId;
-        val names = if (together) c.name + ", " + c.propsType else c.name;
-        out.push("import {" + names + "} from " + quote(c.moduleId) + ";");
+        val names = if (together) at + c.name + ", " + at + c.propsType else at + c.name;
+        out.push("import {" + names + "};");
         val apart = c.propsType != "" && c.propsModule != c.moduleId && c.propsModule != "";
-        if (apart) out.push("import {" + c.propsType + "} from " + quote(c.propsModule) + ";");
+        if (apart) out.push("import {" + c.propsModule.replaceAll("/", ".") + "." + c.propsType + "};");
     };
     return out;
 }

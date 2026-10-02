@@ -18,7 +18,7 @@
 //// max-age=31536000, immutable` and that hash as `ETag`.
 
 import {io.fs, io.process, io.process.Exit, path, hash, encoding} from "std";
-import {ImageConfig, validateSource} from "image";
+import {image.ImageConfig, image.validateSource};
 
 pub type EncodeRequest(inputPath: string, outputPath: string, width: i32, quality: i32, format: string)
 

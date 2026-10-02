@@ -1,6 +1,6 @@
 // `botopink test` suite for `src/style_module.bp` (front 69 step 1).
 
-import {StyleModule, compileStyleModule, generateStyleModuleSource, scopeName, generatedPath, reportOf} from "style_module";
+import {style_module.StyleModule, style_module.compileStyleModule, style_module.generateStyleModuleSource, style_module.scopeName, style_module.generatedPath, style_module.reportOf};
 import {testing.snapshots} from "std";
 
 fn blog() -> string {

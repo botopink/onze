@@ -1,11 +1,11 @@
 // `botopink test` suite for onze-og (front 70) — erlang, the member's row.
 
-import {Style, parseStyle, unsupportedProperties, malformedDeclarations, describeStyle, supportedProperties, refusedProperties} from "card_style";
-import {FontMetrics, parseMetrics, advanceOf, measure} from "metrics";
-import {LayoutBox, ImageSize, layout, wrapText, describeLayout} from "layout";
-import {FontRef, toSvg, gradientOf} from "svg";
-import {Rasterizer, requireRasterizer, rasterize, noRasterizer, detectRasterizer} from "raster";
-import {ImageResponse, defaultSize, defaultContentType, imageResponse, withFonts, checkResponse, cardKey} from "response";
+import {card_style.Style, card_style.parseStyle, card_style.unsupportedProperties, card_style.malformedDeclarations, card_style.describeStyle, card_style.supportedProperties, card_style.refusedProperties};
+import {metrics.FontMetrics, metrics.parseMetrics, metrics.advanceOf, metrics.measure};
+import {layout.LayoutBox, layout.ImageSize, layout.layout, layout.wrapText, layout.describeLayout};
+import {svg.FontRef, svg.toSvg, svg.gradientOf};
+import {raster.Rasterizer, raster.requireRasterizer, raster.rasterize, raster.noRasterizer, raster.detectRasterizer};
+import {response.ImageResponse, response.defaultSize, response.defaultContentType, response.imageResponse, response.withFonts, response.checkResponse, response.cardKey};
 import {Element, div, span, text} from "jhonstart";
 import {testing.snapshots, io.fs, io.process, io.env, path} from "std";
 

@@ -1,12 +1,12 @@
 // `botopink test` suite for `src/rebuild.bp` (front 68 step 8), over the
 // frozen fixture app and stand-in compiled sources.
 
-import {parseFixture, ImportRef} from "scan";
-import {AppModule, ClientGraph, GraphNode, loadModules} from "graph";
-import {ChunkPlan} from "chunk";
-import {BuildRefusal, BuildReport} from "refusal";
-import {BundleState, BundleSetup, RebuildResult, initialState, rebuild} from "rebuild";
-import {fixtureApp} from "fixture";
+import {scan.parseFixture, scan.ImportRef};
+import {graph.AppModule, graph.ClientGraph, graph.GraphNode, graph.loadModules};
+import {chunk.ChunkPlan};
+import {refusal.BuildRefusal, refusal.BuildReport};
+import {rebuild.BundleState, rebuild.BundleSetup, rebuild.RebuildResult, rebuild.initialState, rebuild.rebuild};
+import {fixture.fixtureApp};
 import {AliasMap, OnzeConfig, defaultConfig} from "onze";
 
 fn setup() -> BundleSetup {
