@@ -126,8 +126,10 @@ test "start: the blog through onze build && onze start ---- its pages, not-found
     assert fs.exists(path.join([out, "client", "src", "onze_entry.bp"]));
     assert fs.exists(path.join([out, "client-js", "onze_entry.js"]));
     val sharedChunk = fs.readText(path.join([out, "static", built.buildId, built.chunks.at(0).unwrapOr("")])).unwrapOr("");
-    assert sharedChunk.contains("components/like_button");
-    assert sharedChunk.contains("lib/db") == false;
+    // A chunk registers each module it carries as `["<path>.js"] = function`;
+    // the module table is what is asserted, not any text a comment may hold.
+    assert sharedChunk.contains("[\"components/like_button.js\"] = function");
+    assert sharedChunk.contains("[\"lib/db.js\"]") == false;
     val entryChunk = built.chunks.at(1).unwrapOr("");
     val sheet = built.chunks.at(2).unwrapOr("");
     val pid = try spawnServer(p, 43102);
