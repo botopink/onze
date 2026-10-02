@@ -6,7 +6,7 @@
 import {image.ImageProps, image.RemotePattern, image.ImageConfig, image.defaultImageProps, image.defaultImageConfig, image.validateSource, image.validateConfig, image.validateProps, image.Image, image.srcsetOf, image.refusedImages};
 import {image_handler.EncodeRequest, image_handler.ImageOutcome, image_handler.encode, image_handler.encoderArgs, image_handler.imageResponse, image_handler.negotiate, image_handler.cacheKey};
 import {Element, renderNode} from "jhonstart";
-import {io.fs, io.process, io.clock, path, testing.snapshots, io.env} from "std";
+import {io.fs, io.process, io.process.Exit, io.clock, path, testing.snapshots, io.env} from "std";
 
 // The run's own scratch directory — `botopink test` names it in
 // `BOTOPINK_TEST_TMPDIR`, and it is the one place a test writes.
@@ -143,6 +143,32 @@ test "image: encoder ---- an argument vector, pass-through, a timeout, a failure
         "#7 " + negotiate(cfg, "image/avif", "image/webp") + " (avif not configured)",
     ].join("\n"));
     val gone = process.run("rm", ["-rf", dir]);
+}
+
+// The deadline kills the encoder's process group, not only the encoder: a
+// child it started (`sleep 30 &`) is gone after the timeout. `kill -0` is
+// retried for a moment — a killed child is a zombie until its new parent
+// reaps it.
+test "image: encoder ---- a timeout kills what the encoder started" {
+    val dir = scratch();
+    val pidFile = path.join([dir, "child.pid"]);
+    val spawning = script(dir, "spawning-enc", "sleep 30 &\necho $! > \"" + pidFile + "\"\nsleep 30");
+    val t0 = clock.nowMillis();
+    val r = encode(withEncoder(defaultImageConfig(), spawning, 1000), EncodeRequest(inputPath: "x", outputPath: "y", width: 640, quality: 75, format: "image/webp"));
+    assert encodeErrorOf(r).contains("exceeded 1000 ms and was killed");
+    assert clock.nowMillis() - t0 < 10000;
+    val pid = fs.readText(pidFile).unwrapOr("").trim();
+    assert pid != "";
+    val alive = process.run("sh", ["-c", "i=0; while [ $i -lt 50 ]; do kill -0 \"$1\" 2>/dev/null || exit 1; sleep 0.1; i=$((i + 1)); done; exit 0", "probe", pid]);
+    assert alive.unwrapOr(Exit(status: 0, stdout: "", stderr: "")).status == 1;
+    val gone = process.run("rm", ["-rf", dir]);
+}
+
+fn encodeErrorOf(r: @Result<i32, string>) -> string {
+    return case r {
+        Ok(v) -> "ok";
+        Error(e) -> e;
+    };
 }
 
 test "image: no NIF anywhere in onze-assets" {

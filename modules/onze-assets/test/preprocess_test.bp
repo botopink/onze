@@ -41,9 +41,16 @@ test "preprocess: a missing command fails naming it" {
     assert errorOf(preprocess("no-such-sassc-onze", f)).startsWith("preprocessor \"no-such-sassc-onze\" could not run");
 }
 
+// The failing preprocessor is a script of the test's own, so the output it
+// asserts is the script's, not a host tool's: how `cat` names itself in a
+// diagnostic is the host's (coreutils 9.4 prints the full `argv[0]`, which a
+// port spawn makes `/usr/bin/cat`; later coreutils and BSD print `cat`).
 test "preprocess: a non-zero exit fails with the command's output attached" {
-    val f = path.join([testTmp(), "does-not-exist.scss"]);
-    val msg = errorOf(preprocess("cat", f));
-    assert msg.startsWith("preprocessor \"cat\" exited 1 on ");
-    assert msg.contains(": cat: ");
+    val f = scratchFile("x");
+    val failing = path.join([path.dirname(f), "failing-sass"]);
+    val w = fs.writeText(failing, "#!/bin/sh\necho \"Error: expected one selector in $1\" >&2\nexit 65\n");
+    val x = process.run("chmod", ["+x", failing]);
+    val msg = errorOf(preprocess(failing, f));
+    assert msg.startsWith("preprocessor \"" + failing + "\" exited 65 on " + f + ": ");
+    assert msg.endsWith(": Error: expected one selector in " + f);
 }
