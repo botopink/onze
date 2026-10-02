@@ -86,16 +86,19 @@ onze/
 │                        by `onze start` in onze-cli's start_test); scaffold/ (50: the
 │                        committed output of `onze create scaffold --yes --libs ../../..`,
 │                        diffed by create_test.bp); static-site (71) arrives with its front
-├── scripts/git-hooks/ ← pre-commit (lib/runner-standalone.sh): conflict markers, a staged
-│                        *.snap.new, the compiler (absent → the gate fails, never skips),
-│                        `botopink test` per `modules/*` member on every target its manifest
-│                        declares (manifestTargets: the member's `targets`, else the
-│                        workspace's), `botopink build` per example on every declared target
-│                        (runExamplesGate — no allow list)
-└── .github/workflows/ ← test.yml (one `botopink-lib-test` per runner × workspace target, the
-                         members and examples discovered from the root via BOTOPINK_LIB_ROOTS,
-                         every row hard; the sibling libraries checked out as dependencies;
-                         then runExamplesGate on the row's target), tag.yml
+├── scripts/git-hooks/ ← pre-commit (lib/runner-standalone.sh — one text in the five library
+│                        repositories): a staged *.snap.new or conflict marker, the compiler
+│                        (absent → the gate fails, never skips), `botopink test` in every
+│                        workspace member — `modules/*` and `examples/*` — on every target its
+│                        manifest declares (manifestTargets: the member's `targets`, else the
+│                        workspace's), `botopink build` of every example on every declared
+│                        target (runExamplesGate — no allow list)
+└── .github/workflows/ ← test.yml ({ubuntu-24.04, macos-14} × {commonJS, erlang}, every row
+                         hard, OTP 28 and Node 20 on every row; one `botopink-lib-test
+                         --strict` per row, the members and examples discovered from the root
+                         via BOTOPINK_LIB_ROOTS; the sibling libraries checked out as
+                         dependencies; then the hook's other stages on the row's target),
+                         tag.yml
 ```
 
 ## Rules
@@ -126,12 +129,52 @@ onze/
 
 ## Local gate
 
-`git config core.hooksPath scripts/git-hooks` once per clone. The hook runs `botopink test` in
-every `modules/*` member on every target its manifest declares and builds every example on
-every target it declares; it fails when the compiler binary is not found (`BOTOPINK_BIN`, an
-ancestor `zig-out/bin/botopink`, or `PATH`) and when a `*.snap.new` / `*.snap.md.new` is staged.
+`git config core.hooksPath scripts/git-hooks` once per clone. `scripts/git-hooks/pre-commit`
+sources `scripts/git-hooks/lib/runner-standalone.sh`; the gate's stages, in order — each one a
+refusal (decision 67: fail beats warn), none with a flag, variable or list that turns it off:
+
+1. **staged files** — no `*.snap.new` / `*.snap.md.new` (both are in `.gitignore`; the hook
+   catches a `git add -f`) and no conflict marker;
+2. **the compiler** — `$BOTOPINK_BIN` when it is set (a value that is not an executable is a
+   refusal, never a reason to pick another compiler), else the enclosing checkout's
+   `repository/botopink-lang/zig-out/bin/botopink` (the walk stops at the first ancestor that
+   holds `repository/botopink-lang/`), else a botopink-lang checkout's own `zig-out`, else
+   `$PATH`. None → the gate fails, naming `zig build install` and `BOTOPINK_BIN`. The path is
+   exported as `BOTOPINK_BIN`: `onze-cli`'s fixture suites compile with the compiler that runs
+   them;
+3. **repository stages** — `scripts/git-hooks/repository-stages.sh`, when a repository tracks
+   one. onze has none;
+4. **tests** — `botopink test --target <t>` in every workspace member (every directory the root
+   manifest's `workspaces` patterns expand to: the eight `modules/*` and `examples/{blog,scaffold}`)
+   on every target its manifest declares — 19 cells: nine members on both rows, `onze-server` on
+   erlang. A member with no `test` block (`scaffold`) is still compiled;
+5. **examples** — `botopink build --target <t>` of every `examples/*/` on every declared target,
+   into a throwaway `--out`: 4 builds;
+6. **refusals** — every `refusals/*/` case, when the directory exists. onze has none.
+
+Stages 1–3 stop the gate at the first red. Stages 4–6 all run: every red cell is listed with the
+tail of its output and a re-run line, and the gate fails at the end — one run tells every red.
+Measured 2026-10-02 with the compiler built from botopink-lang `29cfffc8`: 17 of 19 cells green, 4/4
+builds, exit 1 — the two reds are `onze-cli` on both targets (`test/start_test.bp:120` on both,
+`test/start_test.bp:103` and `test/build_test.bp:63` on erlang — `06-onze` and the compiler rows
+the front README names), listed by the one run with every other cell's verdict. Never commit
+with `--no-verify`; fix the red instead.
+
+`pre-commit` and `lib/runner-standalone.sh` are one text in the five library repositories
+(emilia, erika, jhonstart, onze, rakun): the meta repository's `hook-integrity` workflow compares
+the bytes (its check 4), so a change to either lands in all five together. What only one
+repository checks lives in that repository's `scripts/git-hooks/repository-stages.sh`, which the
+runner runs in a child process — it can add a red, it cannot remove or skip a shared stage.
+
 The same cells, discovered by the runner from the workspace root, are CI's:
-`cd $(mktemp -d) && BOTOPINK_LIB_ROOTS=<this repository> botopink-lib-test --target <t>`.
+`cd $(mktemp -d) && BOTOPINK_LIB_ROOTS=<this repository> botopink-lib-test --bin "$BOTOPINK_BIN"
+--target <t> --strict`, on `{ubuntu-24.04, macos-14} × {commonJS, erlang}` — every row hard, no
+windows row (gate-f: botopink-lang has none; it returns with the compiler's), `ubuntu-24.04`
+because the compiler links against a pinned glibc 2.38 and imports `arc4random_buf`
+(GLIBC_2.36), which ubuntu-22.04's glibc 2.35 cannot load. OTP 28 and Node 20 are installed on
+every row (`zig build install` runs `erlc`; the cli suites drive `node`); jhonstart, emilia and
+rakun are checked out under `botopink-lang/repository/` as the `path` dependencies the manifests
+declare — dependencies, never rows.
 
 A `targets` restriction is audited by building the member on the excluded target: `onze-server`'s
 commonJS build fails on rakun's host bindings, so its `["erlang"]` stands; `onze-cli` (erlang) and
