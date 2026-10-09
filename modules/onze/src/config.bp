@@ -95,31 +95,8 @@ declare fn truncToI32(x: f64) -> i32;
 #[@External.Erlang("""float(floor($0))""")]
 declare fn floorF(x: f64) -> f64;
 
-pub fn membersOf(v: Json) -> Array<#(string, Json)> {
-    return case v {
-        Obj(members: ms) -> ms;
-        _ -> [];
-    };
-}
-
-pub fn isObject(v: Json) -> bool {
-    return case v {
-        Obj(members: _) -> true;
-        _ -> false;
-    };
-}
-
-pub fn kindName(v: Json) -> string {
-    return case v {
-        Null -> "null";
-        Bool(value: _) -> "a boolean";
-        Num(value: _) -> "a number";
-        Str(value: _) -> "a string";
-        Arr(items: _) -> "an array";
-        Obj(members: _) -> "an object";
-    };
-}
-
+// Whether `v` is a JSON string — the one kind test std's `Json` does not
+// carry (it has `isObject`); `kindName` names what was found instead.
 pub fn isString(v: Json) -> bool {
     return case v {
         Str(value: _) -> true;
@@ -127,15 +104,15 @@ pub fn isString(v: Json) -> bool {
     };
 }
 
-pub fn strOf(v: Json) -> string {
-    return case v {
-        Str(value: s) -> s;
-        _ -> "";
-    };
-}
-
 fn wrongKind(key: string, want: string, got: Json) -> string {
-    return ["onze.json: \"", key, "\" must be ", want, ", not ", kindName(got)].join("");
+    return [
+        "onze.json: \"",
+        key,
+        "\" must be ",
+        want,
+        ", not ",
+        got.kindName(),
+    ].join("");
 }
 
 // A JSON number that is a whole value in `lo..hi`, as an `i32`.
@@ -149,27 +126,35 @@ fn wholeIn(key: string, v: Json, lo: i32, hi: i32) -> @Result<i32, string> {
         _ -> false;
     };
     if (isNum == false) throw wrongKind(key, "a whole number", v);
-    if (floorF(x) != x) throw ["onze.json: \"", key, "\" must be a whole number"].join("");
+    if (floorF(x) != x)
+        throw ["onze.json: \"", key, "\" must be a whole number"].join("");
     val n = truncToI32(x);
-    if (n < lo || n > hi) throw ["onze.json: \"", key, "\" is ", n.toString(), ", outside ", lo.toString(), "..", hi.toString()].join("");
+    if (n < lo || n > hi)
+        throw [
+            "onze.json: \"",
+            key,
+            "\" is ",
+            n.toString(),
+            ", outside ",
+            lo.toString(),
+            "..",
+            hi.toString(),
+        ].join("");
     return n;
 }
 
 fn stringsOf(key: string, v: Json) -> @Result<Array<string>, string> {
-    val items = case v {
-        Arr(items: xs) -> xs;
-        _ -> [];
-    };
     val isArr = case v {
         Arr(items: _) -> true;
         _ -> false;
     };
     if (isArr == false) throw wrongKind(key, "an array of strings", v);
     var out: string[] = [];
-    for (items) { item ->
-        if (isString(item) == false) throw wrongKind(key, "an array of strings", item);
-        out.push(strOf(item));
-    };
+    for (v.items()) { item ->
+        if (isString(item) == false)
+            throw wrongKind(key, "an array of strings", item);
+        out.push(item.str());
+    }
     return out;
 }
 
@@ -177,23 +162,45 @@ fn stringsOf(key: string, v: Json) -> @Result<Array<string>, string> {
 // by `source` in the refusal: decimal digits only, a value in 1..65535.
 pub fn parsePort(text: string, source: string) -> @Result<i32, string> {
     val digits = text.trim();
-    val numeric = digits != "" && digits.split("").filter({ c -> "0123456789".contains(c) == false }).length == 0 && (digits == "0" || digits.startsWith("0") == false);
-    if (numeric == false) throw source + ": \"" + text + "\" is not a port number";
+    val numeric = digits != ""
+        && digits
+            .split("")
+            .filter({ c -> "0123456789".contains(c) == false }).length
+            == 0
+        && (digits == "0" || digits.startsWith("0") == false);
+    if (numeric == false)
+        throw source + ": \"" + text + "\" is not a port number";
     val v = decode(digits).unwrapOr(Json.Null);
     val n = case v {
         Num(value: x) -> truncToI32(x);
         _ -> 0;
     };
-    if (n < 1 || n > 65535) throw source + ": " + digits + " is outside 1..65535";
+    if (n < 1 || n > 65535)
+        throw source + ": " + digits + " is outside 1..65535";
     return n;
 }
 
 // The keys `onze.json` may carry, each once.
 pub fn configKeys() -> string[] {
-    return ["name", "port", "basePath", "appDir", "publicDir", "outDir", "dev", "actionsBodyLimit", "allowedRedirects", "lang"];
+    return [
+        "name",
+        "port",
+        "basePath",
+        "appDir",
+        "publicDir",
+        "outDir",
+        "dev",
+        "actionsBodyLimit",
+        "allowedRedirects",
+        "lang",
+    ];
 }
 
-fn applyKey(cfg: OnzeConfig, key: string, v: Json) -> @Result<OnzeConfig, string> {
+fn applyKey(
+    cfg: OnzeConfig,
+    key: string,
+    v: Json,
+) -> @Result<OnzeConfig, string> {
     if (key == "port") {
         val port = try wholeIn(key, v, 1, 65535);
         return withPort(cfg, port);
@@ -219,41 +226,60 @@ fn applyKey(cfg: OnzeConfig, key: string, v: Json) -> @Result<OnzeConfig, string
         return OnzeConfig(..cfg, allowedRedirects: allowed);
     }
     if (isString(v) == false) throw wrongKind(key, "a string", v);
-    return withText(cfg, key, strOf(v));
+    return withText(cfg, key, v.str());
 }
 
 // `botopink.json`'s `name` — the project name `onze.json` may override.
 pub fn packageName(botopinkJson: string) -> @Result<string, string> {
     val doc = try decode(botopinkJson);
-    if (isObject(doc) == false) throw "botopink.json: the document must be an object, not " + kindName(doc);
-    val hit = membersOf(doc).filter({ m -> m._0 == "name" });
-    if (hit.length == 0) throw "botopink.json: no \"name\"";
-    val v = (hit.at(0) ?? #("", Json.Null))._1;
-    if (isString(v) == false) throw "botopink.json: \"name\" must be a string, not " + kindName(v);
-    return strOf(v);
+    if (doc.isObject() == false)
+        throw "botopink.json: the document must be an object, not "
+            + doc.kindName();
+    val found = doc.field("name");
+    if (found == null) throw "botopink.json: no \"name\"";
+    val v = found;
+    if (isString(v) == false)
+        throw "botopink.json: \"name\" must be a string, not " + v.kindName();
+    return v.str();
 }
 
 // The resolved configuration of a project: `defaultConfig()`, named after
 // `botopink.json`, overridden by every key `onze.json` carries.
-pub fn loadConfig(botopinkJson: string, onzeJson: string) -> @Result<OnzeConfig, string> {
+pub fn loadConfig(
+    botopinkJson: string,
+    onzeJson: string,
+) -> @Result<OnzeConfig, string> {
     val name = try packageName(botopinkJson);
     val doc = try decode(onzeJson);
-    if (isObject(doc) == false) throw "onze.json: the document must be an object, not " + kindName(doc);
+    if (doc.isObject() == false)
+        throw "onze.json: the document must be an object, not "
+            + doc.kindName();
     var cfg = withName(defaultConfig(), name);
     var seen: string[] = [];
-    for (membersOf(doc)) { m ->
-        if (configKeys().contains(m._0) == false) throw ["onze.json: unknown key \"", m._0, "\" (known: ", configKeys().join(", "), ")"].join("");
-        if (seen.contains(m._0)) throw ["onze.json: \"", m._0, "\" appears twice"].join("");
+    for (doc.members()) { m ->
+        if (configKeys().contains(m._0) == false)
+            throw [
+                "onze.json: unknown key \"",
+                m._0,
+                "\" (known: ",
+                configKeys().join(", "),
+                ")",
+            ].join("");
+        if (seen.contains(m._0))
+            throw ["onze.json: \"", m._0, "\" appears twice"].join("");
         seen.push(m._0);
         cfg = try applyKey(cfg, m._0, m._1);
-    };
+    }
     return cfg;
 }
 
 // The resolved configuration as the table `onze info` prints and the
 // `config` snapshots record: one `key = value` row per field, aligned.
 pub fn describeConfig(cfg: OnzeConfig) -> string {
-    val redirects = if (cfg.allowedRedirects.length == 0) "(none)" else cfg.allowedRedirects.join(", ");
+    val redirects = if (cfg.allowedRedirects.length == 0)
+        "(none)"
+    else
+        cfg.allowedRedirects.join(", ");
     val rows = [
         #("name", cfg.name),
         #("port", cfg.port.toString()),
@@ -267,7 +293,9 @@ pub fn describeConfig(cfg: OnzeConfig) -> string {
         #("lang", cfg.lang),
         #("origin", cfg.origin()),
     ];
-    return rows.map({ r -> (r._0.padEnd(16, " ") + " = " + r._1).trimEnd() }).join("\n");
+    return rows
+        .map({ r -> (r._0.padEnd(16, " ") + " = " + r._1).trimEnd() })
+        .join("\n");
 }
 
 // ── the environment split (seam 4) ──────────────────────────────────────────
@@ -278,7 +306,8 @@ pub val publicEnvPrefix: string = "ONZE_PUBLIC_";
 // case-sensitive, because a case-insensitive one is how a secret named
 // `Onze_Public_Secret` would leak.
 pub fn isPublicEnvName(name: string) -> bool {
-    return name.startsWith(publicEnvPrefix) && name.length() > publicEnvPrefix.length();
+    return name.startsWith(publicEnvPrefix)
+        && name.length() > publicEnvPrefix.length();
 }
 
 // The public names among `names`, each with its value from the process
@@ -291,11 +320,14 @@ pub fn publicEnv(names: string[]) -> Array<#(string, string)> {
 
 // `publicEnv` over an explicit reader — the same filter, testable without
 // touching the process environment.
-pub fn publicEnvFrom(names: string[], read: fn(name: string) -> ?string) -> Array<#(string, string)> {
+pub fn publicEnvFrom(
+    names: string[],
+    read: fn(name: string) -> ?string,
+) -> Array<#(string, string)> {
     var out: Array<#(string, string)> = [];
     for (names) { n ->
         if (isPublicEnvName(n)) out.push(#(n, read(n) ?? ""));
-    };
+    }
     return out;
 }
 
@@ -305,7 +337,7 @@ pub fn widest(xs: string[], floor: i32) -> i32 {
     for (xs) { x ->
         val n: i32 = x.length();
         if (n > w) w = n;
-    };
+    }
     return w;
 }
 
@@ -325,11 +357,14 @@ pub fn pairValue(pairs: Array<#(string, string)>, name: string) -> ?string {
 
 // The env table the `env` snapshots record: every name, `public` with its
 // value (`(unset)` when absent) or `dropped`.
-pub fn describePublicEnv(envPairs: Array<#(string, string)>, names: string[]) -> string {
+pub fn describePublicEnv(
+    envPairs: Array<#(string, string)>,
+    names: string[],
+) -> string {
     val width = widest(names, 0);
     var rows: string[] = ["prefix = " + publicEnvPrefix];
     for (names) { n ->
         rows.push(n.padEnd(width + 3, " ") + envCell(envPairs, n));
-    };
+    }
     return rows.join("\n");
 }

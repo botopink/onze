@@ -28,7 +28,9 @@ onze/
 │                        `botopink build/test` here is a refusal naming the members
 ├── modules/           ← each: botopink.json (name, entry root.bp, files [root.bp]) + src/root.bp
 │   ├── onze/          ← CORE (front 49) — `from "onze"`: config.bp (OnzeConfig, onze.json,
-│   │                    parsePort, the ONZE_PUBLIC_ rule), types.bp (AliasMap, OnzeProject,
+│   │                    parsePort, the ONZE_PUBLIC_ rule; a document is read through std's
+│   │                    `Json` methods — `members`, `field`, `str`, `items`, `isObject`,
+│   │                    `kindName` —, `isString` the one test std lacks), types.bp (AliasMap, OnzeProject,
 │   │                    describeAppFiles — what an app file is, is `routing`'s
 │   │                    `conventions`, decision 323), integration.bp (the jhonstart half of the boot — the one
 │   │                    file that imports jhonstart and the jhonstart-emilia bridge: bootSite,
@@ -42,8 +44,11 @@ onze/
 │   │                    requestData, responseFor. Depends on rakun, rakun-app, rakun-web,
 │   │                    jhonstart, onze, onze-bundler, onze-assets
 │   ├── onze-test/     ← the `<lib>-test` member: core.bp (assertConfig, assertAppFiles,
-│   │                    assertAlias, assertPublicEnv), fixtures.bp (fixtureTree); the E2E
-│   │                    runner arrives with 53. Depends on onze. Re-exports nothing from std
+│   │                    assertAlias, assertPublicEnv), fixtures.bp (fixtureTree); one
+│   │                    group file per front, empty until its front fills it — cli.bp,
+│   │                    bundler.bp (50), assets.bp, og.bp (51), release.bp (71), e2e.bp
+│   │                    (the E2E runner, 53); the front that fills one adds the member
+│   │                    it imports. Depends on onze. Re-exports nothing from std
 │   ├── onze-cli/      ← front 50 — both rows: resolve.bp, scan.bp, generate.bp
 │   │                    (the check, the staged tree under <outDir>/src/), create.bp,
 │   │                    info.bp, build.bp (`onze build`: the staged server with its

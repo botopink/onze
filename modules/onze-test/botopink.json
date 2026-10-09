@@ -8,7 +8,13 @@
   "files": [
     "root.bp",
     "core.bp",
-    "fixtures.bp"
+    "fixtures.bp",
+    "cli.bp",
+    "bundler.bp",
+    "assets.bp",
+    "og.bp",
+    "release.bp",
+    "e2e.bp"
   ],
   "dependencies": {
     "onze": {

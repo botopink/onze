@@ -10,3 +10,9 @@
 
 pub mod core;
 pub mod fixtures;
+pub mod cli;
+pub mod bundler;
+pub mod assets;
+pub mod og;
+pub mod release;
+pub mod e2e;

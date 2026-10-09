@@ -12,7 +12,7 @@
 
 import {json.Json, json.decode} from "std";
 import {conventions.classify} from "routing";
-import {config.OnzeConfig, config.membersOf, config.isObject, config.isString, config.strOf, config.kindName, config.widest};
+import {config.OnzeConfig, config.isString, config.widest};
 
 // ── the alias map (step 6) ──────────────────────────────────────────────────
 
@@ -43,32 +43,32 @@ fn escapesRoot(target: string) -> bool {
 // `alias` key has an empty map.
 pub fn loadAliases(botopinkJson: string) -> @Result<AliasMap, string> {
     val doc = try decode(botopinkJson);
-    if (isObject(doc) == false)
+    if (doc.isObject() == false)
         throw "botopink.json: the document must be an object, not "
-            + kindName(doc);
-    val hit = membersOf(doc).filter({ m -> m._0 == "alias" });
-    if (hit.length == 0) return emptyAliases();
-    val v = (hit.at(0) ?? #("", Json.Null))._1;
-    if (isObject(v) == false)
-        throw "botopink.json: \"alias\" must be an object, not " + kindName(v);
+            + doc.kindName();
+    val found = doc.field("alias");
+    if (found == null) return emptyAliases();
+    val v = found;
+    if (v.isObject() == false)
+        throw "botopink.json: \"alias\" must be an object, not " + v.kindName();
     var entries: Array<#(string, string)> = [];
-    for (membersOf(v)) { m ->
+    for (v.members()) { m ->
         if (isString(m._1) == false)
             throw [
                 "alias \"",
                 m._0,
                 "\" must map to a string, not ",
-                kindName(m._1),
+                m._1.kindName(),
             ].join("");
-        if (escapesRoot(strOf(m._1)))
+        if (escapesRoot(m._1.str()))
             throw [
                 "alias \"",
                 m._0,
                 "\" -> \"",
-                strOf(m._1),
+                m._1.str(),
                 "\" escapes the package root",
             ].join("");
-        entries.push(#(m._0, strOf(m._1)));
+        entries.push(#(m._0, m._1.str()));
     }
     return AliasMap(entries: entries);
 }
