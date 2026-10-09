@@ -1,0 +1,84 @@
+// CommonMark 0.31.2 spec examples — § Backslash escapes (front 121, step 2).
+//
+// Generated from <https://spec.commonmark.org/0.31.2/spec.json>: one test per
+// example, Markdown in, the reference HTML out, named by the example's number.
+// Rendered with `commonmarkOptions()` — CommonMark alone, no extension, no
+// smart punctuation, no heading ids — as the spec renders them.
+
+import {markdown.parseWith, markdown.toHtml, markdown.commonmarkOptions};
+
+fn same(source: string, expected: string) -> @Result<void, string> {
+    val got = toHtml(parseWith(source, commonmarkOptions()));
+    if (got != expected) throw "expected " + expected + " got " + got;
+    return;
+}
+
+test "commonmark 012: Backslash escapes" {
+    try same(
+        "\\!\\\"\\#\\\$\\%\\&\\'\\(\\)\\*\\+\\,\\-\\.\\/\\:\\;\\<\\=\\>\\?\\@\\[\\\\\\]\\^\\_\\`\\{\\|\\}\\~\n",
+        "<p>!&quot;#\$%&amp;'()*+,-./:;&lt;=&gt;?@[\\]^_`{|}~</p>\n",
+    );
+}
+
+test "commonmark 013: Backslash escapes" {
+    try same("\\\t\\A\\a\\ \\3\\φ\\«\n", "<p>\\\t\\A\\a\\ \\3\\φ\\«</p>\n");
+}
+
+test "commonmark 014: Backslash escapes" {
+    try same(
+        "\\*not emphasized*\n\\<br/> not a tag\n\\[not a link](/foo)\n\\`not code`\n1\\. not a list\n\\* not a list\n\\# not a heading\n\\[foo]: /url \"not a reference\"\n\\&ouml; not a character entity\n",
+        "<p>*not emphasized*\n&lt;br/&gt; not a tag\n[not a link](/foo)\n`not code`\n1. not a list\n* not a list\n# not a heading\n[foo]: /url &quot;not a reference&quot;\n&amp;ouml; not a character entity</p>\n",
+    );
+}
+
+test "commonmark 015: Backslash escapes" {
+    try same("\\\\*emphasis*\n", "<p>\\<em>emphasis</em></p>\n");
+}
+
+test "commonmark 016: Backslash escapes" {
+    try same("foo\\\nbar\n", "<p>foo<br />\nbar</p>\n");
+}
+
+test "commonmark 017: Backslash escapes" {
+    try same("`` \\[\\` ``\n", "<p><code>\\[\\`</code></p>\n");
+}
+
+test "commonmark 018: Backslash escapes" {
+    try same("    \\[\\]\n", "<pre><code>\\[\\]\n</code></pre>\n");
+}
+
+test "commonmark 019: Backslash escapes" {
+    try same("~~~\n\\[\\]\n~~~\n", "<pre><code>\\[\\]\n</code></pre>\n");
+}
+
+test "commonmark 020: Backslash escapes" {
+    try same(
+        "<https://example.com?find=\\*>\n",
+        "<p><a href=\"https://example.com?find=%5C*\">https://example.com?find=\\*</a></p>\n",
+    );
+}
+
+test "commonmark 021: Backslash escapes" {
+    try same("<a href=\"/bar\\/)\">\n", "<a href=\"/bar\\/)\">\n");
+}
+
+test "commonmark 022: Backslash escapes" {
+    try same(
+        "[foo](/bar\\* \"ti\\*tle\")\n",
+        "<p><a href=\"/bar*\" title=\"ti*tle\">foo</a></p>\n",
+    );
+}
+
+test "commonmark 023: Backslash escapes" {
+    try same(
+        "[foo]\n\n[foo]: /bar\\* \"ti\\*tle\"\n",
+        "<p><a href=\"/bar*\" title=\"ti*tle\">foo</a></p>\n",
+    );
+}
+
+test "commonmark 024: Backslash escapes" {
+    try same(
+        "``` foo\\+bar\nfoo\n```\n",
+        "<pre><code class=\"language-foo+bar\">foo\n</code></pre>\n",
+    );
+}

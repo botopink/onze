@@ -1,0 +1,82 @@
+// CommonMark 0.31.2 spec examples — § Tabs (front 121, step 1).
+//
+// Generated from <https://spec.commonmark.org/0.31.2/spec.json>: one test per
+// example, Markdown in, the reference HTML out, named by the example's number.
+// Rendered with `commonmarkOptions()` — CommonMark alone, no extension, no
+// smart punctuation, no heading ids — as the spec renders them.
+
+import {markdown.parseWith, markdown.toHtml, markdown.commonmarkOptions};
+
+fn same(source: string, expected: string) -> @Result<void, string> {
+    val got = toHtml(parseWith(source, commonmarkOptions()));
+    if (got != expected) throw "expected " + expected + " got " + got;
+    return;
+}
+
+test "commonmark 001: Tabs" {
+    try same(
+        "\tfoo\tbaz\t\tbim\n",
+        "<pre><code>foo\tbaz\t\tbim\n</code></pre>\n",
+    );
+}
+
+test "commonmark 002: Tabs" {
+    try same(
+        "  \tfoo\tbaz\t\tbim\n",
+        "<pre><code>foo\tbaz\t\tbim\n</code></pre>\n",
+    );
+}
+
+test "commonmark 003: Tabs" {
+    try same(
+        "    a\ta\n    ὐ\ta\n",
+        "<pre><code>a\ta\nὐ\ta\n</code></pre>\n",
+    );
+}
+
+test "commonmark 004: Tabs" {
+    try same(
+        "  - foo\n\n\tbar\n",
+        "<ul>\n<li>\n<p>foo</p>\n<p>bar</p>\n</li>\n</ul>\n",
+    );
+}
+
+test "commonmark 005: Tabs" {
+    try same(
+        "- foo\n\n\t\tbar\n",
+        "<ul>\n<li>\n<p>foo</p>\n<pre><code>  bar\n</code></pre>\n</li>\n</ul>\n",
+    );
+}
+
+test "commonmark 006: Tabs" {
+    try same(
+        ">\t\tfoo\n",
+        "<blockquote>\n<pre><code>  foo\n</code></pre>\n</blockquote>\n",
+    );
+}
+
+test "commonmark 007: Tabs" {
+    try same(
+        "-\t\tfoo\n",
+        "<ul>\n<li>\n<pre><code>  foo\n</code></pre>\n</li>\n</ul>\n",
+    );
+}
+
+test "commonmark 008: Tabs" {
+    try same("    foo\n\tbar\n", "<pre><code>foo\nbar\n</code></pre>\n");
+}
+
+test "commonmark 009: Tabs" {
+    try same(
+        " - foo\n   - bar\n\t - baz\n",
+        "<ul>\n<li>foo\n<ul>\n<li>bar\n<ul>\n<li>baz</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n",
+    );
+}
+
+test "commonmark 010: Tabs" {
+    try same("#\tFoo\n", "<h1>Foo</h1>\n");
+}
+
+test "commonmark 011: Tabs" {
+    try same("*\t*\t*\t\n", "<hr />\n");
+}

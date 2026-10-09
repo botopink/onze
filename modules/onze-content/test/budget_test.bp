@@ -1,0 +1,74 @@
+// The 200 kB budget (front 121, step 2): a document of 420 sections — a
+// heading, a paragraph with emphasis, links, smart punctuation and an
+// extended autolink, a nested list with a task, a block quote with a hard
+// break, a fenced code block, a table and a link reference definition —
+// parsed and rendered to HTML. Measured 2026-10-09 on the author's machine
+// with the compiler built from botopink-lang 94a9c3ef: just over 200 000 code
+// points, ~130 ms on erlang, ~140 ms on commonJS (the whole test, the
+// document's assembly included). The budget is 2 000 ms on either
+// row — the gate's slowest runner with a margin, and an order of magnitude
+// below what a quadratic walk over the document would cost.
+
+import {markdown.parse, markdown.toHtml};
+import {io.clock} from "std";
+
+fn section(n: i32) -> string {
+    return """
+## Section ${n}
+
+Some *emphasis*, some **strong text**, a [link](https://example.com/${n} "title")
+and `inline code`, then a sentence that goes on for a while so that the
+paragraph has a realistic length, with "quotes" -- and dashes... and an
+autolink www.example.com/page and <https://botopink.dev>.
+
+- first item with _emphasis_
+- second item with [a reference][ref]
+  - nested item
+- [x] done task
+
+> A quote with **bold** and a hard\\
+> break.
+
+```bp
+val x = ${n};
+```
+
+| a | b |
+|---|--:|
+| 1 | 2 |
+
+[ref]: /reference
+
+""";
+}
+
+fn document() -> string {
+    var parts: string[] = [];
+    var i = 0;
+    while (i < 420) {
+        parts.push(section(i));
+        i = i + 1;
+    }
+    return parts.join("");
+}
+
+fn within(elapsed: i64, budget: i64) -> @Result<void, string> {
+    if (elapsed > budget)
+        throw "rendering 200 kB took "
+            + elapsed.toString()
+            + " ms, over the budget of "
+            + budget.toString()
+            + " ms";
+    return;
+}
+
+test "budget: a 200 kB document renders within 2 000 ms" {
+    val source = document();
+    assert source.length > 200000;
+    val started = clock.monotonicMillis();
+    val html = toHtml(parse(source));
+    val elapsed = clock.monotonicMillis() - started;
+    assert html.contains("<h2 id=\"section-419\">Section 419</h2>");
+    assert html.contains("and a hard<br />\nbreak.");
+    try within(elapsed, 2000);
+}

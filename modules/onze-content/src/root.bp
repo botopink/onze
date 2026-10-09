@@ -1,0 +1,14 @@
+//// The `onze-content` package — module-tree root (front 121 owns it).
+////
+//// `markdown`: CommonMark 0.31.2 and the GitHub-flavoured extensions (tables,
+//// strikethrough, task lists, extended autolinks, footnotes, the tag filter)
+//// parsed to an `MdNode` tree, rendered to HTML text (`toHtml`) or to
+//// jhonstart's `Element` (`toElement`), with GitHub's heading ids and smart
+//// punctuation. `md_text` (code points, character classes, escaping, URL
+//// normalisation, entity decoding) and `md_entities` (the HTML5 named
+//// references) are the renderer's own and private. Frontmatter, collections
+//// and feeds arrive with the front's later steps.
+
+pub mod markdown;
+mod md_text;
+mod md_entities;

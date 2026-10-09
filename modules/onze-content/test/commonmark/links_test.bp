@@ -1,0 +1,557 @@
+// CommonMark 0.31.2 spec examples — § Links (front 121, step 2).
+//
+// Generated from <https://spec.commonmark.org/0.31.2/spec.json>: one test per
+// example, Markdown in, the reference HTML out, named by the example's number.
+// Rendered with `commonmarkOptions()` — CommonMark alone, no extension, no
+// smart punctuation, no heading ids — as the spec renders them.
+
+import {markdown.parseWith, markdown.toHtml, markdown.commonmarkOptions};
+
+fn same(source: string, expected: string) -> @Result<void, string> {
+    val got = toHtml(parseWith(source, commonmarkOptions()));
+    if (got != expected) throw "expected " + expected + " got " + got;
+    return;
+}
+
+test "commonmark 482: Links" {
+    try same(
+        "[link](/uri \"title\")\n",
+        "<p><a href=\"/uri\" title=\"title\">link</a></p>\n",
+    );
+}
+
+test "commonmark 483: Links" {
+    try same("[link](/uri)\n", "<p><a href=\"/uri\">link</a></p>\n");
+}
+
+test "commonmark 484: Links" {
+    try same("[](./target.md)\n", "<p><a href=\"./target.md\"></a></p>\n");
+}
+
+test "commonmark 485: Links" {
+    try same("[link]()\n", "<p><a href=\"\">link</a></p>\n");
+}
+
+test "commonmark 486: Links" {
+    try same("[link](<>)\n", "<p><a href=\"\">link</a></p>\n");
+}
+
+test "commonmark 487: Links" {
+    try same("[]()\n", "<p><a href=\"\"></a></p>\n");
+}
+
+test "commonmark 488: Links" {
+    try same("[link](/my uri)\n", "<p>[link](/my uri)</p>\n");
+}
+
+test "commonmark 489: Links" {
+    try same("[link](</my uri>)\n", "<p><a href=\"/my%20uri\">link</a></p>\n");
+}
+
+test "commonmark 490: Links" {
+    try same("[link](foo\nbar)\n", "<p>[link](foo\nbar)</p>\n");
+}
+
+test "commonmark 491: Links" {
+    try same("[link](<foo\nbar>)\n", "<p>[link](<foo\nbar>)</p>\n");
+}
+
+test "commonmark 492: Links" {
+    try same("[a](<b)c>)\n", "<p><a href=\"b)c\">a</a></p>\n");
+}
+
+test "commonmark 493: Links" {
+    try same("[link](<foo\\>)\n", "<p>[link](&lt;foo&gt;)</p>\n");
+}
+
+test "commonmark 494: Links" {
+    try same(
+        "[a](<b)c\n[a](<b)c>\n[a](<b>c)\n",
+        "<p>[a](&lt;b)c\n[a](&lt;b)c&gt;\n[a](<b>c)</p>\n",
+    );
+}
+
+test "commonmark 495: Links" {
+    try same("[link](\\(foo\\))\n", "<p><a href=\"(foo)\">link</a></p>\n");
+}
+
+test "commonmark 496: Links" {
+    try same(
+        "[link](foo(and(bar)))\n",
+        "<p><a href=\"foo(and(bar))\">link</a></p>\n",
+    );
+}
+
+test "commonmark 497: Links" {
+    try same("[link](foo(and(bar))\n", "<p>[link](foo(and(bar))</p>\n");
+}
+
+test "commonmark 498: Links" {
+    try same(
+        "[link](foo\\(and\\(bar\\))\n",
+        "<p><a href=\"foo(and(bar)\">link</a></p>\n",
+    );
+}
+
+test "commonmark 499: Links" {
+    try same(
+        "[link](<foo(and(bar)>)\n",
+        "<p><a href=\"foo(and(bar)\">link</a></p>\n",
+    );
+}
+
+test "commonmark 500: Links" {
+    try same("[link](foo\\)\\:)\n", "<p><a href=\"foo):\">link</a></p>\n");
+}
+
+test "commonmark 501: Links" {
+    try same(
+        "[link](#fragment)\n\n[link](https://example.com#fragment)\n\n[link](https://example.com?foo=3#frag)\n",
+        "<p><a href=\"#fragment\">link</a></p>\n<p><a href=\"https://example.com#fragment\">link</a></p>\n<p><a href=\"https://example.com?foo=3#frag\">link</a></p>\n",
+    );
+}
+
+test "commonmark 502: Links" {
+    try same("[link](foo\\bar)\n", "<p><a href=\"foo%5Cbar\">link</a></p>\n");
+}
+
+test "commonmark 503: Links" {
+    try same(
+        "[link](foo%20b&auml;)\n",
+        "<p><a href=\"foo%20b%C3%A4\">link</a></p>\n",
+    );
+}
+
+test "commonmark 504: Links" {
+    try same(
+        "[link](\"title\")\n",
+        "<p><a href=\"%22title%22\">link</a></p>\n",
+    );
+}
+
+test "commonmark 505: Links" {
+    try same(
+        "[link](/url \"title\")\n[link](/url 'title')\n[link](/url (title))\n",
+        "<p><a href=\"/url\" title=\"title\">link</a>\n<a href=\"/url\" title=\"title\">link</a>\n<a href=\"/url\" title=\"title\">link</a></p>\n",
+    );
+}
+
+test "commonmark 506: Links" {
+    try same(
+        "[link](/url \"title \\\"&quot;\")\n",
+        "<p><a href=\"/url\" title=\"title &quot;&quot;\">link</a></p>\n",
+    );
+}
+
+test "commonmark 507: Links" {
+    try same(
+        "[link](/url\u{A0}\"title\")\n",
+        "<p><a href=\"/url%C2%A0%22title%22\">link</a></p>\n",
+    );
+}
+
+test "commonmark 508: Links" {
+    try same(
+        "[link](/url \"title \"and\" title\")\n",
+        "<p>[link](/url &quot;title &quot;and&quot; title&quot;)</p>\n",
+    );
+}
+
+test "commonmark 509: Links" {
+    try same(
+        "[link](/url 'title \"and\" title')\n",
+        "<p><a href=\"/url\" title=\"title &quot;and&quot; title\">link</a></p>\n",
+    );
+}
+
+test "commonmark 510: Links" {
+    try same(
+        "[link](   /uri\n  \"title\"  )\n",
+        "<p><a href=\"/uri\" title=\"title\">link</a></p>\n",
+    );
+}
+
+test "commonmark 511: Links" {
+    try same("[link] (/uri)\n", "<p>[link] (/uri)</p>\n");
+}
+
+test "commonmark 512: Links" {
+    try same(
+        "[link [foo [bar]]](/uri)\n",
+        "<p><a href=\"/uri\">link [foo [bar]]</a></p>\n",
+    );
+}
+
+test "commonmark 513: Links" {
+    try same("[link] bar](/uri)\n", "<p>[link] bar](/uri)</p>\n");
+}
+
+test "commonmark 514: Links" {
+    try same("[link [bar](/uri)\n", "<p>[link <a href=\"/uri\">bar</a></p>\n");
+}
+
+test "commonmark 515: Links" {
+    try same(
+        "[link \\[bar](/uri)\n",
+        "<p><a href=\"/uri\">link [bar</a></p>\n",
+    );
+}
+
+test "commonmark 516: Links" {
+    try same(
+        "[link *foo **bar** `#`*](/uri)\n",
+        "<p><a href=\"/uri\">link <em>foo <strong>bar</strong> <code>#</code></em></a></p>\n",
+    );
+}
+
+test "commonmark 517: Links" {
+    try same(
+        "[![moon](moon.jpg)](/uri)\n",
+        "<p><a href=\"/uri\"><img src=\"moon.jpg\" alt=\"moon\" /></a></p>\n",
+    );
+}
+
+test "commonmark 518: Links" {
+    try same(
+        "[foo [bar](/uri)](/uri)\n",
+        "<p>[foo <a href=\"/uri\">bar</a>](/uri)</p>\n",
+    );
+}
+
+test "commonmark 519: Links" {
+    try same(
+        "[foo *[bar [baz](/uri)](/uri)*](/uri)\n",
+        "<p>[foo <em>[bar <a href=\"/uri\">baz</a>](/uri)</em>](/uri)</p>\n",
+    );
+}
+
+test "commonmark 520: Links" {
+    try same(
+        "![[[foo](uri1)](uri2)](uri3)\n",
+        "<p><img src=\"uri3\" alt=\"[foo](uri2)\" /></p>\n",
+    );
+}
+
+test "commonmark 521: Links" {
+    try same("*[foo*](/uri)\n", "<p>*<a href=\"/uri\">foo*</a></p>\n");
+}
+
+test "commonmark 522: Links" {
+    try same("[foo *bar](baz*)\n", "<p><a href=\"baz*\">foo *bar</a></p>\n");
+}
+
+test "commonmark 523: Links" {
+    try same("*foo [bar* baz]\n", "<p><em>foo [bar</em> baz]</p>\n");
+}
+
+test "commonmark 524: Links" {
+    try same(
+        "[foo <bar attr=\"](baz)\">\n",
+        "<p>[foo <bar attr=\"](baz)\"></p>\n",
+    );
+}
+
+test "commonmark 525: Links" {
+    try same("[foo`](/uri)`\n", "<p>[foo<code>](/uri)</code></p>\n");
+}
+
+test "commonmark 526: Links" {
+    try same(
+        "[foo<https://example.com/?search=](uri)>\n",
+        "<p>[foo<a href=\"https://example.com/?search=%5D(uri)\">https://example.com/?search=](uri)</a></p>\n",
+    );
+}
+
+test "commonmark 527: Links" {
+    try same(
+        "[foo][bar]\n\n[bar]: /url \"title\"\n",
+        "<p><a href=\"/url\" title=\"title\">foo</a></p>\n",
+    );
+}
+
+test "commonmark 528: Links" {
+    try same(
+        "[link [foo [bar]]][ref]\n\n[ref]: /uri\n",
+        "<p><a href=\"/uri\">link [foo [bar]]</a></p>\n",
+    );
+}
+
+test "commonmark 529: Links" {
+    try same(
+        "[link \\[bar][ref]\n\n[ref]: /uri\n",
+        "<p><a href=\"/uri\">link [bar</a></p>\n",
+    );
+}
+
+test "commonmark 530: Links" {
+    try same(
+        "[link *foo **bar** `#`*][ref]\n\n[ref]: /uri\n",
+        "<p><a href=\"/uri\">link <em>foo <strong>bar</strong> <code>#</code></em></a></p>\n",
+    );
+}
+
+test "commonmark 531: Links" {
+    try same(
+        "[![moon](moon.jpg)][ref]\n\n[ref]: /uri\n",
+        "<p><a href=\"/uri\"><img src=\"moon.jpg\" alt=\"moon\" /></a></p>\n",
+    );
+}
+
+test "commonmark 532: Links" {
+    try same(
+        "[foo [bar](/uri)][ref]\n\n[ref]: /uri\n",
+        "<p>[foo <a href=\"/uri\">bar</a>]<a href=\"/uri\">ref</a></p>\n",
+    );
+}
+
+test "commonmark 533: Links" {
+    try same(
+        "[foo *bar [baz][ref]*][ref]\n\n[ref]: /uri\n",
+        "<p>[foo <em>bar <a href=\"/uri\">baz</a></em>]<a href=\"/uri\">ref</a></p>\n",
+    );
+}
+
+test "commonmark 534: Links" {
+    try same(
+        "*[foo*][ref]\n\n[ref]: /uri\n",
+        "<p>*<a href=\"/uri\">foo*</a></p>\n",
+    );
+}
+
+test "commonmark 535: Links" {
+    try same(
+        "[foo *bar][ref]*\n\n[ref]: /uri\n",
+        "<p><a href=\"/uri\">foo *bar</a>*</p>\n",
+    );
+}
+
+test "commonmark 536: Links" {
+    try same(
+        "[foo <bar attr=\"][ref]\">\n\n[ref]: /uri\n",
+        "<p>[foo <bar attr=\"][ref]\"></p>\n",
+    );
+}
+
+test "commonmark 537: Links" {
+    try same(
+        "[foo`][ref]`\n\n[ref]: /uri\n",
+        "<p>[foo<code>][ref]</code></p>\n",
+    );
+}
+
+test "commonmark 538: Links" {
+    try same(
+        "[foo<https://example.com/?search=][ref]>\n\n[ref]: /uri\n",
+        "<p>[foo<a href=\"https://example.com/?search=%5D%5Bref%5D\">https://example.com/?search=][ref]</a></p>\n",
+    );
+}
+
+test "commonmark 539: Links" {
+    try same(
+        "[foo][BaR]\n\n[bar]: /url \"title\"\n",
+        "<p><a href=\"/url\" title=\"title\">foo</a></p>\n",
+    );
+}
+
+test "commonmark 540: Links" {
+    try same("[ẞ]\n\n[SS]: /url\n", "<p><a href=\"/url\">ẞ</a></p>\n");
+}
+
+test "commonmark 541: Links" {
+    try same(
+        "[Foo\n  bar]: /url\n\n[Baz][Foo bar]\n",
+        "<p><a href=\"/url\">Baz</a></p>\n",
+    );
+}
+
+test "commonmark 542: Links" {
+    try same(
+        "[foo] [bar]\n\n[bar]: /url \"title\"\n",
+        "<p>[foo] <a href=\"/url\" title=\"title\">bar</a></p>\n",
+    );
+}
+
+test "commonmark 543: Links" {
+    try same(
+        "[foo]\n[bar]\n\n[bar]: /url \"title\"\n",
+        "<p>[foo]\n<a href=\"/url\" title=\"title\">bar</a></p>\n",
+    );
+}
+
+test "commonmark 544: Links" {
+    try same(
+        "[foo]: /url1\n\n[foo]: /url2\n\n[bar][foo]\n",
+        "<p><a href=\"/url1\">bar</a></p>\n",
+    );
+}
+
+test "commonmark 545: Links" {
+    try same("[bar][foo\\!]\n\n[foo!]: /url\n", "<p>[bar][foo!]</p>\n");
+}
+
+test "commonmark 546: Links" {
+    try same(
+        "[foo][ref[]\n\n[ref[]: /uri\n",
+        "<p>[foo][ref[]</p>\n<p>[ref[]: /uri</p>\n",
+    );
+}
+
+test "commonmark 547: Links" {
+    try same(
+        "[foo][ref[bar]]\n\n[ref[bar]]: /uri\n",
+        "<p>[foo][ref[bar]]</p>\n<p>[ref[bar]]: /uri</p>\n",
+    );
+}
+
+test "commonmark 548: Links" {
+    try same(
+        "[[[foo]]]\n\n[[[foo]]]: /url\n",
+        "<p>[[[foo]]]</p>\n<p>[[[foo]]]: /url</p>\n",
+    );
+}
+
+test "commonmark 549: Links" {
+    try same(
+        "[foo][ref\\[]\n\n[ref\\[]: /uri\n",
+        "<p><a href=\"/uri\">foo</a></p>\n",
+    );
+}
+
+test "commonmark 550: Links" {
+    try same(
+        "[bar\\\\]: /uri\n\n[bar\\\\]\n",
+        "<p><a href=\"/uri\">bar\\</a></p>\n",
+    );
+}
+
+test "commonmark 551: Links" {
+    try same("[]\n\n[]: /uri\n", "<p>[]</p>\n<p>[]: /uri</p>\n");
+}
+
+test "commonmark 552: Links" {
+    try same("[\n ]\n\n[\n ]: /uri\n", "<p>[\n]</p>\n<p>[\n]: /uri</p>\n");
+}
+
+test "commonmark 553: Links" {
+    try same(
+        "[foo][]\n\n[foo]: /url \"title\"\n",
+        "<p><a href=\"/url\" title=\"title\">foo</a></p>\n",
+    );
+}
+
+test "commonmark 554: Links" {
+    try same(
+        "[*foo* bar][]\n\n[*foo* bar]: /url \"title\"\n",
+        "<p><a href=\"/url\" title=\"title\"><em>foo</em> bar</a></p>\n",
+    );
+}
+
+test "commonmark 555: Links" {
+    try same(
+        "[Foo][]\n\n[foo]: /url \"title\"\n",
+        "<p><a href=\"/url\" title=\"title\">Foo</a></p>\n",
+    );
+}
+
+test "commonmark 556: Links" {
+    try same(
+        "[foo] \n[]\n\n[foo]: /url \"title\"\n",
+        "<p><a href=\"/url\" title=\"title\">foo</a>\n[]</p>\n",
+    );
+}
+
+test "commonmark 557: Links" {
+    try same(
+        "[foo]\n\n[foo]: /url \"title\"\n",
+        "<p><a href=\"/url\" title=\"title\">foo</a></p>\n",
+    );
+}
+
+test "commonmark 558: Links" {
+    try same(
+        "[*foo* bar]\n\n[*foo* bar]: /url \"title\"\n",
+        "<p><a href=\"/url\" title=\"title\"><em>foo</em> bar</a></p>\n",
+    );
+}
+
+test "commonmark 559: Links" {
+    try same(
+        "[[*foo* bar]]\n\n[*foo* bar]: /url \"title\"\n",
+        "<p>[<a href=\"/url\" title=\"title\"><em>foo</em> bar</a>]</p>\n",
+    );
+}
+
+test "commonmark 560: Links" {
+    try same(
+        "[[bar [foo]\n\n[foo]: /url\n",
+        "<p>[[bar <a href=\"/url\">foo</a></p>\n",
+    );
+}
+
+test "commonmark 561: Links" {
+    try same(
+        "[Foo]\n\n[foo]: /url \"title\"\n",
+        "<p><a href=\"/url\" title=\"title\">Foo</a></p>\n",
+    );
+}
+
+test "commonmark 562: Links" {
+    try same(
+        "[foo] bar\n\n[foo]: /url\n",
+        "<p><a href=\"/url\">foo</a> bar</p>\n",
+    );
+}
+
+test "commonmark 563: Links" {
+    try same("\\[foo]\n\n[foo]: /url \"title\"\n", "<p>[foo]</p>\n");
+}
+
+test "commonmark 564: Links" {
+    try same(
+        "[foo*]: /url\n\n*[foo*]\n",
+        "<p>*<a href=\"/url\">foo*</a></p>\n",
+    );
+}
+
+test "commonmark 565: Links" {
+    try same(
+        "[foo][bar]\n\n[foo]: /url1\n[bar]: /url2\n",
+        "<p><a href=\"/url2\">foo</a></p>\n",
+    );
+}
+
+test "commonmark 566: Links" {
+    try same("[foo][]\n\n[foo]: /url1\n", "<p><a href=\"/url1\">foo</a></p>\n");
+}
+
+test "commonmark 567: Links" {
+    try same("[foo]()\n\n[foo]: /url1\n", "<p><a href=\"\">foo</a></p>\n");
+}
+
+test "commonmark 568: Links" {
+    try same(
+        "[foo](not a link)\n\n[foo]: /url1\n",
+        "<p><a href=\"/url1\">foo</a>(not a link)</p>\n",
+    );
+}
+
+test "commonmark 569: Links" {
+    try same(
+        "[foo][bar][baz]\n\n[baz]: /url\n",
+        "<p>[foo]<a href=\"/url\">bar</a></p>\n",
+    );
+}
+
+test "commonmark 570: Links" {
+    try same(
+        "[foo][bar][baz]\n\n[baz]: /url1\n[bar]: /url2\n",
+        "<p><a href=\"/url2\">foo</a><a href=\"/url1\">baz</a></p>\n",
+    );
+}
+
+test "commonmark 571: Links" {
+    try same(
+        "[foo][bar][baz]\n\n[baz]: /url1\n[foo]: /url2\n",
+        "<p>[foo]<a href=\"/url1\">bar</a></p>\n",
+    );
+}

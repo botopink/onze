@@ -1,0 +1,177 @@
+// CommonMark 0.31.2 spec examples — § Block quotes (front 121, step 1).
+//
+// Generated from <https://spec.commonmark.org/0.31.2/spec.json>: one test per
+// example, Markdown in, the reference HTML out, named by the example's number.
+// Rendered with `commonmarkOptions()` — CommonMark alone, no extension, no
+// smart punctuation, no heading ids — as the spec renders them.
+
+import {markdown.parseWith, markdown.toHtml, markdown.commonmarkOptions};
+
+fn same(source: string, expected: string) -> @Result<void, string> {
+    val got = toHtml(parseWith(source, commonmarkOptions()));
+    if (got != expected) throw "expected " + expected + " got " + got;
+    return;
+}
+
+test "commonmark 228: Block quotes" {
+    try same(
+        "> # Foo\n> bar\n> baz\n",
+        "<blockquote>\n<h1>Foo</h1>\n<p>bar\nbaz</p>\n</blockquote>\n",
+    );
+}
+
+test "commonmark 229: Block quotes" {
+    try same(
+        "># Foo\n>bar\n> baz\n",
+        "<blockquote>\n<h1>Foo</h1>\n<p>bar\nbaz</p>\n</blockquote>\n",
+    );
+}
+
+test "commonmark 230: Block quotes" {
+    try same(
+        "   > # Foo\n   > bar\n > baz\n",
+        "<blockquote>\n<h1>Foo</h1>\n<p>bar\nbaz</p>\n</blockquote>\n",
+    );
+}
+
+test "commonmark 231: Block quotes" {
+    try same(
+        "    > # Foo\n    > bar\n    > baz\n",
+        "<pre><code>&gt; # Foo\n&gt; bar\n&gt; baz\n</code></pre>\n",
+    );
+}
+
+test "commonmark 232: Block quotes" {
+    try same(
+        "> # Foo\n> bar\nbaz\n",
+        "<blockquote>\n<h1>Foo</h1>\n<p>bar\nbaz</p>\n</blockquote>\n",
+    );
+}
+
+test "commonmark 233: Block quotes" {
+    try same(
+        "> bar\nbaz\n> foo\n",
+        "<blockquote>\n<p>bar\nbaz\nfoo</p>\n</blockquote>\n",
+    );
+}
+
+test "commonmark 234: Block quotes" {
+    try same(
+        "> foo\n---\n",
+        "<blockquote>\n<p>foo</p>\n</blockquote>\n<hr />\n",
+    );
+}
+
+test "commonmark 235: Block quotes" {
+    try same(
+        "> - foo\n- bar\n",
+        "<blockquote>\n<ul>\n<li>foo</li>\n</ul>\n</blockquote>\n<ul>\n<li>bar</li>\n</ul>\n",
+    );
+}
+
+test "commonmark 236: Block quotes" {
+    try same(
+        ">     foo\n    bar\n",
+        "<blockquote>\n<pre><code>foo\n</code></pre>\n</blockquote>\n<pre><code>bar\n</code></pre>\n",
+    );
+}
+
+test "commonmark 237: Block quotes" {
+    try same(
+        "> ```\nfoo\n```\n",
+        "<blockquote>\n<pre><code></code></pre>\n</blockquote>\n<p>foo</p>\n<pre><code></code></pre>\n",
+    );
+}
+
+test "commonmark 238: Block quotes" {
+    try same(
+        "> foo\n    - bar\n",
+        "<blockquote>\n<p>foo\n- bar</p>\n</blockquote>\n",
+    );
+}
+
+test "commonmark 239: Block quotes" {
+    try same(">\n", "<blockquote>\n</blockquote>\n");
+}
+
+test "commonmark 240: Block quotes" {
+    try same(">\n>  \n> \n", "<blockquote>\n</blockquote>\n");
+}
+
+test "commonmark 241: Block quotes" {
+    try same(">\n> foo\n>  \n", "<blockquote>\n<p>foo</p>\n</blockquote>\n");
+}
+
+test "commonmark 242: Block quotes" {
+    try same(
+        "> foo\n\n> bar\n",
+        "<blockquote>\n<p>foo</p>\n</blockquote>\n<blockquote>\n<p>bar</p>\n</blockquote>\n",
+    );
+}
+
+test "commonmark 243: Block quotes" {
+    try same(
+        "> foo\n> bar\n",
+        "<blockquote>\n<p>foo\nbar</p>\n</blockquote>\n",
+    );
+}
+
+test "commonmark 244: Block quotes" {
+    try same(
+        "> foo\n>\n> bar\n",
+        "<blockquote>\n<p>foo</p>\n<p>bar</p>\n</blockquote>\n",
+    );
+}
+
+test "commonmark 245: Block quotes" {
+    try same(
+        "foo\n> bar\n",
+        "<p>foo</p>\n<blockquote>\n<p>bar</p>\n</blockquote>\n",
+    );
+}
+
+test "commonmark 246: Block quotes" {
+    try same(
+        "> aaa\n***\n> bbb\n",
+        "<blockquote>\n<p>aaa</p>\n</blockquote>\n<hr />\n<blockquote>\n<p>bbb</p>\n</blockquote>\n",
+    );
+}
+
+test "commonmark 247: Block quotes" {
+    try same("> bar\nbaz\n", "<blockquote>\n<p>bar\nbaz</p>\n</blockquote>\n");
+}
+
+test "commonmark 248: Block quotes" {
+    try same(
+        "> bar\n\nbaz\n",
+        "<blockquote>\n<p>bar</p>\n</blockquote>\n<p>baz</p>\n",
+    );
+}
+
+test "commonmark 249: Block quotes" {
+    try same(
+        "> bar\n>\nbaz\n",
+        "<blockquote>\n<p>bar</p>\n</blockquote>\n<p>baz</p>\n",
+    );
+}
+
+test "commonmark 250: Block quotes" {
+    try same(
+        "> > > foo\nbar\n",
+        "<blockquote>\n<blockquote>\n<blockquote>\n<p>foo\nbar</p>\n</blockquote>\n</blockquote>\n</blockquote>\n",
+    );
+}
+
+test "commonmark 251: Block quotes" {
+    try same(
+        ">>> foo\n> bar\n>>baz\n",
+        "<blockquote>\n<blockquote>\n<blockquote>\n<p>foo\nbar\nbaz</p>\n</blockquote>\n</blockquote>\n</blockquote>\n",
+    );
+}
+
+test "commonmark 252: Block quotes" {
+    try same(
+        ">     code\n\n>    not code\n",
+        "<blockquote>\n<pre><code>code\n</code></pre>\n</blockquote>\n<blockquote>\n<p>not code</p>\n</blockquote>\n",
+    );
+}

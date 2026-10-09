@@ -9,7 +9,8 @@ The **Next.js-style orchestrator**: the one package that imports rakun, jhonstar
 onze, and every value that crosses between them is handed across by `Onze.run`. Pure `.bp`
 client, zero compiler-core surface, reached via `from "onze"`.
 
-The workspace and its eight members exist (front 95, and `onze-server` — decision pending 49-e):
+The workspace and its nine members exist (front 95, `onze-server` — decision pending 49-e — and
+`onze-content`, front 121):
 rakun is erlang-only (decision 117), so the rakun half of the boot lives in the erlang member
 `onze-server` and the core stays on both rows. The name came from the old mocking library, archived
 under the tag `mocking-lib-final` (decision 79); nothing of it is here, and its surface is std's
@@ -73,6 +74,11 @@ onze/
 │   │                    sidecars), layout.bp, svg.bp, raster.bp (the port; NIF
 │   │                    declared, never shipped), response.bp — depends on jhonstart (it
 │   │                    parses the sidecar text itself, so no onze-assets edge)
+│   ├── onze-content/  ← front 121 — both rows (see its AGENTS.md): markdown.bp
+│   │                    (CommonMark 0.31.2 + GFM to MdNode, toHtml, toElement,
+│   │                    headings), md_text.bp, md_entities.bp; frontmatter,
+│   │                    collections and feeds arrive with its later steps —
+│   │                    depends on jhonstart; nothing imports it yet
 │   └── onze-release/  ← front 71: spec.bp (ReleaseSpec, the build id), otp.bp (.rel,
 │                        sys.config, vm.args, bin/onze, systools), docker.bp, package.bp
 │                        (manifest completeness, the secret scan), lifecycle.bp (readiness,
@@ -156,8 +162,8 @@ refusal (decision 67: fail beats warn), none with a flag, variable or list that 
 3. **repository stages** — `scripts/git-hooks/repository-stages.sh`, when a repository tracks
    one. onze has none;
 4. **tests** — `botopink test --target <t>` in every workspace member (every directory the root
-   manifest's `workspaces` patterns expand to: the eight `modules/*` and `examples/{blog,scaffold}`)
-   on every target its manifest declares — 19 cells: nine members on both rows, `onze-server` on
+   manifest's `workspaces` patterns expand to: the nine `modules/*` and `examples/{blog,scaffold}`)
+   on every target its manifest declares — 21 cells: ten members on both rows, `onze-server` on
    erlang. A member with no `test` block (`scaffold`) is still compiled;
    the cells run side by side on the runner's pool (`gatePool`: one per CPU,
    bounded by `MemAvailable / 768 MiB`, a cell started only while the runnable

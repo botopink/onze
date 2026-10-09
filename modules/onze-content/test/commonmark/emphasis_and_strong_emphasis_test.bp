@@ -1,0 +1,647 @@
+// CommonMark 0.31.2 spec examples — § Emphasis and strong emphasis (front 121, step 2).
+//
+// Generated from <https://spec.commonmark.org/0.31.2/spec.json>: one test per
+// example, Markdown in, the reference HTML out, named by the example's number.
+// Rendered with `commonmarkOptions()` — CommonMark alone, no extension, no
+// smart punctuation, no heading ids — as the spec renders them.
+
+import {markdown.parseWith, markdown.toHtml, markdown.commonmarkOptions};
+
+fn same(source: string, expected: string) -> @Result<void, string> {
+    val got = toHtml(parseWith(source, commonmarkOptions()));
+    if (got != expected) throw "expected " + expected + " got " + got;
+    return;
+}
+
+test "commonmark 350: Emphasis and strong emphasis" {
+    try same("*foo bar*\n", "<p><em>foo bar</em></p>\n");
+}
+
+test "commonmark 351: Emphasis and strong emphasis" {
+    try same("a * foo bar*\n", "<p>a * foo bar*</p>\n");
+}
+
+test "commonmark 352: Emphasis and strong emphasis" {
+    try same("a*\"foo\"*\n", "<p>a*&quot;foo&quot;*</p>\n");
+}
+
+test "commonmark 353: Emphasis and strong emphasis" {
+    try same("*\u{A0}a\u{A0}*\n", "<p>*\u{A0}a\u{A0}*</p>\n");
+}
+
+test "commonmark 354: Emphasis and strong emphasis" {
+    try same(
+        "*\$*alpha.\n\n*£*bravo.\n\n*€*charlie.\n",
+        "<p>*\$*alpha.</p>\n<p>*£*bravo.</p>\n<p>*€*charlie.</p>\n",
+    );
+}
+
+test "commonmark 355: Emphasis and strong emphasis" {
+    try same("foo*bar*\n", "<p>foo<em>bar</em></p>\n");
+}
+
+test "commonmark 356: Emphasis and strong emphasis" {
+    try same("5*6*78\n", "<p>5<em>6</em>78</p>\n");
+}
+
+test "commonmark 357: Emphasis and strong emphasis" {
+    try same("_foo bar_\n", "<p><em>foo bar</em></p>\n");
+}
+
+test "commonmark 358: Emphasis and strong emphasis" {
+    try same("_ foo bar_\n", "<p>_ foo bar_</p>\n");
+}
+
+test "commonmark 359: Emphasis and strong emphasis" {
+    try same("a_\"foo\"_\n", "<p>a_&quot;foo&quot;_</p>\n");
+}
+
+test "commonmark 360: Emphasis and strong emphasis" {
+    try same("foo_bar_\n", "<p>foo_bar_</p>\n");
+}
+
+test "commonmark 361: Emphasis and strong emphasis" {
+    try same("5_6_78\n", "<p>5_6_78</p>\n");
+}
+
+test "commonmark 362: Emphasis and strong emphasis" {
+    try same(
+        "пристаням_стремятся_\n",
+        "<p>пристаням_стремятся_</p>\n",
+    );
+}
+
+test "commonmark 363: Emphasis and strong emphasis" {
+    try same("aa_\"bb\"_cc\n", "<p>aa_&quot;bb&quot;_cc</p>\n");
+}
+
+test "commonmark 364: Emphasis and strong emphasis" {
+    try same("foo-_(bar)_\n", "<p>foo-<em>(bar)</em></p>\n");
+}
+
+test "commonmark 365: Emphasis and strong emphasis" {
+    try same("_foo*\n", "<p>_foo*</p>\n");
+}
+
+test "commonmark 366: Emphasis and strong emphasis" {
+    try same("*foo bar *\n", "<p>*foo bar *</p>\n");
+}
+
+test "commonmark 367: Emphasis and strong emphasis" {
+    try same("*foo bar\n*\n", "<p>*foo bar\n*</p>\n");
+}
+
+test "commonmark 368: Emphasis and strong emphasis" {
+    try same("*(*foo)\n", "<p>*(*foo)</p>\n");
+}
+
+test "commonmark 369: Emphasis and strong emphasis" {
+    try same("*(*foo*)*\n", "<p><em>(<em>foo</em>)</em></p>\n");
+}
+
+test "commonmark 370: Emphasis and strong emphasis" {
+    try same("*foo*bar\n", "<p><em>foo</em>bar</p>\n");
+}
+
+test "commonmark 371: Emphasis and strong emphasis" {
+    try same("_foo bar _\n", "<p>_foo bar _</p>\n");
+}
+
+test "commonmark 372: Emphasis and strong emphasis" {
+    try same("_(_foo)\n", "<p>_(_foo)</p>\n");
+}
+
+test "commonmark 373: Emphasis and strong emphasis" {
+    try same("_(_foo_)_\n", "<p><em>(<em>foo</em>)</em></p>\n");
+}
+
+test "commonmark 374: Emphasis and strong emphasis" {
+    try same("_foo_bar\n", "<p>_foo_bar</p>\n");
+}
+
+test "commonmark 375: Emphasis and strong emphasis" {
+    try same(
+        "_пристаням_стремятся\n",
+        "<p>_пристаням_стремятся</p>\n",
+    );
+}
+
+test "commonmark 376: Emphasis and strong emphasis" {
+    try same("_foo_bar_baz_\n", "<p><em>foo_bar_baz</em></p>\n");
+}
+
+test "commonmark 377: Emphasis and strong emphasis" {
+    try same("_(bar)_.\n", "<p><em>(bar)</em>.</p>\n");
+}
+
+test "commonmark 378: Emphasis and strong emphasis" {
+    try same("**foo bar**\n", "<p><strong>foo bar</strong></p>\n");
+}
+
+test "commonmark 379: Emphasis and strong emphasis" {
+    try same("** foo bar**\n", "<p>** foo bar**</p>\n");
+}
+
+test "commonmark 380: Emphasis and strong emphasis" {
+    try same("a**\"foo\"**\n", "<p>a**&quot;foo&quot;**</p>\n");
+}
+
+test "commonmark 381: Emphasis and strong emphasis" {
+    try same("foo**bar**\n", "<p>foo<strong>bar</strong></p>\n");
+}
+
+test "commonmark 382: Emphasis and strong emphasis" {
+    try same("__foo bar__\n", "<p><strong>foo bar</strong></p>\n");
+}
+
+test "commonmark 383: Emphasis and strong emphasis" {
+    try same("__ foo bar__\n", "<p>__ foo bar__</p>\n");
+}
+
+test "commonmark 384: Emphasis and strong emphasis" {
+    try same("__\nfoo bar__\n", "<p>__\nfoo bar__</p>\n");
+}
+
+test "commonmark 385: Emphasis and strong emphasis" {
+    try same("a__\"foo\"__\n", "<p>a__&quot;foo&quot;__</p>\n");
+}
+
+test "commonmark 386: Emphasis and strong emphasis" {
+    try same("foo__bar__\n", "<p>foo__bar__</p>\n");
+}
+
+test "commonmark 387: Emphasis and strong emphasis" {
+    try same("5__6__78\n", "<p>5__6__78</p>\n");
+}
+
+test "commonmark 388: Emphasis and strong emphasis" {
+    try same(
+        "пристаням__стремятся__\n",
+        "<p>пристаням__стремятся__</p>\n",
+    );
+}
+
+test "commonmark 389: Emphasis and strong emphasis" {
+    try same(
+        "__foo, __bar__, baz__\n",
+        "<p><strong>foo, <strong>bar</strong>, baz</strong></p>\n",
+    );
+}
+
+test "commonmark 390: Emphasis and strong emphasis" {
+    try same("foo-__(bar)__\n", "<p>foo-<strong>(bar)</strong></p>\n");
+}
+
+test "commonmark 391: Emphasis and strong emphasis" {
+    try same("**foo bar **\n", "<p>**foo bar **</p>\n");
+}
+
+test "commonmark 392: Emphasis and strong emphasis" {
+    try same("**(**foo)\n", "<p>**(**foo)</p>\n");
+}
+
+test "commonmark 393: Emphasis and strong emphasis" {
+    try same("*(**foo**)*\n", "<p><em>(<strong>foo</strong>)</em></p>\n");
+}
+
+test "commonmark 394: Emphasis and strong emphasis" {
+    try same(
+        "**Gomphocarpus (*Gomphocarpus physocarpus*, syn.\n*Asclepias physocarpa*)**\n",
+        "<p><strong>Gomphocarpus (<em>Gomphocarpus physocarpus</em>, syn.\n<em>Asclepias physocarpa</em>)</strong></p>\n",
+    );
+}
+
+test "commonmark 395: Emphasis and strong emphasis" {
+    try same(
+        "**foo \"*bar*\" foo**\n",
+        "<p><strong>foo &quot;<em>bar</em>&quot; foo</strong></p>\n",
+    );
+}
+
+test "commonmark 396: Emphasis and strong emphasis" {
+    try same("**foo**bar\n", "<p><strong>foo</strong>bar</p>\n");
+}
+
+test "commonmark 397: Emphasis and strong emphasis" {
+    try same("__foo bar __\n", "<p>__foo bar __</p>\n");
+}
+
+test "commonmark 398: Emphasis and strong emphasis" {
+    try same("__(__foo)\n", "<p>__(__foo)</p>\n");
+}
+
+test "commonmark 399: Emphasis and strong emphasis" {
+    try same("_(__foo__)_\n", "<p><em>(<strong>foo</strong>)</em></p>\n");
+}
+
+test "commonmark 400: Emphasis and strong emphasis" {
+    try same("__foo__bar\n", "<p>__foo__bar</p>\n");
+}
+
+test "commonmark 401: Emphasis and strong emphasis" {
+    try same(
+        "__пристаням__стремятся\n",
+        "<p>__пристаням__стремятся</p>\n",
+    );
+}
+
+test "commonmark 402: Emphasis and strong emphasis" {
+    try same("__foo__bar__baz__\n", "<p><strong>foo__bar__baz</strong></p>\n");
+}
+
+test "commonmark 403: Emphasis and strong emphasis" {
+    try same("__(bar)__.\n", "<p><strong>(bar)</strong>.</p>\n");
+}
+
+test "commonmark 404: Emphasis and strong emphasis" {
+    try same(
+        "*foo [bar](/url)*\n",
+        "<p><em>foo <a href=\"/url\">bar</a></em></p>\n",
+    );
+}
+
+test "commonmark 405: Emphasis and strong emphasis" {
+    try same("*foo\nbar*\n", "<p><em>foo\nbar</em></p>\n");
+}
+
+test "commonmark 406: Emphasis and strong emphasis" {
+    try same(
+        "_foo __bar__ baz_\n",
+        "<p><em>foo <strong>bar</strong> baz</em></p>\n",
+    );
+}
+
+test "commonmark 407: Emphasis and strong emphasis" {
+    try same("_foo _bar_ baz_\n", "<p><em>foo <em>bar</em> baz</em></p>\n");
+}
+
+test "commonmark 408: Emphasis and strong emphasis" {
+    try same("__foo_ bar_\n", "<p><em><em>foo</em> bar</em></p>\n");
+}
+
+test "commonmark 409: Emphasis and strong emphasis" {
+    try same("*foo *bar**\n", "<p><em>foo <em>bar</em></em></p>\n");
+}
+
+test "commonmark 410: Emphasis and strong emphasis" {
+    try same(
+        "*foo **bar** baz*\n",
+        "<p><em>foo <strong>bar</strong> baz</em></p>\n",
+    );
+}
+
+test "commonmark 411: Emphasis and strong emphasis" {
+    try same(
+        "*foo**bar**baz*\n",
+        "<p><em>foo<strong>bar</strong>baz</em></p>\n",
+    );
+}
+
+test "commonmark 412: Emphasis and strong emphasis" {
+    try same("*foo**bar*\n", "<p><em>foo**bar</em></p>\n");
+}
+
+test "commonmark 413: Emphasis and strong emphasis" {
+    try same("***foo** bar*\n", "<p><em><strong>foo</strong> bar</em></p>\n");
+}
+
+test "commonmark 414: Emphasis and strong emphasis" {
+    try same("*foo **bar***\n", "<p><em>foo <strong>bar</strong></em></p>\n");
+}
+
+test "commonmark 415: Emphasis and strong emphasis" {
+    try same("*foo**bar***\n", "<p><em>foo<strong>bar</strong></em></p>\n");
+}
+
+test "commonmark 416: Emphasis and strong emphasis" {
+    try same(
+        "foo***bar***baz\n",
+        "<p>foo<em><strong>bar</strong></em>baz</p>\n",
+    );
+}
+
+test "commonmark 417: Emphasis and strong emphasis" {
+    try same(
+        "foo******bar*********baz\n",
+        "<p>foo<strong><strong><strong>bar</strong></strong></strong>***baz</p>\n",
+    );
+}
+
+test "commonmark 418: Emphasis and strong emphasis" {
+    try same(
+        "*foo **bar *baz* bim** bop*\n",
+        "<p><em>foo <strong>bar <em>baz</em> bim</strong> bop</em></p>\n",
+    );
+}
+
+test "commonmark 419: Emphasis and strong emphasis" {
+    try same(
+        "*foo [*bar*](/url)*\n",
+        "<p><em>foo <a href=\"/url\"><em>bar</em></a></em></p>\n",
+    );
+}
+
+test "commonmark 420: Emphasis and strong emphasis" {
+    try same(
+        "** is not an empty emphasis\n",
+        "<p>** is not an empty emphasis</p>\n",
+    );
+}
+
+test "commonmark 421: Emphasis and strong emphasis" {
+    try same(
+        "**** is not an empty strong emphasis\n",
+        "<p>**** is not an empty strong emphasis</p>\n",
+    );
+}
+
+test "commonmark 422: Emphasis and strong emphasis" {
+    try same(
+        "**foo [bar](/url)**\n",
+        "<p><strong>foo <a href=\"/url\">bar</a></strong></p>\n",
+    );
+}
+
+test "commonmark 423: Emphasis and strong emphasis" {
+    try same("**foo\nbar**\n", "<p><strong>foo\nbar</strong></p>\n");
+}
+
+test "commonmark 424: Emphasis and strong emphasis" {
+    try same(
+        "__foo _bar_ baz__\n",
+        "<p><strong>foo <em>bar</em> baz</strong></p>\n",
+    );
+}
+
+test "commonmark 425: Emphasis and strong emphasis" {
+    try same(
+        "__foo __bar__ baz__\n",
+        "<p><strong>foo <strong>bar</strong> baz</strong></p>\n",
+    );
+}
+
+test "commonmark 426: Emphasis and strong emphasis" {
+    try same(
+        "____foo__ bar__\n",
+        "<p><strong><strong>foo</strong> bar</strong></p>\n",
+    );
+}
+
+test "commonmark 427: Emphasis and strong emphasis" {
+    try same(
+        "**foo **bar****\n",
+        "<p><strong>foo <strong>bar</strong></strong></p>\n",
+    );
+}
+
+test "commonmark 428: Emphasis and strong emphasis" {
+    try same(
+        "**foo *bar* baz**\n",
+        "<p><strong>foo <em>bar</em> baz</strong></p>\n",
+    );
+}
+
+test "commonmark 429: Emphasis and strong emphasis" {
+    try same(
+        "**foo*bar*baz**\n",
+        "<p><strong>foo<em>bar</em>baz</strong></p>\n",
+    );
+}
+
+test "commonmark 430: Emphasis and strong emphasis" {
+    try same("***foo* bar**\n", "<p><strong><em>foo</em> bar</strong></p>\n");
+}
+
+test "commonmark 431: Emphasis and strong emphasis" {
+    try same("**foo *bar***\n", "<p><strong>foo <em>bar</em></strong></p>\n");
+}
+
+test "commonmark 432: Emphasis and strong emphasis" {
+    try same(
+        "**foo *bar **baz**\nbim* bop**\n",
+        "<p><strong>foo <em>bar <strong>baz</strong>\nbim</em> bop</strong></p>\n",
+    );
+}
+
+test "commonmark 433: Emphasis and strong emphasis" {
+    try same(
+        "**foo [*bar*](/url)**\n",
+        "<p><strong>foo <a href=\"/url\"><em>bar</em></a></strong></p>\n",
+    );
+}
+
+test "commonmark 434: Emphasis and strong emphasis" {
+    try same(
+        "__ is not an empty emphasis\n",
+        "<p>__ is not an empty emphasis</p>\n",
+    );
+}
+
+test "commonmark 435: Emphasis and strong emphasis" {
+    try same(
+        "____ is not an empty strong emphasis\n",
+        "<p>____ is not an empty strong emphasis</p>\n",
+    );
+}
+
+test "commonmark 436: Emphasis and strong emphasis" {
+    try same("foo ***\n", "<p>foo ***</p>\n");
+}
+
+test "commonmark 437: Emphasis and strong emphasis" {
+    try same("foo *\\**\n", "<p>foo <em>*</em></p>\n");
+}
+
+test "commonmark 438: Emphasis and strong emphasis" {
+    try same("foo *_*\n", "<p>foo <em>_</em></p>\n");
+}
+
+test "commonmark 439: Emphasis and strong emphasis" {
+    try same("foo *****\n", "<p>foo *****</p>\n");
+}
+
+test "commonmark 440: Emphasis and strong emphasis" {
+    try same("foo **\\***\n", "<p>foo <strong>*</strong></p>\n");
+}
+
+test "commonmark 441: Emphasis and strong emphasis" {
+    try same("foo **_**\n", "<p>foo <strong>_</strong></p>\n");
+}
+
+test "commonmark 442: Emphasis and strong emphasis" {
+    try same("**foo*\n", "<p>*<em>foo</em></p>\n");
+}
+
+test "commonmark 443: Emphasis and strong emphasis" {
+    try same("*foo**\n", "<p><em>foo</em>*</p>\n");
+}
+
+test "commonmark 444: Emphasis and strong emphasis" {
+    try same("***foo**\n", "<p>*<strong>foo</strong></p>\n");
+}
+
+test "commonmark 445: Emphasis and strong emphasis" {
+    try same("****foo*\n", "<p>***<em>foo</em></p>\n");
+}
+
+test "commonmark 446: Emphasis and strong emphasis" {
+    try same("**foo***\n", "<p><strong>foo</strong>*</p>\n");
+}
+
+test "commonmark 447: Emphasis and strong emphasis" {
+    try same("*foo****\n", "<p><em>foo</em>***</p>\n");
+}
+
+test "commonmark 448: Emphasis and strong emphasis" {
+    try same("foo ___\n", "<p>foo ___</p>\n");
+}
+
+test "commonmark 449: Emphasis and strong emphasis" {
+    try same("foo _\\__\n", "<p>foo <em>_</em></p>\n");
+}
+
+test "commonmark 450: Emphasis and strong emphasis" {
+    try same("foo _*_\n", "<p>foo <em>*</em></p>\n");
+}
+
+test "commonmark 451: Emphasis and strong emphasis" {
+    try same("foo _____\n", "<p>foo _____</p>\n");
+}
+
+test "commonmark 452: Emphasis and strong emphasis" {
+    try same("foo __\\___\n", "<p>foo <strong>_</strong></p>\n");
+}
+
+test "commonmark 453: Emphasis and strong emphasis" {
+    try same("foo __*__\n", "<p>foo <strong>*</strong></p>\n");
+}
+
+test "commonmark 454: Emphasis and strong emphasis" {
+    try same("__foo_\n", "<p>_<em>foo</em></p>\n");
+}
+
+test "commonmark 455: Emphasis and strong emphasis" {
+    try same("_foo__\n", "<p><em>foo</em>_</p>\n");
+}
+
+test "commonmark 456: Emphasis and strong emphasis" {
+    try same("___foo__\n", "<p>_<strong>foo</strong></p>\n");
+}
+
+test "commonmark 457: Emphasis and strong emphasis" {
+    try same("____foo_\n", "<p>___<em>foo</em></p>\n");
+}
+
+test "commonmark 458: Emphasis and strong emphasis" {
+    try same("__foo___\n", "<p><strong>foo</strong>_</p>\n");
+}
+
+test "commonmark 459: Emphasis and strong emphasis" {
+    try same("_foo____\n", "<p><em>foo</em>___</p>\n");
+}
+
+test "commonmark 460: Emphasis and strong emphasis" {
+    try same("**foo**\n", "<p><strong>foo</strong></p>\n");
+}
+
+test "commonmark 461: Emphasis and strong emphasis" {
+    try same("*_foo_*\n", "<p><em><em>foo</em></em></p>\n");
+}
+
+test "commonmark 462: Emphasis and strong emphasis" {
+    try same("__foo__\n", "<p><strong>foo</strong></p>\n");
+}
+
+test "commonmark 463: Emphasis and strong emphasis" {
+    try same("_*foo*_\n", "<p><em><em>foo</em></em></p>\n");
+}
+
+test "commonmark 464: Emphasis and strong emphasis" {
+    try same("****foo****\n", "<p><strong><strong>foo</strong></strong></p>\n");
+}
+
+test "commonmark 465: Emphasis and strong emphasis" {
+    try same("____foo____\n", "<p><strong><strong>foo</strong></strong></p>\n");
+}
+
+test "commonmark 466: Emphasis and strong emphasis" {
+    try same(
+        "******foo******\n",
+        "<p><strong><strong><strong>foo</strong></strong></strong></p>\n",
+    );
+}
+
+test "commonmark 467: Emphasis and strong emphasis" {
+    try same("***foo***\n", "<p><em><strong>foo</strong></em></p>\n");
+}
+
+test "commonmark 468: Emphasis and strong emphasis" {
+    try same(
+        "_____foo_____\n",
+        "<p><em><strong><strong>foo</strong></strong></em></p>\n",
+    );
+}
+
+test "commonmark 469: Emphasis and strong emphasis" {
+    try same("*foo _bar* baz_\n", "<p><em>foo _bar</em> baz_</p>\n");
+}
+
+test "commonmark 470: Emphasis and strong emphasis" {
+    try same(
+        "*foo __bar *baz bim__ bam*\n",
+        "<p><em>foo <strong>bar *baz bim</strong> bam</em></p>\n",
+    );
+}
+
+test "commonmark 471: Emphasis and strong emphasis" {
+    try same("**foo **bar baz**\n", "<p>**foo <strong>bar baz</strong></p>\n");
+}
+
+test "commonmark 472: Emphasis and strong emphasis" {
+    try same("*foo *bar baz*\n", "<p>*foo <em>bar baz</em></p>\n");
+}
+
+test "commonmark 473: Emphasis and strong emphasis" {
+    try same("*[bar*](/url)\n", "<p>*<a href=\"/url\">bar*</a></p>\n");
+}
+
+test "commonmark 474: Emphasis and strong emphasis" {
+    try same("_foo [bar_](/url)\n", "<p>_foo <a href=\"/url\">bar_</a></p>\n");
+}
+
+test "commonmark 475: Emphasis and strong emphasis" {
+    try same(
+        "*<img src=\"foo\" title=\"*\"/>\n",
+        "<p>*<img src=\"foo\" title=\"*\"/></p>\n",
+    );
+}
+
+test "commonmark 476: Emphasis and strong emphasis" {
+    try same("**<a href=\"**\">\n", "<p>**<a href=\"**\"></p>\n");
+}
+
+test "commonmark 477: Emphasis and strong emphasis" {
+    try same("__<a href=\"__\">\n", "<p>__<a href=\"__\"></p>\n");
+}
+
+test "commonmark 478: Emphasis and strong emphasis" {
+    try same("*a `*`*\n", "<p><em>a <code>*</code></em></p>\n");
+}
+
+test "commonmark 479: Emphasis and strong emphasis" {
+    try same("_a `_`_\n", "<p><em>a <code>_</code></em></p>\n");
+}
+
+test "commonmark 480: Emphasis and strong emphasis" {
+    try same(
+        "**a<https://foo.bar/?q=**>\n",
+        "<p>**a<a href=\"https://foo.bar/?q=**\">https://foo.bar/?q=**</a></p>\n",
+    );
+}
+
+test "commonmark 481: Emphasis and strong emphasis" {
+    try same(
+        "__a<https://foo.bar/?q=__>\n",
+        "<p>__a<a href=\"https://foo.bar/?q=__\">https://foo.bar/?q=__</a></p>\n",
+    );
+}

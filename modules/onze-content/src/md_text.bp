@@ -1,0 +1,284 @@
+//// onze-content — the text layer under the Markdown parser (front 121).
+////
+//// `Chars` is a string's code points with constant-time reads on both rows:
+//// the parser peeks ahead and behind at every character, and `string.at` /
+//// `Array.at` walk the whole value on erlang (a list there), so a scan over a
+//// 200 kB document would be quadratic. The two host cells hold a JS array on
+//// commonJS and a tuple on erlang; nothing else is host code.
+////
+//// The rest is CommonMark's vocabulary in botopink: character classes
+//// (§ 2.1 Characters and lines), backslash escapes (§ 2.4), entity and numeric
+//// character references (§ 2.5, through `md_entities`), link label
+//// normalisation (§ 4.7 — case fold, collapsed white space), the URL
+//// percent-encoding every renderer applies to a destination, and the HTML
+//// escaping of text and attribute values.
+
+import {md_entities.entityText};
+
+// A string's code points. `at` answers `-1` outside `[0, size)`; `text`
+// answers the code points `[start, end)` as a string (bounds clamped).
+pub type Chars(handle: unknown, size: i32) {
+    #[@External.Node("""(($0.handle[$1]) ?? -1)""")]
+    #[@External.Erlang("""(fun(__B, __I) -> __T = element(2, __B), case (__I >= 0) andalso (__I < tuple_size(__T)) of true -> element(__I + 1, __T); false -> -1 end end)($0, $1)""")]
+    pub declare fn at(self: Self, i: i32) -> i32;
+
+    #[@External.Node("""((__b, __s, __e) => { const __h = __b.handle; let __o = ""; const __z = Math.min(__e, __h.length); for (let __k = Math.max(__s, 0); __k < __z; __k++) __o += String.fromCodePoint(__h[__k]); return __o; })($0, $1, $2)""")]
+    #[@External.Erlang("""(fun(__B, __S, __E) -> __T = element(2, __B), __A = erlang:max(__S, 0), __Z = erlang:min(__E, tuple_size(__T)), unicode:characters_to_binary([element(__K, __T) || __K <- lists:seq(__A + 1, __Z)]) end)($0, $1, $2)""")]
+    pub declare fn text(self: Self, start: i32, end: i32) -> string;
+}
+
+#[@External.Node("""((__s) => { const __a = Array.from(__s, (__c) => __c.codePointAt(0)); return { handle: __a, size: __a.length }; })($0)""")]
+#[@External.Erlang("""(fun(__S) -> __T = list_to_tuple(unicode:characters_to_list(__S, utf8)), #{handle => __T, size => tuple_size(__T)} end)($0)""")]
+pub declare fn charsOf(s: string) -> Chars;
+
+// Unicode punctuation outside ASCII: the general categories P and S
+// (CommonMark 0.31.2 § 2.1, "Unicode punctuation character").
+#[@External.Node("""(new RegExp("^[\\p{P}\\p{S}]$", "u").test(String.fromCodePoint($0)))""")]
+#[@External.Erlang("""(re:run(<<($0)/utf8>>, <<"^[\\p{P}\\p{S}]$"/utf8>>, [unicode, ucp]) =/= nomatch)""")]
+declare fn isWidePunctHost(c: i32) -> bool;
+
+// The one-character string of a code point; a value that is no Unicode scalar
+// value (zero, a surrogate, past U+10FFFF) is U+FFFD, as § 2.5 requires of a
+// numeric character reference.
+pub fn charText(c: i32) -> string {
+    val scalar = c > 0 && c <= 1114111 && (c < 55296 || c > 57343);
+    return if (scalar) String.fromCodepoint(c) else String.fromCodepoint(65533);
+}
+
+pub fn isSpaceOrTab(c: i32) -> bool {
+    return c == 32 || c == 9;
+}
+
+// § 2.1 "Unicode whitespace character": Zs, tab, line feed, form feed,
+// carriage return.
+pub fn isUnicodeSpace(c: i32) -> bool {
+    if (c == 32 || c == 9 || c == 10 || c == 12 || c == 13) return true;
+    if (c < 160) return false;
+    return c == 160
+        || c == 5760
+        || (c >= 8192 && c <= 8202)
+        || c == 8239
+        || c == 8287
+        || c == 12288;
+}
+
+// § 2.1 "ASCII punctuation character".
+pub fn isAsciiPunct(c: i32) -> bool {
+    return (c >= 33 && c <= 47)
+        || (c >= 58 && c <= 64)
+        || (c >= 91 && c <= 96)
+        || (c >= 123 && c <= 126);
+}
+
+// § 2.1 "Unicode punctuation character".
+pub fn isPunct(c: i32) -> bool {
+    if (c < 0) return false;
+    if (c < 128) return isAsciiPunct(c);
+    return isWidePunctHost(c);
+}
+
+pub fn isDigit(c: i32) -> bool {
+    return c >= 48 && c <= 57;
+}
+
+pub fn isAsciiAlpha(c: i32) -> bool {
+    return (c >= 65 && c <= 90) || (c >= 97 && c <= 122);
+}
+
+pub fn isAsciiAlnum(c: i32) -> bool {
+    return isAsciiAlpha(c) || isDigit(c);
+}
+
+pub fn isHexDigit(c: i32) -> bool {
+    return isDigit(c) || (c >= 65 && c <= 70) || (c >= 97 && c <= 102);
+}
+
+// The value of a decimal (or, with `hex`, hexadecimal) digit; `-1` for a
+// character that is none.
+fn digitOf(c: i32, hex: bool) -> i32 {
+    if (isDigit(c)) return c - 48;
+    if (!hex) return -1;
+    if (c >= 65 && c <= 70) return c - 55;
+    if (c >= 97 && c <= 102) return c - 87;
+    return -1;
+}
+
+// The text of an HTML document's character data or attribute value: `&`, `<`,
+// `>` and `"` escaped — the four the CommonMark reference renderer escapes.
+pub fn escapeHtml(s: string) -> string {
+    if (!(s.contains("&")
+        || s.contains("<")
+        || s.contains(">")
+        || s.contains("\"")))
+        return s;
+    return s
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll("\"", "&quot;");
+}
+
+// An entity or numeric character reference starting at the `&` at `pos`:
+// the index after its `;` and the text it stands for, or `-1` when the text
+// there is none (§ 2.5 — a name that is not an HTML5 entity is not one).
+pub fn matchEntity(c: Chars, pos: i32) -> #(i32, string) {
+    if (c.at(pos) != 38) return #(-1, "");
+    if (c.at(pos + 1) == 35) {
+        val x = c.at(pos + 2);
+        val hex = x == 120 || x == 88;
+        val first = if (hex) pos + 3 else pos + 2;
+        var i = first;
+        var value = 0;
+        val most = if (hex) 6 else 7;
+        while (i - first < most && digitOf(c.at(i), hex) >= 0) {
+            val base = if (hex) 16 else 10;
+            value = value * base + digitOf(c.at(i), hex);
+            i = i + 1;
+        }
+        if (i == first || c.at(i) != 59) return #(-1, "");
+        return #(i + 1, charText(value));
+    }
+    if (!isAsciiAlpha(c.at(pos + 1))) return #(-1, "");
+    var i = pos + 2;
+    while (isAsciiAlnum(c.at(i)) && i - pos <= 32) {
+        i = i + 1;
+    }
+    if (c.at(i) != 59 || i - pos - 1 > 32) return #(-1, "");
+    val found = entityText(c.text(pos + 1, i));
+    if (found == "") return #(-1, "");
+    return #(i + 1, found);
+}
+
+// Backslash escapes and character references replaced by the characters they
+// stand for (§ 2.4, § 2.5) — a link destination, a title, an info string.
+pub fn unescapeString(s: string) -> string {
+    if (!(s.contains("\\") || s.contains("&"))) return s;
+    val c = charsOf(s);
+    var parts: string[] = [];
+    var start = 0;
+    var i = 0;
+    while (i < c.size) {
+        val ch = c.at(i);
+        if (ch == 92 && isAsciiPunct(c.at(i + 1))) {
+            parts.push(c.text(start, i));
+            parts.push(c.text(i + 1, i + 2));
+            i = i + 2;
+            start = i;
+        } else if (ch == 38) {
+            val m = matchEntity(c, i);
+            if (m._0 > 0) {
+                parts.push(c.text(start, i));
+                parts.push(m._1);
+                i = m._0;
+                start = i;
+            } else i = i + 1;
+        } else i = i + 1;
+    }
+    parts.push(c.text(start, c.size));
+    return parts.join("");
+}
+
+// A link label as references compare it (§ 4.7): the brackets' content,
+// trimmed, inner white space collapsed to one space, Unicode case-folded.
+pub fn normalizeLabel(label: string) -> string {
+    val c = charsOf(label);
+    var parts: string[] = [];
+    var i = 0;
+    var start = 0;
+    var inSpace = false;
+    while (i < c.size) {
+        val ch = c.at(i);
+        val ws = ch == 32 || ch == 9 || ch == 10 || ch == 13;
+        if (ws && !inSpace) {
+            parts.push(c.text(start, i));
+            parts.push(" ");
+            inSpace = true;
+        } else if (!ws && inSpace) {
+            start = i;
+            inSpace = false;
+        }
+        i = i + 1;
+    }
+    if (!inSpace) parts.push(c.text(start, c.size));
+    return parts.join("").trim().toLower().toUpper();
+}
+
+// The URL form of a destination: every character outside the URL-safe set
+// percent-encoded as UTF-8 (upper-case hex), an existing `%XX` kept — what
+// the reference implementations' `encode` does (mdurl).
+pub fn normalizeUri(s: string) -> string {
+    val c = charsOf(s);
+    var parts: string[] = [];
+    var start = 0;
+    var i = 0;
+    while (i < c.size) {
+        val ch = c.at(i);
+        if (uriSafe(ch))
+            i = i + 1
+        else if (ch == 37 && isHexDigit(c.at(i + 1)) && isHexDigit(c.at(i + 2)))
+            i = i + 3
+        else {
+            parts.push(c.text(start, i));
+            parts.push(percentEncoded(ch));
+            i = i + 1;
+            start = i;
+        }
+    }
+    if (start == 0) return s;
+    parts.push(c.text(start, c.size));
+    return parts.join("");
+}
+
+// `;/?:@&=+$,-_.!~*'()#`, letters and digits.
+fn uriSafe(c: i32) -> bool {
+    if (isAsciiAlnum(c)) return true;
+    return c == 59
+        || c == 47
+        || c == 63
+        || c == 58
+        || c == 64
+        || c == 38
+        || c == 61
+        || c == 43
+        || c == 36
+        || c == 44
+        || c == 45
+        || c == 95
+        || c == 46
+        || c == 33
+        || c == 126
+        || c == 42
+        || c == 39
+        || c == 40
+        || c == 41
+        || c == 35;
+}
+
+fn hexByte(b: i32) -> string {
+    val digits = "0123456789ABCDEF";
+    return [
+        "%",
+        digits.at(b / 16) ?? "0",
+        digits.at(b % 16) ?? "0",
+    ].join("");
+}
+
+// The `%XX` escapes of a code point's UTF-8 bytes.
+fn percentEncoded(c: i32) -> string {
+    val cp = if (c >= 55296 && c <= 57343) 65533 else c;
+    if (cp < 128) return hexByte(cp);
+    if (cp < 2048)
+        return [hexByte(192 + cp / 64), hexByte(128 + cp % 64)].join("");
+    if (cp < 65536)
+        return [
+            hexByte(224 + cp / 4096),
+            hexByte(128 + (cp / 64) % 64),
+            hexByte(128 + cp % 64),
+        ].join("");
+    return [
+        hexByte(240 + cp / 262144),
+        hexByte(128 + (cp / 4096) % 64),
+        hexByte(128 + (cp / 64) % 64),
+        hexByte(128 + cp % 64),
+    ].join("");
+}

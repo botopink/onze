@@ -1,0 +1,26 @@
+// CommonMark 0.31.2 spec examples — § Textual content (front 121, step 2).
+//
+// Generated from <https://spec.commonmark.org/0.31.2/spec.json>: one test per
+// example, Markdown in, the reference HTML out, named by the example's number.
+// Rendered with `commonmarkOptions()` — CommonMark alone, no extension, no
+// smart punctuation, no heading ids — as the spec renders them.
+
+import {markdown.parseWith, markdown.toHtml, markdown.commonmarkOptions};
+
+fn same(source: string, expected: string) -> @Result<void, string> {
+    val got = toHtml(parseWith(source, commonmarkOptions()));
+    if (got != expected) throw "expected " + expected + " got " + got;
+    return;
+}
+
+test "commonmark 650: Textual content" {
+    try same("hello \$.;'there\n", "<p>hello \$.;'there</p>\n");
+}
+
+test "commonmark 651: Textual content" {
+    try same("Foo χρῆν\n", "<p>Foo χρῆν</p>\n");
+}
+
+test "commonmark 652: Textual content" {
+    try same("Multiple     spaces\n", "<p>Multiple     spaces</p>\n");
+}

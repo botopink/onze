@@ -1,0 +1,49 @@
+// CommonMark 0.31.2 spec examples — § Paragraphs (front 121, step 1).
+//
+// Generated from <https://spec.commonmark.org/0.31.2/spec.json>: one test per
+// example, Markdown in, the reference HTML out, named by the example's number.
+// Rendered with `commonmarkOptions()` — CommonMark alone, no extension, no
+// smart punctuation, no heading ids — as the spec renders them.
+
+import {markdown.parseWith, markdown.toHtml, markdown.commonmarkOptions};
+
+fn same(source: string, expected: string) -> @Result<void, string> {
+    val got = toHtml(parseWith(source, commonmarkOptions()));
+    if (got != expected) throw "expected " + expected + " got " + got;
+    return;
+}
+
+test "commonmark 219: Paragraphs" {
+    try same("aaa\n\nbbb\n", "<p>aaa</p>\n<p>bbb</p>\n");
+}
+
+test "commonmark 220: Paragraphs" {
+    try same("aaa\nbbb\n\nccc\nddd\n", "<p>aaa\nbbb</p>\n<p>ccc\nddd</p>\n");
+}
+
+test "commonmark 221: Paragraphs" {
+    try same("aaa\n\n\nbbb\n", "<p>aaa</p>\n<p>bbb</p>\n");
+}
+
+test "commonmark 222: Paragraphs" {
+    try same("  aaa\n bbb\n", "<p>aaa\nbbb</p>\n");
+}
+
+test "commonmark 223: Paragraphs" {
+    try same(
+        "aaa\n             bbb\n                                       ccc\n",
+        "<p>aaa\nbbb\nccc</p>\n",
+    );
+}
+
+test "commonmark 224: Paragraphs" {
+    try same("   aaa\nbbb\n", "<p>aaa\nbbb</p>\n");
+}
+
+test "commonmark 225: Paragraphs" {
+    try same("    aaa\nbbb\n", "<pre><code>aaa\n</code></pre>\n<p>bbb</p>\n");
+}
+
+test "commonmark 226: Paragraphs" {
+    try same("aaa     \nbbb     \n", "<p>aaa<br />\nbbb</p>\n");
+}

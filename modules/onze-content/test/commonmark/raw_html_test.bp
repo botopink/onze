@@ -1,0 +1,121 @@
+// CommonMark 0.31.2 spec examples — § Raw HTML (front 121, step 2).
+//
+// Generated from <https://spec.commonmark.org/0.31.2/spec.json>: one test per
+// example, Markdown in, the reference HTML out, named by the example's number.
+// Rendered with `commonmarkOptions()` — CommonMark alone, no extension, no
+// smart punctuation, no heading ids — as the spec renders them.
+
+import {markdown.parseWith, markdown.toHtml, markdown.commonmarkOptions};
+
+fn same(source: string, expected: string) -> @Result<void, string> {
+    val got = toHtml(parseWith(source, commonmarkOptions()));
+    if (got != expected) throw "expected " + expected + " got " + got;
+    return;
+}
+
+test "commonmark 613: Raw HTML" {
+    try same("<a><bab><c2c>\n", "<p><a><bab><c2c></p>\n");
+}
+
+test "commonmark 614: Raw HTML" {
+    try same("<a/><b2/>\n", "<p><a/><b2/></p>\n");
+}
+
+test "commonmark 615: Raw HTML" {
+    try same(
+        "<a  /><b2\ndata=\"foo\" >\n",
+        "<p><a  /><b2\ndata=\"foo\" ></p>\n",
+    );
+}
+
+test "commonmark 616: Raw HTML" {
+    try same(
+        "<a foo=\"bar\" bam = 'baz <em>\"</em>'\n_boolean zoop:33=zoop:33 />\n",
+        "<p><a foo=\"bar\" bam = 'baz <em>\"</em>'\n_boolean zoop:33=zoop:33 /></p>\n",
+    );
+}
+
+test "commonmark 617: Raw HTML" {
+    try same(
+        "Foo <responsive-image src=\"foo.jpg\" />\n",
+        "<p>Foo <responsive-image src=\"foo.jpg\" /></p>\n",
+    );
+}
+
+test "commonmark 618: Raw HTML" {
+    try same("<33> <__>\n", "<p>&lt;33&gt; &lt;__&gt;</p>\n");
+}
+
+test "commonmark 619: Raw HTML" {
+    try same("<a h*#ref=\"hi\">\n", "<p>&lt;a h*#ref=&quot;hi&quot;&gt;</p>\n");
+}
+
+test "commonmark 620: Raw HTML" {
+    try same(
+        "<a href=\"hi'> <a href=hi'>\n",
+        "<p>&lt;a href=&quot;hi'&gt; &lt;a href=hi'&gt;</p>\n",
+    );
+}
+
+test "commonmark 621: Raw HTML" {
+    try same(
+        "< a><\nfoo><bar/ >\n<foo bar=baz\nbim!bop />\n",
+        "<p>&lt; a&gt;&lt;\nfoo&gt;&lt;bar/ &gt;\n&lt;foo bar=baz\nbim!bop /&gt;</p>\n",
+    );
+}
+
+test "commonmark 622: Raw HTML" {
+    try same(
+        "<a href='bar'title=title>\n",
+        "<p>&lt;a href='bar'title=title&gt;</p>\n",
+    );
+}
+
+test "commonmark 623: Raw HTML" {
+    try same("</a></foo >\n", "<p></a></foo ></p>\n");
+}
+
+test "commonmark 624: Raw HTML" {
+    try same("</a href=\"foo\">\n", "<p>&lt;/a href=&quot;foo&quot;&gt;</p>\n");
+}
+
+test "commonmark 625: Raw HTML" {
+    try same(
+        "foo <!-- this is a --\ncomment - with hyphens -->\n",
+        "<p>foo <!-- this is a --\ncomment - with hyphens --></p>\n",
+    );
+}
+
+test "commonmark 626: Raw HTML" {
+    try same(
+        "foo <!--> foo -->\n\nfoo <!---> foo -->\n",
+        "<p>foo <!--> foo --&gt;</p>\n<p>foo <!---> foo --&gt;</p>\n",
+    );
+}
+
+test "commonmark 627: Raw HTML" {
+    try same("foo <?php echo \$a; ?>\n", "<p>foo <?php echo \$a; ?></p>\n");
+}
+
+test "commonmark 628: Raw HTML" {
+    try same("foo <!ELEMENT br EMPTY>\n", "<p>foo <!ELEMENT br EMPTY></p>\n");
+}
+
+test "commonmark 629: Raw HTML" {
+    try same("foo <![CDATA[>&<]]>\n", "<p>foo <![CDATA[>&<]]></p>\n");
+}
+
+test "commonmark 630: Raw HTML" {
+    try same("foo <a href=\"&ouml;\">\n", "<p>foo <a href=\"&ouml;\"></p>\n");
+}
+
+test "commonmark 631: Raw HTML" {
+    try same("foo <a href=\"\\*\">\n", "<p>foo <a href=\"\\*\"></p>\n");
+}
+
+test "commonmark 632: Raw HTML" {
+    try same(
+        "<a href=\"\\\"\">\n",
+        "<p>&lt;a href=&quot;&quot;&quot;&gt;</p>\n",
+    );
+}

@@ -1,0 +1,109 @@
+// CommonMark 0.31.2 spec examples — § Entity and numeric character references (front 121, step 2).
+//
+// Generated from <https://spec.commonmark.org/0.31.2/spec.json>: one test per
+// example, Markdown in, the reference HTML out, named by the example's number.
+// Rendered with `commonmarkOptions()` — CommonMark alone, no extension, no
+// smart punctuation, no heading ids — as the spec renders them.
+
+import {markdown.parseWith, markdown.toHtml, markdown.commonmarkOptions};
+
+fn same(source: string, expected: string) -> @Result<void, string> {
+    val got = toHtml(parseWith(source, commonmarkOptions()));
+    if (got != expected) throw "expected " + expected + " got " + got;
+    return;
+}
+
+test "commonmark 025: Entity and numeric character references" {
+    try same(
+        "&nbsp; &amp; &copy; &AElig; &Dcaron;\n&frac34; &HilbertSpace; &DifferentialD;\n&ClockwiseContourIntegral; &ngE;\n",
+        "<p>\u{A0} &amp; © Æ Ď\n¾ ℋ ⅆ\n∲ ≧̸</p>\n",
+    );
+}
+
+test "commonmark 026: Entity and numeric character references" {
+    try same("&#35; &#1234; &#992; &#0;\n", "<p># Ӓ Ϡ �</p>\n");
+}
+
+test "commonmark 027: Entity and numeric character references" {
+    try same("&#X22; &#XD06; &#xcab;\n", "<p>&quot; ആ ಫ</p>\n");
+}
+
+test "commonmark 028: Entity and numeric character references" {
+    try same(
+        "&nbsp &x; &#; &#x;\n&#87654321;\n&#abcdef0;\n&ThisIsNotDefined; &hi?;\n",
+        "<p>&amp;nbsp &amp;x; &amp;#; &amp;#x;\n&amp;#87654321;\n&amp;#abcdef0;\n&amp;ThisIsNotDefined; &amp;hi?;</p>\n",
+    );
+}
+
+test "commonmark 029: Entity and numeric character references" {
+    try same("&copy\n", "<p>&amp;copy</p>\n");
+}
+
+test "commonmark 030: Entity and numeric character references" {
+    try same("&MadeUpEntity;\n", "<p>&amp;MadeUpEntity;</p>\n");
+}
+
+test "commonmark 031: Entity and numeric character references" {
+    try same(
+        "<a href=\"&ouml;&ouml;.html\">\n",
+        "<a href=\"&ouml;&ouml;.html\">\n",
+    );
+}
+
+test "commonmark 032: Entity and numeric character references" {
+    try same(
+        "[foo](/f&ouml;&ouml; \"f&ouml;&ouml;\")\n",
+        "<p><a href=\"/f%C3%B6%C3%B6\" title=\"föö\">foo</a></p>\n",
+    );
+}
+
+test "commonmark 033: Entity and numeric character references" {
+    try same(
+        "[foo]\n\n[foo]: /f&ouml;&ouml; \"f&ouml;&ouml;\"\n",
+        "<p><a href=\"/f%C3%B6%C3%B6\" title=\"föö\">foo</a></p>\n",
+    );
+}
+
+test "commonmark 034: Entity and numeric character references" {
+    try same(
+        "``` f&ouml;&ouml;\nfoo\n```\n",
+        "<pre><code class=\"language-föö\">foo\n</code></pre>\n",
+    );
+}
+
+test "commonmark 035: Entity and numeric character references" {
+    try same(
+        "`f&ouml;&ouml;`\n",
+        "<p><code>f&amp;ouml;&amp;ouml;</code></p>\n",
+    );
+}
+
+test "commonmark 036: Entity and numeric character references" {
+    try same(
+        "    f&ouml;f&ouml;\n",
+        "<pre><code>f&amp;ouml;f&amp;ouml;\n</code></pre>\n",
+    );
+}
+
+test "commonmark 037: Entity and numeric character references" {
+    try same("&#42;foo&#42;\n*foo*\n", "<p>*foo*\n<em>foo</em></p>\n");
+}
+
+test "commonmark 038: Entity and numeric character references" {
+    try same(
+        "&#42; foo\n\n* foo\n",
+        "<p>* foo</p>\n<ul>\n<li>foo</li>\n</ul>\n",
+    );
+}
+
+test "commonmark 039: Entity and numeric character references" {
+    try same("foo&#10;&#10;bar\n", "<p>foo\n\nbar</p>\n");
+}
+
+test "commonmark 040: Entity and numeric character references" {
+    try same("&#9;foo\n", "<p>\tfoo</p>\n");
+}
+
+test "commonmark 041: Entity and numeric character references" {
+    try same("[a](url &quot;tit&quot;)\n", "<p>[a](url &quot;tit&quot;)</p>\n");
+}

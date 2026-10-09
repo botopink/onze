@@ -1,0 +1,166 @@
+// CommonMark 0.31.2 spec examples — § Fenced code blocks (front 121, step 1).
+//
+// Generated from <https://spec.commonmark.org/0.31.2/spec.json>: one test per
+// example, Markdown in, the reference HTML out, named by the example's number.
+// Rendered with `commonmarkOptions()` — CommonMark alone, no extension, no
+// smart punctuation, no heading ids — as the spec renders them.
+
+import {markdown.parseWith, markdown.toHtml, markdown.commonmarkOptions};
+
+fn same(source: string, expected: string) -> @Result<void, string> {
+    val got = toHtml(parseWith(source, commonmarkOptions()));
+    if (got != expected) throw "expected " + expected + " got " + got;
+    return;
+}
+
+test "commonmark 119: Fenced code blocks" {
+    try same("```\n<\n >\n```\n", "<pre><code>&lt;\n &gt;\n</code></pre>\n");
+}
+
+test "commonmark 120: Fenced code blocks" {
+    try same("~~~\n<\n >\n~~~\n", "<pre><code>&lt;\n &gt;\n</code></pre>\n");
+}
+
+test "commonmark 121: Fenced code blocks" {
+    try same("``\nfoo\n``\n", "<p><code>foo</code></p>\n");
+}
+
+test "commonmark 122: Fenced code blocks" {
+    try same("```\naaa\n~~~\n```\n", "<pre><code>aaa\n~~~\n</code></pre>\n");
+}
+
+test "commonmark 123: Fenced code blocks" {
+    try same("~~~\naaa\n```\n~~~\n", "<pre><code>aaa\n```\n</code></pre>\n");
+}
+
+test "commonmark 124: Fenced code blocks" {
+    try same(
+        "````\naaa\n```\n``````\n",
+        "<pre><code>aaa\n```\n</code></pre>\n",
+    );
+}
+
+test "commonmark 125: Fenced code blocks" {
+    try same("~~~~\naaa\n~~~\n~~~~\n", "<pre><code>aaa\n~~~\n</code></pre>\n");
+}
+
+test "commonmark 126: Fenced code blocks" {
+    try same("```\n", "<pre><code></code></pre>\n");
+}
+
+test "commonmark 127: Fenced code blocks" {
+    try same("`````\n\n```\naaa\n", "<pre><code>\n```\naaa\n</code></pre>\n");
+}
+
+test "commonmark 128: Fenced code blocks" {
+    try same(
+        "> ```\n> aaa\n\nbbb\n",
+        "<blockquote>\n<pre><code>aaa\n</code></pre>\n</blockquote>\n<p>bbb</p>\n",
+    );
+}
+
+test "commonmark 129: Fenced code blocks" {
+    try same("```\n\n  \n```\n", "<pre><code>\n  \n</code></pre>\n");
+}
+
+test "commonmark 130: Fenced code blocks" {
+    try same("```\n```\n", "<pre><code></code></pre>\n");
+}
+
+test "commonmark 131: Fenced code blocks" {
+    try same(" ```\n aaa\naaa\n```\n", "<pre><code>aaa\naaa\n</code></pre>\n");
+}
+
+test "commonmark 132: Fenced code blocks" {
+    try same(
+        "  ```\naaa\n  aaa\naaa\n  ```\n",
+        "<pre><code>aaa\naaa\naaa\n</code></pre>\n",
+    );
+}
+
+test "commonmark 133: Fenced code blocks" {
+    try same(
+        "   ```\n   aaa\n    aaa\n  aaa\n   ```\n",
+        "<pre><code>aaa\n aaa\naaa\n</code></pre>\n",
+    );
+}
+
+test "commonmark 134: Fenced code blocks" {
+    try same(
+        "    ```\n    aaa\n    ```\n",
+        "<pre><code>```\naaa\n```\n</code></pre>\n",
+    );
+}
+
+test "commonmark 135: Fenced code blocks" {
+    try same("```\naaa\n  ```\n", "<pre><code>aaa\n</code></pre>\n");
+}
+
+test "commonmark 136: Fenced code blocks" {
+    try same("   ```\naaa\n  ```\n", "<pre><code>aaa\n</code></pre>\n");
+}
+
+test "commonmark 137: Fenced code blocks" {
+    try same("```\naaa\n    ```\n", "<pre><code>aaa\n    ```\n</code></pre>\n");
+}
+
+test "commonmark 138: Fenced code blocks" {
+    try same("``` ```\naaa\n", "<p><code> </code>\naaa</p>\n");
+}
+
+test "commonmark 139: Fenced code blocks" {
+    try same(
+        "~~~~~~\naaa\n~~~ ~~\n",
+        "<pre><code>aaa\n~~~ ~~\n</code></pre>\n",
+    );
+}
+
+test "commonmark 140: Fenced code blocks" {
+    try same(
+        "foo\n```\nbar\n```\nbaz\n",
+        "<p>foo</p>\n<pre><code>bar\n</code></pre>\n<p>baz</p>\n",
+    );
+}
+
+test "commonmark 141: Fenced code blocks" {
+    try same(
+        "foo\n---\n~~~\nbar\n~~~\n# baz\n",
+        "<h2>foo</h2>\n<pre><code>bar\n</code></pre>\n<h1>baz</h1>\n",
+    );
+}
+
+test "commonmark 142: Fenced code blocks" {
+    try same(
+        "```ruby\ndef foo(x)\n  return 3\nend\n```\n",
+        "<pre><code class=\"language-ruby\">def foo(x)\n  return 3\nend\n</code></pre>\n",
+    );
+}
+
+test "commonmark 143: Fenced code blocks" {
+    try same(
+        "~~~~    ruby startline=3 \$%@#\$\ndef foo(x)\n  return 3\nend\n~~~~~~~\n",
+        "<pre><code class=\"language-ruby\">def foo(x)\n  return 3\nend\n</code></pre>\n",
+    );
+}
+
+test "commonmark 144: Fenced code blocks" {
+    try same(
+        "````;\n````\n",
+        "<pre><code class=\"language-;\"></code></pre>\n",
+    );
+}
+
+test "commonmark 145: Fenced code blocks" {
+    try same("``` aa ```\nfoo\n", "<p><code>aa</code>\nfoo</p>\n");
+}
+
+test "commonmark 146: Fenced code blocks" {
+    try same(
+        "~~~ aa ``` ~~~\nfoo\n~~~\n",
+        "<pre><code class=\"language-aa\">foo\n</code></pre>\n",
+    );
+}
+
+test "commonmark 147: Fenced code blocks" {
+    try same("```\n``` aaa\n```\n", "<pre><code>``` aaa\n</code></pre>\n");
+}

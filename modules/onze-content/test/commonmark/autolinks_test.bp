@@ -1,0 +1,126 @@
+// CommonMark 0.31.2 spec examples — § Autolinks (front 121, step 2).
+//
+// Generated from <https://spec.commonmark.org/0.31.2/spec.json>: one test per
+// example, Markdown in, the reference HTML out, named by the example's number.
+// Rendered with `commonmarkOptions()` — CommonMark alone, no extension, no
+// smart punctuation, no heading ids — as the spec renders them.
+
+import {markdown.parseWith, markdown.toHtml, markdown.commonmarkOptions};
+
+fn same(source: string, expected: string) -> @Result<void, string> {
+    val got = toHtml(parseWith(source, commonmarkOptions()));
+    if (got != expected) throw "expected " + expected + " got " + got;
+    return;
+}
+
+test "commonmark 594: Autolinks" {
+    try same(
+        "<http://foo.bar.baz>\n",
+        "<p><a href=\"http://foo.bar.baz\">http://foo.bar.baz</a></p>\n",
+    );
+}
+
+test "commonmark 595: Autolinks" {
+    try same(
+        "<https://foo.bar.baz/test?q=hello&id=22&boolean>\n",
+        "<p><a href=\"https://foo.bar.baz/test?q=hello&amp;id=22&amp;boolean\">https://foo.bar.baz/test?q=hello&amp;id=22&amp;boolean</a></p>\n",
+    );
+}
+
+test "commonmark 596: Autolinks" {
+    try same(
+        "<irc://foo.bar:2233/baz>\n",
+        "<p><a href=\"irc://foo.bar:2233/baz\">irc://foo.bar:2233/baz</a></p>\n",
+    );
+}
+
+test "commonmark 597: Autolinks" {
+    try same(
+        "<MAILTO:FOO@BAR.BAZ>\n",
+        "<p><a href=\"MAILTO:FOO@BAR.BAZ\">MAILTO:FOO@BAR.BAZ</a></p>\n",
+    );
+}
+
+test "commonmark 598: Autolinks" {
+    try same("<a+b+c:d>\n", "<p><a href=\"a+b+c:d\">a+b+c:d</a></p>\n");
+}
+
+test "commonmark 599: Autolinks" {
+    try same(
+        "<made-up-scheme://foo,bar>\n",
+        "<p><a href=\"made-up-scheme://foo,bar\">made-up-scheme://foo,bar</a></p>\n",
+    );
+}
+
+test "commonmark 600: Autolinks" {
+    try same(
+        "<https://../>\n",
+        "<p><a href=\"https://../\">https://../</a></p>\n",
+    );
+}
+
+test "commonmark 601: Autolinks" {
+    try same(
+        "<localhost:5001/foo>\n",
+        "<p><a href=\"localhost:5001/foo\">localhost:5001/foo</a></p>\n",
+    );
+}
+
+test "commonmark 602: Autolinks" {
+    try same(
+        "<https://foo.bar/baz bim>\n",
+        "<p>&lt;https://foo.bar/baz bim&gt;</p>\n",
+    );
+}
+
+test "commonmark 603: Autolinks" {
+    try same(
+        "<https://example.com/\\[\\>\n",
+        "<p><a href=\"https://example.com/%5C%5B%5C\">https://example.com/\\[\\</a></p>\n",
+    );
+}
+
+test "commonmark 604: Autolinks" {
+    try same(
+        "<foo@bar.example.com>\n",
+        "<p><a href=\"mailto:foo@bar.example.com\">foo@bar.example.com</a></p>\n",
+    );
+}
+
+test "commonmark 605: Autolinks" {
+    try same(
+        "<foo+special@Bar.baz-bar0.com>\n",
+        "<p><a href=\"mailto:foo+special@Bar.baz-bar0.com\">foo+special@Bar.baz-bar0.com</a></p>\n",
+    );
+}
+
+test "commonmark 606: Autolinks" {
+    try same(
+        "<foo\\+@bar.example.com>\n",
+        "<p>&lt;foo+@bar.example.com&gt;</p>\n",
+    );
+}
+
+test "commonmark 607: Autolinks" {
+    try same("<>\n", "<p>&lt;&gt;</p>\n");
+}
+
+test "commonmark 608: Autolinks" {
+    try same("< https://foo.bar >\n", "<p>&lt; https://foo.bar &gt;</p>\n");
+}
+
+test "commonmark 609: Autolinks" {
+    try same("<m:abc>\n", "<p>&lt;m:abc&gt;</p>\n");
+}
+
+test "commonmark 610: Autolinks" {
+    try same("<foo.bar.baz>\n", "<p>&lt;foo.bar.baz&gt;</p>\n");
+}
+
+test "commonmark 611: Autolinks" {
+    try same("https://example.com\n", "<p>https://example.com</p>\n");
+}
+
+test "commonmark 612: Autolinks" {
+    try same("foo@bar.example.com\n", "<p>foo@bar.example.com</p>\n");
+}

@@ -1,0 +1,289 @@
+// CommonMark 0.31.2 spec examples — § HTML blocks (front 121, step 1).
+//
+// Generated from <https://spec.commonmark.org/0.31.2/spec.json>: one test per
+// example, Markdown in, the reference HTML out, named by the example's number.
+// Rendered with `commonmarkOptions()` — CommonMark alone, no extension, no
+// smart punctuation, no heading ids — as the spec renders them.
+
+import {markdown.parseWith, markdown.toHtml, markdown.commonmarkOptions};
+
+fn same(source: string, expected: string) -> @Result<void, string> {
+    val got = toHtml(parseWith(source, commonmarkOptions()));
+    if (got != expected) throw "expected " + expected + " got " + got;
+    return;
+}
+
+test "commonmark 148: HTML blocks" {
+    try same(
+        "<table><tr><td>\n<pre>\n**Hello**,\n\n_world_.\n</pre>\n</td></tr></table>\n",
+        "<table><tr><td>\n<pre>\n**Hello**,\n<p><em>world</em>.\n</pre></p>\n</td></tr></table>\n",
+    );
+}
+
+test "commonmark 149: HTML blocks" {
+    try same(
+        "<table>\n  <tr>\n    <td>\n           hi\n    </td>\n  </tr>\n</table>\n\nokay.\n",
+        "<table>\n  <tr>\n    <td>\n           hi\n    </td>\n  </tr>\n</table>\n<p>okay.</p>\n",
+    );
+}
+
+test "commonmark 150: HTML blocks" {
+    try same(
+        " <div>\n  *hello*\n         <foo><a>\n",
+        " <div>\n  *hello*\n         <foo><a>\n",
+    );
+}
+
+test "commonmark 151: HTML blocks" {
+    try same("</div>\n*foo*\n", "</div>\n*foo*\n");
+}
+
+test "commonmark 152: HTML blocks" {
+    try same(
+        "<DIV CLASS=\"foo\">\n\n*Markdown*\n\n</DIV>\n",
+        "<DIV CLASS=\"foo\">\n<p><em>Markdown</em></p>\n</DIV>\n",
+    );
+}
+
+test "commonmark 153: HTML blocks" {
+    try same(
+        "<div id=\"foo\"\n  class=\"bar\">\n</div>\n",
+        "<div id=\"foo\"\n  class=\"bar\">\n</div>\n",
+    );
+}
+
+test "commonmark 154: HTML blocks" {
+    try same(
+        "<div id=\"foo\" class=\"bar\n  baz\">\n</div>\n",
+        "<div id=\"foo\" class=\"bar\n  baz\">\n</div>\n",
+    );
+}
+
+test "commonmark 155: HTML blocks" {
+    try same("<div>\n*foo*\n\n*bar*\n", "<div>\n*foo*\n<p><em>bar</em></p>\n");
+}
+
+test "commonmark 156: HTML blocks" {
+    try same("<div id=\"foo\"\n*hi*\n", "<div id=\"foo\"\n*hi*\n");
+}
+
+test "commonmark 157: HTML blocks" {
+    try same("<div class\nfoo\n", "<div class\nfoo\n");
+}
+
+test "commonmark 158: HTML blocks" {
+    try same("<div *???-&&&-<---\n*foo*\n", "<div *???-&&&-<---\n*foo*\n");
+}
+
+test "commonmark 159: HTML blocks" {
+    try same(
+        "<div><a href=\"bar\">*foo*</a></div>\n",
+        "<div><a href=\"bar\">*foo*</a></div>\n",
+    );
+}
+
+test "commonmark 160: HTML blocks" {
+    try same(
+        "<table><tr><td>\nfoo\n</td></tr></table>\n",
+        "<table><tr><td>\nfoo\n</td></tr></table>\n",
+    );
+}
+
+test "commonmark 161: HTML blocks" {
+    try same(
+        "<div></div>\n``` c\nint x = 33;\n```\n",
+        "<div></div>\n``` c\nint x = 33;\n```\n",
+    );
+}
+
+test "commonmark 162: HTML blocks" {
+    try same(
+        "<a href=\"foo\">\n*bar*\n</a>\n",
+        "<a href=\"foo\">\n*bar*\n</a>\n",
+    );
+}
+
+test "commonmark 163: HTML blocks" {
+    try same(
+        "<Warning>\n*bar*\n</Warning>\n",
+        "<Warning>\n*bar*\n</Warning>\n",
+    );
+}
+
+test "commonmark 164: HTML blocks" {
+    try same(
+        "<i class=\"foo\">\n*bar*\n</i>\n",
+        "<i class=\"foo\">\n*bar*\n</i>\n",
+    );
+}
+
+test "commonmark 165: HTML blocks" {
+    try same("</ins>\n*bar*\n", "</ins>\n*bar*\n");
+}
+
+test "commonmark 166: HTML blocks" {
+    try same("<del>\n*foo*\n</del>\n", "<del>\n*foo*\n</del>\n");
+}
+
+test "commonmark 167: HTML blocks" {
+    try same(
+        "<del>\n\n*foo*\n\n</del>\n",
+        "<del>\n<p><em>foo</em></p>\n</del>\n",
+    );
+}
+
+test "commonmark 168: HTML blocks" {
+    try same("<del>*foo*</del>\n", "<p><del><em>foo</em></del></p>\n");
+}
+
+test "commonmark 169: HTML blocks" {
+    try same(
+        "<pre language=\"haskell\"><code>\nimport Text.HTML.TagSoup\n\nmain :: IO ()\nmain = print \$ parseTags tags\n</code></pre>\nokay\n",
+        "<pre language=\"haskell\"><code>\nimport Text.HTML.TagSoup\n\nmain :: IO ()\nmain = print \$ parseTags tags\n</code></pre>\n<p>okay</p>\n",
+    );
+}
+
+test "commonmark 170: HTML blocks" {
+    try same(
+        "<script type=\"text/javascript\">\n// JavaScript example\n\ndocument.getElementById(\"demo\").innerHTML = \"Hello JavaScript!\";\n</script>\nokay\n",
+        "<script type=\"text/javascript\">\n// JavaScript example\n\ndocument.getElementById(\"demo\").innerHTML = \"Hello JavaScript!\";\n</script>\n<p>okay</p>\n",
+    );
+}
+
+test "commonmark 171: HTML blocks" {
+    try same(
+        "<textarea>\n\n*foo*\n\n_bar_\n\n</textarea>\n",
+        "<textarea>\n\n*foo*\n\n_bar_\n\n</textarea>\n",
+    );
+}
+
+test "commonmark 172: HTML blocks" {
+    try same(
+        "<style\n  type=\"text/css\">\nh1 {color:red;}\n\np {color:blue;}\n</style>\nokay\n",
+        "<style\n  type=\"text/css\">\nh1 {color:red;}\n\np {color:blue;}\n</style>\n<p>okay</p>\n",
+    );
+}
+
+test "commonmark 173: HTML blocks" {
+    try same(
+        "<style\n  type=\"text/css\">\n\nfoo\n",
+        "<style\n  type=\"text/css\">\n\nfoo\n",
+    );
+}
+
+test "commonmark 174: HTML blocks" {
+    try same(
+        "> <div>\n> foo\n\nbar\n",
+        "<blockquote>\n<div>\nfoo\n</blockquote>\n<p>bar</p>\n",
+    );
+}
+
+test "commonmark 175: HTML blocks" {
+    try same(
+        "- <div>\n- foo\n",
+        "<ul>\n<li>\n<div>\n</li>\n<li>foo</li>\n</ul>\n",
+    );
+}
+
+test "commonmark 176: HTML blocks" {
+    try same(
+        "<style>p{color:red;}</style>\n*foo*\n",
+        "<style>p{color:red;}</style>\n<p><em>foo</em></p>\n",
+    );
+}
+
+test "commonmark 177: HTML blocks" {
+    try same(
+        "<!-- foo -->*bar*\n*baz*\n",
+        "<!-- foo -->*bar*\n<p><em>baz</em></p>\n",
+    );
+}
+
+test "commonmark 178: HTML blocks" {
+    try same(
+        "<script>\nfoo\n</script>1. *bar*\n",
+        "<script>\nfoo\n</script>1. *bar*\n",
+    );
+}
+
+test "commonmark 179: HTML blocks" {
+    try same(
+        "<!-- Foo\n\nbar\n   baz -->\nokay\n",
+        "<!-- Foo\n\nbar\n   baz -->\n<p>okay</p>\n",
+    );
+}
+
+test "commonmark 180: HTML blocks" {
+    try same(
+        "<?php\n\n  echo '>';\n\n?>\nokay\n",
+        "<?php\n\n  echo '>';\n\n?>\n<p>okay</p>\n",
+    );
+}
+
+test "commonmark 181: HTML blocks" {
+    try same("<!DOCTYPE html>\n", "<!DOCTYPE html>\n");
+}
+
+test "commonmark 182: HTML blocks" {
+    try same(
+        "<![CDATA[\nfunction matchwo(a,b)\n{\n  if (a < b && a < 0) then {\n    return 1;\n\n  } else {\n\n    return 0;\n  }\n}\n]]>\nokay\n",
+        "<![CDATA[\nfunction matchwo(a,b)\n{\n  if (a < b && a < 0) then {\n    return 1;\n\n  } else {\n\n    return 0;\n  }\n}\n]]>\n<p>okay</p>\n",
+    );
+}
+
+test "commonmark 183: HTML blocks" {
+    try same(
+        "  <!-- foo -->\n\n    <!-- foo -->\n",
+        "  <!-- foo -->\n<pre><code>&lt;!-- foo --&gt;\n</code></pre>\n",
+    );
+}
+
+test "commonmark 184: HTML blocks" {
+    try same(
+        "  <div>\n\n    <div>\n",
+        "  <div>\n<pre><code>&lt;div&gt;\n</code></pre>\n",
+    );
+}
+
+test "commonmark 185: HTML blocks" {
+    try same("Foo\n<div>\nbar\n</div>\n", "<p>Foo</p>\n<div>\nbar\n</div>\n");
+}
+
+test "commonmark 186: HTML blocks" {
+    try same("<div>\nbar\n</div>\n*foo*\n", "<div>\nbar\n</div>\n*foo*\n");
+}
+
+test "commonmark 187: HTML blocks" {
+    try same(
+        "Foo\n<a href=\"bar\">\nbaz\n",
+        "<p>Foo\n<a href=\"bar\">\nbaz</p>\n",
+    );
+}
+
+test "commonmark 188: HTML blocks" {
+    try same(
+        "<div>\n\n*Emphasized* text.\n\n</div>\n",
+        "<div>\n<p><em>Emphasized</em> text.</p>\n</div>\n",
+    );
+}
+
+test "commonmark 189: HTML blocks" {
+    try same(
+        "<div>\n*Emphasized* text.\n</div>\n",
+        "<div>\n*Emphasized* text.\n</div>\n",
+    );
+}
+
+test "commonmark 190: HTML blocks" {
+    try same(
+        "<table>\n\n<tr>\n\n<td>\nHi\n</td>\n\n</tr>\n\n</table>\n",
+        "<table>\n<tr>\n<td>\nHi\n</td>\n</tr>\n</table>\n",
+    );
+}
+
+test "commonmark 191: HTML blocks" {
+    try same(
+        "<table>\n\n  <tr>\n\n    <td>\n      Hi\n    </td>\n\n  </tr>\n\n</table>\n",
+        "<table>\n  <tr>\n<pre><code>&lt;td&gt;\n  Hi\n&lt;/td&gt;\n</code></pre>\n  </tr>\n</table>\n",
+    );
+}

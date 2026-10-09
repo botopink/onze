@@ -1,0 +1,159 @@
+// CommonMark 0.31.2 spec examples — § Images (front 121, step 2).
+//
+// Generated from <https://spec.commonmark.org/0.31.2/spec.json>: one test per
+// example, Markdown in, the reference HTML out, named by the example's number.
+// Rendered with `commonmarkOptions()` — CommonMark alone, no extension, no
+// smart punctuation, no heading ids — as the spec renders them.
+
+import {markdown.parseWith, markdown.toHtml, markdown.commonmarkOptions};
+
+fn same(source: string, expected: string) -> @Result<void, string> {
+    val got = toHtml(parseWith(source, commonmarkOptions()));
+    if (got != expected) throw "expected " + expected + " got " + got;
+    return;
+}
+
+test "commonmark 572: Images" {
+    try same(
+        "![foo](/url \"title\")\n",
+        "<p><img src=\"/url\" alt=\"foo\" title=\"title\" /></p>\n",
+    );
+}
+
+test "commonmark 573: Images" {
+    try same(
+        "![foo *bar*]\n\n[foo *bar*]: train.jpg \"train & tracks\"\n",
+        "<p><img src=\"train.jpg\" alt=\"foo bar\" title=\"train &amp; tracks\" /></p>\n",
+    );
+}
+
+test "commonmark 574: Images" {
+    try same(
+        "![foo ![bar](/url)](/url2)\n",
+        "<p><img src=\"/url2\" alt=\"foo bar\" /></p>\n",
+    );
+}
+
+test "commonmark 575: Images" {
+    try same(
+        "![foo [bar](/url)](/url2)\n",
+        "<p><img src=\"/url2\" alt=\"foo bar\" /></p>\n",
+    );
+}
+
+test "commonmark 576: Images" {
+    try same(
+        "![foo *bar*][]\n\n[foo *bar*]: train.jpg \"train & tracks\"\n",
+        "<p><img src=\"train.jpg\" alt=\"foo bar\" title=\"train &amp; tracks\" /></p>\n",
+    );
+}
+
+test "commonmark 577: Images" {
+    try same(
+        "![foo *bar*][foobar]\n\n[FOOBAR]: train.jpg \"train & tracks\"\n",
+        "<p><img src=\"train.jpg\" alt=\"foo bar\" title=\"train &amp; tracks\" /></p>\n",
+    );
+}
+
+test "commonmark 578: Images" {
+    try same(
+        "![foo](train.jpg)\n",
+        "<p><img src=\"train.jpg\" alt=\"foo\" /></p>\n",
+    );
+}
+
+test "commonmark 579: Images" {
+    try same(
+        "My ![foo bar](/path/to/train.jpg  \"title\"   )\n",
+        "<p>My <img src=\"/path/to/train.jpg\" alt=\"foo bar\" title=\"title\" /></p>\n",
+    );
+}
+
+test "commonmark 580: Images" {
+    try same("![foo](<url>)\n", "<p><img src=\"url\" alt=\"foo\" /></p>\n");
+}
+
+test "commonmark 581: Images" {
+    try same("![](/url)\n", "<p><img src=\"/url\" alt=\"\" /></p>\n");
+}
+
+test "commonmark 582: Images" {
+    try same(
+        "![foo][bar]\n\n[bar]: /url\n",
+        "<p><img src=\"/url\" alt=\"foo\" /></p>\n",
+    );
+}
+
+test "commonmark 583: Images" {
+    try same(
+        "![foo][bar]\n\n[BAR]: /url\n",
+        "<p><img src=\"/url\" alt=\"foo\" /></p>\n",
+    );
+}
+
+test "commonmark 584: Images" {
+    try same(
+        "![foo][]\n\n[foo]: /url \"title\"\n",
+        "<p><img src=\"/url\" alt=\"foo\" title=\"title\" /></p>\n",
+    );
+}
+
+test "commonmark 585: Images" {
+    try same(
+        "![*foo* bar][]\n\n[*foo* bar]: /url \"title\"\n",
+        "<p><img src=\"/url\" alt=\"foo bar\" title=\"title\" /></p>\n",
+    );
+}
+
+test "commonmark 586: Images" {
+    try same(
+        "![Foo][]\n\n[foo]: /url \"title\"\n",
+        "<p><img src=\"/url\" alt=\"Foo\" title=\"title\" /></p>\n",
+    );
+}
+
+test "commonmark 587: Images" {
+    try same(
+        "![foo] \n[]\n\n[foo]: /url \"title\"\n",
+        "<p><img src=\"/url\" alt=\"foo\" title=\"title\" />\n[]</p>\n",
+    );
+}
+
+test "commonmark 588: Images" {
+    try same(
+        "![foo]\n\n[foo]: /url \"title\"\n",
+        "<p><img src=\"/url\" alt=\"foo\" title=\"title\" /></p>\n",
+    );
+}
+
+test "commonmark 589: Images" {
+    try same(
+        "![*foo* bar]\n\n[*foo* bar]: /url \"title\"\n",
+        "<p><img src=\"/url\" alt=\"foo bar\" title=\"title\" /></p>\n",
+    );
+}
+
+test "commonmark 590: Images" {
+    try same(
+        "![[foo]]\n\n[[foo]]: /url \"title\"\n",
+        "<p>![[foo]]</p>\n<p>[[foo]]: /url &quot;title&quot;</p>\n",
+    );
+}
+
+test "commonmark 591: Images" {
+    try same(
+        "![Foo]\n\n[foo]: /url \"title\"\n",
+        "<p><img src=\"/url\" alt=\"Foo\" title=\"title\" /></p>\n",
+    );
+}
+
+test "commonmark 592: Images" {
+    try same("!\\[foo]\n\n[foo]: /url \"title\"\n", "<p>![foo]</p>\n");
+}
+
+test "commonmark 593: Images" {
+    try same(
+        "\\![foo]\n\n[foo]: /url \"title\"\n",
+        "<p>!<a href=\"/url\" title=\"title\">foo</a></p>\n",
+    );
+}

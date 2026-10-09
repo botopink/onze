@@ -1,0 +1,19 @@
+{
+  "name": "onze-content",
+  "version": "0.0.1",
+  "description": "onze-content — Markdown (CommonMark 0.31.2 + GFM) to an MdNode tree, HTML and jhonstart's Element (front 121) — commonJS and erlang",
+  "src": "src/",
+  "entry": "root.bp",
+  "target": "commonJS",
+  "files": [
+    "root.bp",
+    "markdown.bp",
+    "md_text.bp",
+    "md_entities.bp"
+  ],
+  "dependencies": {
+    "jhonstart": {
+      "path": "../../../jhonstart/modules/jhonstart"
+    }
+  }
+}
