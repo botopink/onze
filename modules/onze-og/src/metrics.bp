@@ -9,10 +9,6 @@
 
 pub type FontMetrics(family: string, weight: i32, unitsPerEm: i32, ascent: i32, descent: i32, notdef: i32, advances: Array<#(i32, i32)>)
 
-#[@External.Node("""(/^-?[0-9]+$/.test($0) ? Number($0) : 0)""")]
-#[@External.Erlang("""(fun(__S) -> try binary_to_integer(__S) catch _:_ -> 0 end end)($0)""")]
-declare fn intOf(s: string) -> i32;
-
 #[@External.Node("""Array.from($0, (__c) => __c.codePointAt(0))""")]
 #[@External.Erlang("""unicode:characters_to_list($0, utf8)""")]
 declare fn codePoints(s: string) -> Array<i32>;
@@ -27,17 +23,41 @@ pub fn parseMetrics(family: string, weight: i32, text: string) -> FontMetrics {
         val line = raw.trim();
         if (line.contains("|")) {
             val parts = line.split("|");
-            advances.push(#(intOf(parts.at(0) ?? "0"), intOf(parts.at(1) ?? "0")));
+            val codepointText = parts.at(0) ?? "";
+            val advanceText = parts.at(1) ?? "";
+            val codepoint = case codepointText.parseInt() {
+                Ok(n) -> n.toI32();
+                Error(_) -> 0;
+            };
+            val advance = case advanceText.parseInt() {
+                Ok(n) -> n.toI32();
+                Error(_) -> 0;
+            };
+            advances.push(#(codepoint, advance));
         } else if (line.contains(" ")) {
             val key = line.slice(0, line.indexOf(" "));
-            val v = intOf(line.slice(line.indexOf(" ") + 1, line.length()).trim());
+            val v = case line
+                .slice(line.indexOf(" ") + 1, line.length())
+                .trim()
+                .parseInt() {
+                Ok(n) -> n.toI32();
+                Error(_) -> 0;
+            };
             if (key == "unitsPerEm") upm = v;
             if (key == "ascent") ascent = v;
             if (key == "descent") descent = v;
             if (key == "avgCharWidth" || key == "notdef") notdef = v;
-        };
-    };
-    return FontMetrics(family: family, weight: weight, unitsPerEm: upm, ascent: ascent, descent: descent, notdef: notdef, advances: advances);
+        }
+    }
+    return FontMetrics(
+        family: family,
+        weight: weight,
+        unitsPerEm: upm,
+        ascent: ascent,
+        descent: descent,
+        notdef: notdef,
+        advances: advances,
+    );
 }
 
 pub fn advanceOf(m: FontMetrics, codepoint: i32) -> i32 {
@@ -52,6 +72,6 @@ pub fn measure(m: FontMetrics, text: string, fontSize: i32) -> i32 {
     var units = 0;
     for (codePoints(text)) { c ->
         units = units + advanceOf(m, c);
-    };
+    }
     return ((units * fontSize + m.unitsPerEm - 1) / m.unitsPerEm);
 }
