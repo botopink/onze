@@ -116,7 +116,7 @@ pub fn pageInput(
     table: string,
     actions: Array<#(string, string)>,
     chainPatterns: string[],
-    page: fn() -> @Component<ElementBase, Element>,
+    page: fn() -> @Component<Element>,
     metadata: Array<Metadata>,
     viewports: Array<Viewport>,
 ) -> PageInput {

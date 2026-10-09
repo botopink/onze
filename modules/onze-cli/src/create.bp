@@ -146,11 +146,11 @@ fn layoutSource(o: CreateOpts) -> string {
     val emiliaImport = if (o.emilia) "\nimport {emilia, Token} from \"emilia\";" else "";
     val cls = if (o.emilia) "    val shell = emilia([.Gap.All.4]);\n" else "";
     val attrs = if (o.emilia) "[#(\"class\", shell)]" else "[]";
-    return imports + emiliaImport + "\n\n// The root layout: every page renders inside it.\n#[layout(\"\")]\npub fn rootLayout(props: LayoutProps) -> @Component<ElementBase, Element> {\n" + cls + "    return main([props.children], attrs: " + attrs + ");\n}\n";
+    return imports + emiliaImport + "\n\n// The root layout: every page renders inside it.\n#[layout(\"\")]\npub fn rootLayout(props: LayoutProps) -> @Component<Element> {\n" + cls + "    return main([props.children], attrs: " + attrs + ");\n}\n";
 }
 
 fn pageSource(o: CreateOpts) -> string {
-    return "import {page, jhPage, ctxParam, ctxRest, PageContext, Element, ElementBase, h1, p, text} from \"jhonstart\";\n\n#[page(\"\")]\npub fn home(route: PageContext) -> @Component<ElementBase, Element> {\n    return h1([text(" + quote("Welcome to " + o.name) + ", attrs: [])], attrs: []);\n}\n";
+    return "import {page, jhPage, ctxParam, ctxRest, PageContext, Element, ElementBase, h1, p, text} from \"jhonstart\";\n\n#[page(\"\")]\npub fn home(route: PageContext) -> @Component<Element> {\n    return h1([text(" + quote("Welcome to " + o.name) + ", attrs: [])], attrs: []);\n}\n";
 }
 
 // The scaffold, as `#(path relative to the project, text)`.

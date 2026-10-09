@@ -66,12 +66,12 @@ fn bodyTag(route: string) -> string {
     return "<script type=\"module\" src=\"/_onze/static/b1/chunks/entry.js\"></script>";
 }
 
-fn StyledHome() -> @Component<ElementBase, Element> {
+fn StyledHome() -> @Component<Element> {
     val cls = emilia([.Gap.All.4]);
     return div([text("home", attrs: [])], attrs: [#("class", cls)]);
 }
 
-fn LoginRedirect() -> @Component<ElementBase, Element> {
+fn LoginRedirect() -> @Component<Element> {
     redirect("/login");
     return p([text("never", attrs: [])], attrs: []);
 }

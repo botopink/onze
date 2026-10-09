@@ -7,7 +7,7 @@ import {readPost, parsePost} from "@/lib.db";
 import {LikeButton} from "@/components.like_button";
 
 #[page("blog/[slug]")]
-pub fn post(route: PageContext) -> @Component<ElementBase, Element> {
+pub fn post(route: PageContext) -> @Component<Element> {
     val ps = postParams(route);
     val found = readPost(ps.slug);
     if (found.isError()) notFound();

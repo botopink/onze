@@ -3,6 +3,6 @@
 import {page, jhPage, ctxParam, ctxRest, PageContext, Element, ElementBase, section, h1, text} from "jhonstart";
 
 #[page("dashboard")]
-pub fn dashboardHome(route: PageContext) -> @Component<ElementBase, Element> {
+pub fn dashboardHome(route: PageContext) -> @Component<Element> {
     return section([h1([text("Your posts", attrs: [])], attrs: [])], attrs: []);
 }

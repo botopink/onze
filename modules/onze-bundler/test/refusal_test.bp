@@ -26,11 +26,11 @@ fn report(tree: string) -> @Result<BuildReport, string> {
 }
 
 fn page(component: string) -> string {
-    return ["== app/page.bp", "import { " + component + " } from \"@/components.w\";", "#[page(\"\")] pub fn home(route: PageContext) -> @Component<ElementBase, Element> { return p([]); }", "== components/w.bp", "#[client]"].join("\n");
+    return ["== app/page.bp", "import { " + component + " } from \"@/components.w\";", "#[page(\"\")] pub fn home(route: PageContext) -> @Component<Element> { return p([]); }", "== components/w.bp", "#[client]"].join("\n");
 }
 
 test "refusal: server-only ---- the chain from the root" {
-    val r = try report(["== app/page.bp", "import { Status } from \"@/components.status\";", "#[page(\"\")] pub fn home(route: PageContext) -> @Component<ElementBase, Element> { return p([]); }", "== components/status.bp", "#[client]", "import { fmt } from \"@/lib.format\";", "pub fn Status(props: P) -> Element { return p([]); }", "== lib/format.bp", "import { listPosts } from \"@/lib.db\";", "pub fn fmt() -> string { return \"\"; }", "== lib/db.bp", "import { serverOnly } from \"jhonstart\";", "pub fn listPosts() -> Post[] { return []; }"].join("\n"));
+    val r = try report(["== app/page.bp", "import { Status } from \"@/components.status\";", "#[page(\"\")] pub fn home(route: PageContext) -> @Component<Element> { return p([]); }", "== components/status.bp", "#[client]", "import { fmt } from \"@/lib.format\";", "pub fn Status(props: P) -> Element { return p([]); }", "== lib/format.bp", "import { listPosts } from \"@/lib.db\";", "pub fn fmt() -> string { return \"\"; }", "== lib/db.bp", "import { serverOnly } from \"jhonstart\";", "pub fn listPosts() -> Post[] { return []; }"].join("\n"));
     val text = describeReport(r);
     assert text.contains("components.status > lib.format > lib.db");
     try snapshots.assertAs(@src(), "refusals", text);
@@ -111,6 +111,6 @@ test "refusal: the styleMap probe ---- its source, and the two backends compared
 }
 
 test "refusal: a module outside the client graph is never checked" {
-    val r = try report(["== app/page.bp", "import { io.env } from \"std\";", "import { serverOnly } from \"jhonstart\";", "val secret = env.read(\"DATABASE_URL\");", "#[page(\"\")] pub fn home(route: PageContext) -> @Component<ElementBase, Element> { return p([]); }"].join("\n"));
+    val r = try report(["== app/page.bp", "import { io.env } from \"std\";", "import { serverOnly } from \"jhonstart\";", "val secret = env.read(\"DATABASE_URL\");", "#[page(\"\")] pub fn home(route: PageContext) -> @Component<Element> { return p([]); }"].join("\n"));
     assert r.refusals.length == 0;
 }

@@ -15,7 +15,7 @@ fn testTmp() -> string {
 }
 
 fn page(seg: string) -> string {
-    return "#[page(\"" + seg + "\")] pub fn p(route: PageContext) -> @Component<ElementBase, Element> { return div([]); }";
+    return "#[page(\"" + seg + "\")] pub fn p(route: PageContext) -> @Component<Element> { return div([]); }";
 }
 
 fn errorOf(r: @Result<Array<RouteEntry>, string>) -> string {
@@ -52,7 +52,7 @@ fn drop(dir: string) -> i32 {
 test "scan: every folder form ---- the staging table" {
     val entries = try scanFiles("", "app", [
         #("app/page.bp", page("")),
-        #("app/layout.bp", "#[layout(\"\")] pub fn l(props: LayoutProps) -> @Component<ElementBase, Element> { return props.children; }"),
+        #("app/layout.bp", "#[layout(\"\")] pub fn l(props: LayoutProps) -> @Component<Element> { return props.children; }"),
         #("app/blog/[slug]/page.bp", page("blog/[slug]")),
         #("app/blog/[slug]/loading.bp", "pub fn Loading() -> Element { return p([]); }"),
         #("app/blog/[slug]/not-found.bp", "pub fn NotFound() -> Element { return p([]); }"),
@@ -74,7 +74,7 @@ test "scan: the group does not reach the pattern" {
 
 test "scan: refusals ---- page and route together, a missing decorator, a staging clash" {
     val both = errorOf(scanFiles("", "app", [#("app/api/page.bp", page("api")), #("app/api/route.bp", "#[getRoute(\"api\")] pub fn g(req: Request) -> @Task<HandlerResponse> { return ok(); }")]));
-    val bare = errorOf(scanFiles("", "app", [#("app/blog/page.bp", "pub fn p(route: PageContext) -> @Component<ElementBase, Element> { return div([]); }")]));
+    val bare = errorOf(scanFiles("", "app", [#("app/blog/page.bp", "pub fn p(route: PageContext) -> @Component<Element> { return div([]); }")]));
     val clash = errorOf(scanFiles("", "app", [#("app/blog/[slug]/page.bp", page("blog/[slug]")), #("app/blog/d_slug/page.bp", page("blog/d_slug"))]));
     try snapshots.assertAs(@src(), "errors", [both, bare, clash].join("\n"));
 }

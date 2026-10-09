@@ -28,12 +28,12 @@ fn sources() -> Array<#(string, string)> {
         #("root.bp", "pub mod lib;"),
         #("lib/mod.bp", "pub mod format;"),
         #("lib/format.bp", "pub fn plural(n: i32, word: string) -> string {\n    return if (n == 1) word else word + \"s\";\n}"),
-        #("app/layout.bp", jh() + "\n\n#[layout(\"\")]\npub fn rootLayout(props: LayoutProps) -> @Component<ElementBase, Element> {\n    return div([props.children], attrs: []);\n}"),
-        #("app/page.bp", jh() + "\nimport {plural} from \"@/lib.format\";\n\n#[page(\"\")]\npub fn home(route: PageContext) -> @Component<ElementBase, Element> {\n    return p([text(plural(2, \"post\"), attrs: [])], attrs: []);\n}"),
-        #("app/blog/[slug]/page.bp", jh() + "\n\n#[page(\"blog/[slug]\")]\npub fn post(route: PageContext) -> @Component<ElementBase, Element> {\n    val ps = postParams(route);\n    return p([text(ps.slug, attrs: [])], attrs: []);\n}"),
+        #("app/layout.bp", jh() + "\n\n#[layout(\"\")]\npub fn rootLayout(props: LayoutProps) -> @Component<Element> {\n    return div([props.children], attrs: []);\n}"),
+        #("app/page.bp", jh() + "\nimport {plural} from \"@/lib.format\";\n\n#[page(\"\")]\npub fn home(route: PageContext) -> @Component<Element> {\n    return p([text(plural(2, \"post\"), attrs: [])], attrs: []);\n}"),
+        #("app/blog/[slug]/page.bp", jh() + "\n\n#[page(\"blog/[slug]\")]\npub fn post(route: PageContext) -> @Component<Element> {\n    val ps = postParams(route);\n    return p([text(ps.slug, attrs: [])], attrs: []);\n}"),
         #("app/blog/[slug]/loading.bp", jh() + "\n\npub fn Loading() -> Element {\n    return p([text(\"loading\", attrs: [])], attrs: []);\n}"),
         #("app/blog/[slug]/not-found.bp", jh() + "\n\npub fn NotFound() -> Element {\n    return p([text(\"no such post\", attrs: [])], attrs: []);\n}"),
-        #("app/(marketing)/about/page.bp", jh() + "\n\n#[page(\"(marketing)/about\")]\npub fn about(route: PageContext) -> @Component<ElementBase, Element> {\n    return p([text(\"about\", attrs: [])], attrs: []);\n}"),
+        #("app/(marketing)/about/page.bp", jh() + "\n\n#[page(\"(marketing)/about\")]\npub fn about(route: PageContext) -> @Component<Element> {\n    return p([text(\"about\", attrs: [])], attrs: []);\n}"),
     ];
 }
 
@@ -75,7 +75,7 @@ fn manifest() -> string {
 }
 
 test "generate: check ---- a decorator that disagrees with its directory" {
-    val es = try scanFiles("", "app", [#("app/blog/[slug]/page.bp", "#[page(\"posts/[slug]\")] pub fn post(route: PageContext) -> @Component<ElementBase, Element> { return p([]); }")]);
+    val es = try scanFiles("", "app", [#("app/blog/[slug]/page.bp", "#[page(\"posts/[slug]\")] pub fn post(route: PageContext) -> @Component<Element> { return p([]); }")]);
     val problems = checkTree("app", es);
     assert problems.length == 1;
     assert (problems.at(0) ?? "").contains("app/blog/[slug]/page.bp");
