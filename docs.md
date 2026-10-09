@@ -21,7 +21,7 @@ Five things, and nothing that duplicates a rakun or jhonstart definition:
 |---|---|---|
 | `OnzeConfig` | `modules/onze/src/config.bp` | the project configuration `onze.json` holds — `defaultConfig()`, `withPort` / `withDev`, `loadConfig(botopinkJson, onzeJson)` (an unknown key, a wrong kind or a port outside `1..65535` is an `Error` naming the key), `parsePort(text, source)` (a `PORT` / `-p` value), `describeConfig` (the table `onze info` prints) |
 | the import alias map | `modules/onze/src/types.bp` | `AliasMap`, `loadAliases(botopinkJson)` (a target that escapes the package root is refused at load, naming the entry), `resolveAlias(map, spec)` (longest prefix first, at a module boundary) |
-| the routing-file vocabulary | `modules/onze/src/types.bp` | `OnzeProject`, `AppFile(authoredPath, segment, kind)`, `appFileKinds()`, `classifyAppFile(appDir, path)` |
+| the routing-file table | `modules/onze/src/types.bp` | `OnzeProject`, `describeAppFiles(appDir, paths)` — over the `routing` library's `conventions` (`ConventionFile(authoredPath, segment, kind)`, `fileKinds()`, `classify(appDir, path)`; decision 323), which say what an app file is |
 | the environment rule | `modules/onze/src/config.bp` | `publicEnvPrefix`, `isPublicEnvName`, `publicEnv` |
 | the boot adapter | `modules/onze/src/integration.bp` (both rows) and `modules/onze-server/src/server.bp` (erlang) | the jhonstart half — `bootSite`, `siteRender`, `rakunEntries`, `responseOver`, `chainFor`, `pageInput`, `boot` — and the rakun half: `Onze.run(config)`, `requestData`, `responseFor`, `registerPages`, `registerRoots` |
 
@@ -62,7 +62,8 @@ annotates. The answer is an explicit argument — `#[page("blog/[slug]")]`, `#[l
 (jhonstart front 30), `#[getRoute("api/posts")]` (rakun front 25) — where the argument is the
 app-relative directory and the segment grammar is the library `routing`'s. `onze-cli` generates
 the `pub mod` lines from the tree and **fails the scan when a file's location and its decorator
-argument disagree**. `AppFile.segment` is the value it compares:
+argument disagree**. `routing`'s `conventions.classify(appDir, path)` answers a
+`ConventionFile`; its `segment` is the value it compares:
 
 | File | `segment` | `kind` |
 |---|---|---|

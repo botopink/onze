@@ -29,7 +29,8 @@ onze/
 ├── modules/           ← each: botopink.json (name, entry root.bp, files [root.bp]) + src/root.bp
 │   ├── onze/          ← CORE (front 49) — `from "onze"`: config.bp (OnzeConfig, onze.json,
 │   │                    parsePort, the ONZE_PUBLIC_ rule), types.bp (AliasMap, OnzeProject,
-│   │                    AppFile), integration.bp (the jhonstart half of the boot — the one
+│   │                    describeAppFiles — what an app file is, is `routing`'s
+│   │                    `conventions`, decision 323), integration.bp (the jhonstart half of the boot — the one
 │   │                    file that imports jhonstart and the jhonstart-emilia bridge: bootSite,
 │   │                    siteRender, rakunEntries, responseOver, pageInput). config/types tests
 │   │                    import only std; integration_test.bp renders through the bridge
