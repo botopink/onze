@@ -25,7 +25,8 @@
 //// and names the AUTHORED path — the developer has never seen `d_slug`.
 
 import {path, json.Json, json.decode, json.quote} from "std";
-import {AppFile, classifyAppFile, AliasMap, resolveAlias} from "onze";
+import {AliasMap, resolveAlias} from "onze";
+import {conventions.classify} from "routing";
 import {stagedSegment, stagedStem, publicNamesOf} from "onze-bundler";
 import {scan.RouteEntry, scan.decoratorFor};
 
@@ -38,12 +39,20 @@ pub fn banner() -> string {
 pub fn checkTree(appDir: string, entries: Array<RouteEntry>) -> Array<string> {
     var out: string[] = [];
     for (entries) { e ->
-        val f = classifyAppFile(appDir, e.authoredPath);
+        val f = classify(appDir, e.authoredPath);
         val seg = f?.segment ?? "";
         val needs = decoratorFor(e.kind) != "";
         val drift = needs && e.declared != seg;
-        if (drift) out.push(e.authoredPath + ": its decorator says \"" + e.declared + "\" but the file lives at \"" + seg + "\"");
-    };
+        if (drift)
+            out.push(
+                e.authoredPath
+                    + ": its decorator says \""
+                    + e.declared
+                    + "\" but the file lives at \""
+                    + seg
+                    + "\"",
+            );
+    }
     return out;
 }
 
@@ -55,7 +64,10 @@ pub fn stagedPath(rel: string) -> string {
     val parts = rel.split("/");
     val dirs = parts.take(parts.length - 1).map({ d -> stagedSegment(d) });
     val file = parts.at(parts.length - 1) ?? "";
-    val stem = if (file.endsWith(".bp")) stagedStem(file.slice(0, file.length() - 3)) + ".bp" else file;
+    val stem = if (file.endsWith(".bp"))
+        stagedStem(file.slice(0, file.length() - 3)) + ".bp"
+    else
+        file;
     return dirs.append([stem]).join("/");
 }
 
@@ -74,13 +86,13 @@ pub fn rewriteImports(aliases: AliasMap, source: string) -> string {
             if (line.indexOf(";") >= 0) {
                 out.push(rewriteImport(aliases, pending.join("\n")));
                 pending = [];
-            };
-        } else if (line.trimStart().startsWith("import {") && line.indexOf(";") < 0) {
-            pending.push(line);
-        } else {
+            }
+        } else if (line.trimStart().startsWith("import {")
+            && line.indexOf(";") < 0)
+            pending.push(line)
+        else
             out.push(rewriteImport(aliases, line));
-        };
-    };
+    }
     return out.append(pending).join("\n");
 }
 
@@ -99,10 +111,20 @@ fn rewriteImport(aliases: AliasMap, text: string) -> string {
     if (open < 0 || shut < open) return text;
     val prefix = resolved.replaceAll("/", ".") + ".";
     val inner = text.slice(open + 1, shut);
-    val items = if (inner.indexOf("{") >= 0) [prefix.slice(0, prefix.length() - 1) + ": {" + inner.trim() + "}"]
-        else inner.split(",").map({ i -> i.trim() }).filter({ i -> i != "" }).map({ i -> prefix + i });
+    val items = if (inner.indexOf("{") >= 0)
+        [prefix.slice(0, prefix.length() - 1) + ": {" + inner.trim() + "}"]
+    else
+        inner
+            .split(",")
+            .map({ i -> i.trim() })
+            .filter({ i -> i != "" })
+            .map({ i -> prefix + i });
     val tail = rest.slice(close + 1);
-    return text.slice(0, open) + "{" + items.join(", ") + "}" + tail.trimStart();
+    return text.slice(0, open)
+        + "{"
+        + items.join(", ")
+        + "}"
+        + tail.trimStart();
 }
 
 fn identOf(moduleId: string) -> string {
@@ -111,7 +133,10 @@ fn identOf(moduleId: string) -> string {
 
 // The `mod.bp` of every staged directory under `stagedApp` (e.g. `app`) that
 // the staged file list does not already hold, as `#(path, text)`.
-pub fn modFiles(stagedApp: string, stagedFiles: string[]) -> Array<#(string, string)> {
+pub fn modFiles(
+    stagedApp: string,
+    stagedFiles: string[],
+) -> Array<#(string, string)> {
     var dirs: string[] = [stagedApp];
     for (stagedFiles.filter({ f -> f.startsWith(stagedApp + "/") })) { f ->
         val parts = f.split("/");
@@ -120,8 +145,8 @@ pub fn modFiles(stagedApp: string, stagedFiles: string[]) -> Array<#(string, str
             val d = parts.take(i).join("/");
             if (dirs.contains(d) == false) dirs.push(d);
             i = i + 1;
-        };
-    };
+        }
+    }
     var out: Array<#(string, string)> = [];
     for (sortedText(dirs)) { d ->
         val own = d + "/mod.bp";
@@ -129,15 +154,22 @@ pub fn modFiles(stagedApp: string, stagedFiles: string[]) -> Array<#(string, str
             var children: string[] = [];
             for (dirs) { c ->
                 if (path.dirname(c) == d) children.push(path.basename(c));
-            };
+            }
             for (stagedFiles) { f ->
-                val isChild = path.dirname(f) == d && f.endsWith(".bp") && path.basename(f) != "mod.bp";
-                if (isChild) children.push(path.basename(f).slice(0, path.basename(f).length() - 3));
-            };
+                val isChild = path.dirname(f) == d
+                    && f.endsWith(".bp")
+                    && path.basename(f) != "mod.bp";
+                if (isChild)
+                    children.push(
+                        path
+                            .basename(f)
+                            .slice(0, path.basename(f).length() - 3),
+                    );
+            }
             val lines = sortedText(children).map({ c -> "pub mod " + c + ";" });
             out.push(#(own, banner() + "\n\n" + lines.join("\n") + "\n"));
-        };
-    };
+        }
+    }
     return out;
 }
 
@@ -149,38 +181,98 @@ pub fn modFiles(stagedApp: string, stagedFiles: string[]) -> Array<#(string, str
 // `@TypeInfo.all` (decision 216). `routeModules()` answers how many app
 // modules it imports. Each is a module of the staged package, so it
 // is imported by its path inside the braces (decision 206).
-pub fn routesModule(appDir: string, entries: Array<RouteEntry>, staged: Array<#(string, string)>) -> string {
+pub fn routesModule(
+    appDir: string,
+    entries: Array<RouteEntry>,
+    staged: Array<#(string, string)>,
+) -> string {
     var imports: string[] = [];
     var vals: string[] = [];
     var decorated = 0;
     for (entries.filter({ e -> decoratorFor(e.kind) != "" })) { e ->
         val file = e.modulePath.replaceAll(".", "/") + ".bp";
-        val text = staged.filter({ f -> f._0 == file }).map({ f -> f._1 }).join("");
+        val text = staged
+            .filter({ f -> f._0 == file })
+            .map({ f -> f._1 })
+            .join("");
         val first = publicNamesOf(text).at(0) ?? "";
         if (first != "") {
-            imports.push("import {" + e.modulePath + "." + first + " as onze_" + identOf(e.modulePath) + "};");
+            imports.push(
+                "import {"
+                    + e.modulePath
+                    + "."
+                    + first
+                    + " as onze_"
+                    + identOf(e.modulePath)
+                    + "};",
+            );
             decorated = decorated + 1;
-        };
-    };
+        }
+    }
     for (entries) { e ->
-        val f = classifyAppFile(appDir, e.authoredPath);
+        val f = classify(appDir, e.authoredPath);
         val seg = f?.segment ?? "";
         val local = identOf(e.modulePath);
         if (e.kind == "loading") {
-            imports.push("import {" + e.modulePath + ".Loading as " + local + "};");
-            vals.push("val __onze_" + local + " = jhLoading(" + quote(seg) + ", { -> " + local + "() });");
+            imports.push(
+                "import {" + e.modulePath + ".Loading as " + local + "};",
+            );
+            vals.push(
+                "val __onze_"
+                    + local
+                    + " = jhLoading("
+                    + quote(seg)
+                    + ", { -> "
+                    + local
+                    + "() });",
+            );
         } else if (e.kind == "error") {
-            imports.push("import {" + e.modulePath + ".ErrorPage as " + local + "};");
-            vals.push("val __onze_" + local + " = jhError(" + quote(seg) + ", { info -> " + local + "(info) });");
+            imports.push(
+                "import {" + e.modulePath + ".ErrorPage as " + local + "};",
+            );
+            vals.push(
+                "val __onze_"
+                    + local
+                    + " = jhError("
+                    + quote(seg)
+                    + ", { info -> "
+                    + local
+                    + "(info) });",
+            );
         } else if (e.kind == "not-found") {
-            imports.push("import {" + e.modulePath + ".NotFound as " + local + "};");
-            vals.push("val __onze_" + local + " = jhNotFound(" + quote(seg) + ", { -> " + local + "() });");
-        };
-    };
+            imports.push(
+                "import {" + e.modulePath + ".NotFound as " + local + "};",
+            );
+            vals.push(
+                "val __onze_"
+                    + local
+                    + " = jhNotFound("
+                    + quote(seg)
+                    + ", { -> "
+                    + local
+                    + "() });",
+            );
+        }
+    }
     val count = decorated + vals.length;
-    val head = [banner(), "", "import {jhLoading, jhError, jhNotFound, Element, ErrorInfo} from \"jhonstart\";"];
-    val tail = ["", "pub fn routeModules() -> i32 {", "    return " + count.toString() + ";", "}"];
-    return head.append(sortedText(imports)).append([""]).append(sortedText(vals)).append(tail).join("\n") + "\n";
+    val head = [
+        banner(),
+        "",
+        "import {jhLoading, jhError, jhNotFound, Element, ErrorInfo} from \"jhonstart\";",
+    ];
+    val tail = [
+        "",
+        "pub fn routeModules() -> i32 {",
+        "    return " + count.toString() + ";",
+        "}",
+    ];
+    return head
+        .append(sortedText(imports))
+        .append([""])
+        .append(sortedText(vals))
+        .append(tail)
+        .join("\n")
+        + "\n";
 }
 
 // The staged package's manifest: the project's own, `src` pointed at the
@@ -188,7 +280,13 @@ pub fn routesModule(appDir: string, entries: Array<RouteEntry>, staged: Array<#(
 // project's `root` (the staged package may sit anywhere — `<root>/<outDir>/`,
 // or an `outDir` outside the project), plus `extraDeps` as `#(name, absolute
 // directory or git URL)`.
-pub fn stagedManifest(manifest: string, files: string[], root: string, workspace: Array<#(string, string)>, extraDeps: Array<#(string, string)>) -> @Result<string, string> {
+pub fn stagedManifest(
+    manifest: string,
+    files: string[],
+    root: string,
+    workspace: Array<#(string, string)>,
+    extraDeps: Array<#(string, string)>,
+) -> @Result<string, string> {
     val doc = try decode(manifest);
     val members = case doc {
         Obj(members: ms) -> ms;
@@ -196,32 +294,60 @@ pub fn stagedManifest(manifest: string, files: string[], root: string, workspace
     };
     var fields: string[] = [];
     for (members) { m ->
-        if (m._0 == "src") {
-            fields.push(quote("src") + ": " + quote("src/"));
-        } else if (m._0 == "files") {
-            fields.push(quote("files") + ": [" + files.map({ f -> quote(f) }).join(", ") + "]");
-        } else if (m._0 == "entry") {
-            fields.push(quote("entry") + ": " + quote("root.bp"));
-        } else if (m._0 == "dependencies") {
-            fields.push(quote("dependencies") + ": " + rerootDeps(m._1, root, workspace, extraDeps));
-        } else if (m._0 != "alias") {
+        if (m._0 == "src")
+            fields.push(quote("src") + ": " + quote("src/"))
+        else if (m._0 == "files")
+            fields.push(
+                quote("files")
+                    + ": ["
+                    + files.map({ f -> quote(f) }).join(", ")
+                    + "]",
+            )
+        else if (m._0 == "entry")
+            fields.push(quote("entry") + ": " + quote("root.bp"))
+        else if (m._0 == "dependencies")
+            fields.push(
+                quote("dependencies")
+                    + ": "
+                    + rerootDeps(m._1, root, workspace, extraDeps),
+            )
+        else if (m._0 != "alias")
             fields.push(quote(m._0) + ": " + jsonText(m._1));
-        };
-    };
+    }
     val hasFiles = members.any({ m -> m._0 == "files" });
-    if (hasFiles == false) fields.push(quote("files") + ": [" + files.map({ f -> quote(f) }).join(", ") + "]");
+    if (hasFiles == false)
+        fields.push(
+            quote("files")
+                + ": ["
+                + files.map({ f -> quote(f) }).join(", ")
+                + "]",
+        );
     val hasDeps = members.any({ m -> m._0 == "dependencies" });
-    if (hasDeps == false && extraDeps.length > 0) fields.push(quote("dependencies") + ": " + rerootDeps(Json.Obj(members: []), root, workspace, extraDeps));
+    if (hasDeps == false && extraDeps.length > 0)
+        fields.push(
+            quote("dependencies")
+                + ": "
+                + rerootDeps(Json.Obj(members: []), root, workspace, extraDeps),
+        );
     return "{\n  " + fields.join(",\n  ") + "\n}\n";
 }
 
-fn rerootDeps(v: Json, root: string, workspace: Array<#(string, string)>, extraDeps: Array<#(string, string)>) -> string {
+fn rerootDeps(
+    v: Json,
+    root: string,
+    workspace: Array<#(string, string)>,
+    extraDeps: Array<#(string, string)>,
+) -> string {
     val deps = case v {
         Obj(members: ms) -> ms;
         _ -> [];
     };
-    val own = deps.map({ m -> quote(m._0) + ": " + rerootDep(m._0, m._1, root, workspace) });
-    val extra = extraDeps.filter({ d -> deps.any({ m -> m._0 == d._0 }) == false }).map({ d -> quote(d._0) + ": " + extraDep(d._1) });
+    val own = deps.map(
+        { m -> quote(m._0) + ": " + rerootDep(m._0, m._1, root, workspace) },
+    );
+    val extra = extraDeps
+        .filter({ d -> deps.any({ m -> m._0 == d._0 }) == false })
+        .map({ d -> quote(d._0) + ": " + extraDep(d._1) });
     return "{ " + own.append(extra).join(", ") + " }";
 }
 
@@ -229,13 +355,19 @@ fn rerootDeps(v: Json, root: string, workspace: Array<#(string, string)>, extraD
 // resolved by name through the library roots, as any git dependency —, else a
 // directory, `{ "path": … }`.
 fn extraDep(source: string) -> string {
-    if (source.startsWith("https://")) return "{ \"git\": " + quote(source) + ", \"branch\": \"feat\" }";
+    if (source.startsWith("https://"))
+        return "{ \"git\": " + quote(source) + ", \"branch\": \"feat\" }";
     return "{ \"path\": " + quote(source) + " }";
 }
 
 // A `{ "workspace": true }` dependency becomes a `path` to the member the
 // enclosing workspace names — the staged package is no workspace member.
-fn rerootDep(name: string, v: Json, root: string, workspace: Array<#(string, string)>) -> string {
+fn rerootDep(
+    name: string,
+    v: Json,
+    root: string,
+    workspace: Array<#(string, string)>,
+) -> string {
     val members = case v {
         Obj(members: ms) -> ms;
         _ -> [];
@@ -248,16 +380,22 @@ fn rerootDep(name: string, v: Json, root: string, workspace: Array<#(string, str
     }
     var fields: string[] = [];
     for (members) { m ->
-        val value = if (m._0 == "path") { quote(reroot(textOf(m._1), root)) } else { jsonText(m._1) };
+        val value = if (m._0 == "path")
+            quote(reroot(textOf(m._1), root))
+        else
+            jsonText(m._1);
         fields.push(quote(m._0) + ": " + value);
-    };
+    }
     return "{ " + fields.join(", ") + " }";
 }
 
 // A dependency path against the project root; an absolute one, or any when
 // no root is given, as written.
 fn reroot(p: string, root: string) -> string {
-    return if (p.startsWith("/") || root == "") p else path.normalize(path.join([root, p]));
+    return if (p.startsWith("/") || root == "")
+        p
+    else
+        path.normalize(path.join([root, p]));
 }
 
 fn textOf(v: Json) -> string {
@@ -274,7 +412,9 @@ fn jsonText(v: Json) -> string {
         Num(value: n) -> n.toString();
         Str(value: s) -> quote(s);
         Arr(items: xs) -> "[" + xs.map({ x -> jsonText(x) }).join(", ") + "]";
-        Obj(members: ms) -> "{ " + ms.map({ m -> quote(m._0) + ": " + jsonText(m._1) }).join(", ") + " }";
+        Obj(members: ms) -> "{ "
+            + ms.map({ m -> quote(m._0) + ": " + jsonText(m._1) }).join(", ")
+            + " }";
     };
 }
 
@@ -288,12 +428,12 @@ pub fn sortedText(xs: string[]) -> string[] {
             if (before) {
                 next.push(x);
                 placed = true;
-            };
+            }
             next.push(y);
-        };
+        }
         if (placed == false) next.push(x);
         out = next;
-    };
+    }
     return out;
 }
 
@@ -301,39 +441,90 @@ pub fn sortedText(xs: string[]) -> string[] {
 // its src, text)`), staged and alias-rewritten, the generated `mod.bp`s, the
 // routes module and the root. `appRel` is the app directory relative to the
 // project's src (`app` for `src/app`). Answers `#(path under <outDir>/, text)`.
-pub fn stage(aliases: AliasMap, appRel: string, appDir: string, sources: Array<#(string, string)>, entries: Array<RouteEntry>, manifest: string) -> @Result<Array<#(string, string)>, string> {
-    return try stageAt(aliases, appRel, appDir, sources, entries, manifest, "", [], [], []);
+pub fn stage(
+    aliases: AliasMap,
+    appRel: string,
+    appDir: string,
+    sources: Array<#(string, string)>,
+    entries: Array<RouteEntry>,
+    manifest: string,
+) -> @Result<Array<#(string, string)>, string> {
+    return try stageAt(
+        aliases,
+        appRel,
+        appDir,
+        sources,
+        entries,
+        manifest,
+        "",
+        [],
+        [],
+        [],
+    );
 }
 
 // `stage` for the project at `root` (its relative dependency paths made
 // absolute against it), with `extraMods` declared by the root beside the app
 // (a generated entry, the style modules, the server's main) and `extraDeps`
 // added to the manifest.
-pub fn stageAt(aliases: AliasMap, appRel: string, appDir: string, sources: Array<#(string, string)>, entries: Array<RouteEntry>, manifest: string, root: string, extraMods: string[], workspace: Array<#(string, string)>, extraDeps: Array<#(string, string)>) -> @Result<Array<#(string, string)>, string> {
+pub fn stageAt(
+    aliases: AliasMap,
+    appRel: string,
+    appDir: string,
+    sources: Array<#(string, string)>,
+    entries: Array<RouteEntry>,
+    manifest: string,
+    root: string,
+    extraMods: string[],
+    workspace: Array<#(string, string)>,
+    extraDeps: Array<#(string, string)>,
+) -> @Result<Array<#(string, string)>, string> {
     var staged: Array<#(string, string)> = [];
     var rootText = "";
     for (sources) { s ->
-        val authoredAppMod = s._0.startsWith(appRel + "/") && s._0.endsWith("mod.bp") && (s._0 == appRel + "/mod.bp" || s._0.endsWith("/mod.bp"));
-        if (s._0 == "root.bp") {
-            rootText = s._1;
-        } else if (authoredAppMod) {
-            rootText = rootText;
-        } else {
+        val authoredAppMod = s._0.startsWith(appRel + "/")
+            && s._0.endsWith("mod.bp")
+            && (s._0 == appRel + "/mod.bp" || s._0.endsWith("/mod.bp"));
+        if (s._0 == "root.bp")
+            rootText = s._1
+        else if (authoredAppMod)
+            rootText = rootText
+        else
             staged.push(#(stagedPath(s._0), rewriteImports(aliases, s._1)));
-        };
-    };
-    val stagedApp = stagedPath(appRel + "/x.bp").split("/").take(appRel.split("/").length).join("/");
+    }
+    val stagedApp = stagedPath(appRel + "/x.bp")
+        .split("/")
+        .take(appRel.split("/").length)
+        .join("/");
     val mods = modFiles(stagedApp, staged.map({ f -> f._0 }));
-    val all = staged.append(mods).append([#("onze_routes.bp", routesModule(appDir, entries, staged))]);
+    val all = staged
+        .append(mods)
+        .append([#("onze_routes.bp", routesModule(appDir, entries, staged))]);
     val appTop = stagedApp.split("/").at(0) ?? "app";
-    val declaresApp = rootText.split("\n").any({ l -> l.trim() == "pub mod " + appTop + ";" });
+    val declaresApp = rootText
+        .split("\n")
+        .any({ l -> l.trim() == "pub mod " + appTop + ";" });
     val appLine = if (declaresApp) "" else "pub mod " + appTop + ";\n";
     val extra = extraMods.map({ m -> "pub mod " + m + ";\n" }).join("");
-    val rootModule = rootText.trimEnd() + "\n\n" + banner() + "\n" + appLine + "pub mod onze_routes;\n" + extra;
+    val rootModule = rootText.trimEnd()
+        + "\n\n"
+        + banner()
+        + "\n"
+        + appLine
+        + "pub mod onze_routes;\n"
+        + extra;
     val withRoot = all.append([#("root.bp", rootModule)]);
     val names = sortedText(withRoot.map({ f -> f._0 }));
-    val manifestText = try stagedManifest(manifest, names, root, workspace, extraDeps);
-    var out: Array<#(string, string)> = withRoot.map({ f -> #("src/" + f._0, f._1) });
+    val manifestText = try stagedManifest(
+        manifest,
+        names,
+        root,
+        workspace,
+        extraDeps,
+    );
+    var out: Array<#(string, string)> = withRoot.map(
+        { f -> #("src/" + f._0, f._1) },
+    );
     out.push(#("botopink.json", manifestText));
     return out;
 }
