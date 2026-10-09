@@ -6,9 +6,12 @@
 //// jhonstart's `Element` (`toElement`), with GitHub's heading ids and smart
 //// punctuation. `md_text` (code points, character classes, escaping, URL
 //// normalisation, entity decoding) and `md_entities` (the HTML5 named
-//// references) are the renderer's own and private. Frontmatter, collections
-//// and feeds arrive with the front's later steps.
+//// references) are the renderer's own and private. `collections`: content
+//// collections — loaders, typed entries, the sync and its store. `feeds`: an
+//// RSS 2.0 document. Frontmatter arrives with the front's step 3.
 
 pub mod markdown;
+pub mod collections;
+pub mod feeds;
 mod md_text;
 mod md_entities;

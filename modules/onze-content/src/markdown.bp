@@ -2666,6 +2666,12 @@ fn isEmailLocalGfm(c: i32) -> bool {
 
 // ── heading ids ─────────────────────────────────────────────────────────────
 
+// GitHub's slug of `title` — the rule heading ids follow, and the one a
+// collection entry's id is made with (`collections`).
+pub fn slug(title: string) -> string {
+    return slugOf(title);
+}
+
 // GitHub's slug: lower case, spaces to `-`, punctuation and symbols other
 // than `-` and `_` dropped.
 fn slugOf(title: string) -> string {

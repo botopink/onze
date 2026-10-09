@@ -76,9 +76,11 @@ onze/
 │   │                    parses the sidecar text itself, so no onze-assets edge)
 │   ├── onze-content/  ← front 121 — both rows (see its AGENTS.md): markdown.bp
 │   │                    (CommonMark 0.31.2 + GFM to MdNode, toHtml, toElement,
-│   │                    headings), md_text.bp, md_entities.bp; frontmatter,
-│   │                    collections and feeds arrive with its later steps —
-│   │                    depends on jhonstart; nothing imports it yet
+│   │                    headings), md_text.bp, md_entities.bp, collections.bp
+│   │                    (loaders, typed entries, the sync and its store),
+│   │                    feeds.bp (RSS 2.0); frontmatter arrives with step 3 —
+│   │                    depends on jhonstart (and the bundled validation);
+│   │                    nothing imports it yet
 │   └── onze-release/  ← front 71: spec.bp (ReleaseSpec, the build id), otp.bp (.rel,
 │                        sys.config, vm.args, bin/onze, systools), docker.bp, package.bp
 │                        (manifest completeness, the secret scan), lifecycle.bp (readiness,
