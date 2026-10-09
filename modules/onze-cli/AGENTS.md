@@ -34,4 +34,5 @@ to the same id into the run's scratch directory, a refusal failing a build befor
 compiles, the contract-4 fixture's class out of the styleMap probe, a CSS module's accessors
 compiling), `start_test` (the port's precedence, the refusal of an unbuilt project, `onze build`
 then the server over a real socket — the scaffold's `/`, the blog's `/blog/hello-world` and
-`/about`). Every file a test writes is under `BOTOPINK_TEST_TMPDIR`.
+`/about` — on a port the OS hands out (`freePort`: the gate runs the commonJS and erlang cells
+side by side, so no port is written into the suite)). Every file a test writes is under `BOTOPINK_TEST_TMPDIR`.
