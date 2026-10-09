@@ -1,7 +1,7 @@
 //// onze-cli — `scan` (front 50 step 3): the `app/` walk.
 ////
 //// Every `.bp` file under `<root>/<appDir>` named after a routing
-//// convention becomes a `RouteEntry`: its URL pattern (the bundled
+//// convention becomes a `RouteEntry`: its URL pattern (the shared
 //// `routing`'s `patternOf` — groups and slots contribute no segment, the
 //// bracket spelling kept), its kind, the path the developer wrote, the module
 //// the compiler sees after staging, and the decorator argument the file

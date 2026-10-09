@@ -6,7 +6,7 @@
 //// global, no `__`-prefixed name and no matcher of its own: the island
 //// marker is jhonstart front 29's (`islandAttrOf`), the globals are
 //// jhonstart's registry (`globals.payload` / `.fill` / `.signal` /
-//// `.starters`), the router matches with the bundled `routing` itself, and
+//// `.starters`), the router matches with the shared `routing` itself, and
 //// nothing of rakun is imported. In order, the generated `main()`:
 ////
 ////   1. sets the browser's validation message source (`setMessageSource`),

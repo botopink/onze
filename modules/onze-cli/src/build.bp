@@ -223,23 +223,6 @@ pub fn buildProject(p: Project, bin: string) -> @Result<BuildResult, string> {
         ),
     );
     val clientDir = path.join([outDir, "client"]);
-    val linkDir = try memberBeside(
-        manifest,
-        p.root,
-        workspace,
-        "jhonstart",
-        "jhonstart-link",
-    );
-    val formsDir = try memberBeside(
-        manifest,
-        p.root,
-        workspace,
-        "jhonstart",
-        "jhonstart-forms",
-    );
-    // the generated entry imports `validation` (its message source): a
-    // library of its own since decision 326, declared like any dependency.
-    val validationGit = "https://github.com/botopink/validation.git";
     val clientFiles = try stageAt(
         p.aliases,
         appRel,
@@ -254,10 +237,34 @@ pub fn buildProject(p: Project, bin: string) -> @Result<BuildResult, string> {
         p.root,
         extraMods.append(probeMods).append(["onze_entry"]),
         workspace,
+        // the extra dependencies, each a `#(name, source)` built in place: a
+        // tuple built from variables takes their names as labels (decision 8
+        // §6 T1), and the list's elements would disagree on them
         [
-            #("jhonstart-link", linkDir),
-            #("jhonstart-forms", formsDir),
-            #("validation", validationGit),
+            #(
+                "jhonstart-link",
+                try memberBeside(
+                    manifest,
+                    p.root,
+                    workspace,
+                    "jhonstart",
+                    "jhonstart-link",
+                ),
+            ),
+            #(
+                "jhonstart-forms",
+                try memberBeside(
+                    manifest,
+                    p.root,
+                    workspace,
+                    "jhonstart",
+                    "jhonstart-forms",
+                ),
+            ),
+            // the generated entry imports `validation` (its message source):
+            // a library of its own since decision 326, declared like any
+            // dependency, by its git source
+            #("validation", "https://github.com/botopink/validation.git"),
         ],
     );
     try writeAll(

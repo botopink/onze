@@ -71,7 +71,7 @@ fn joinId(dir: string, name: string) -> string {
 }
 
 // The app modules one import (or `mod` line) of `origin` reaches. A spec that
-// names no module of the app — `std`, `jhonstart`, a bundled library — is
+// names no module of the app — `std`, `jhonstart`, a shared library — is
 // not an app edge.
 pub fn edgesOf(
     modules: Array<AppModule>,
