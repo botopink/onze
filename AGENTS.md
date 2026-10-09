@@ -187,8 +187,8 @@ The same cells, discovered by the runner from the workspace root, are CI's:
 `cd $(mktemp -d) && BOTOPINK_LIB_ROOTS=<this repository> botopink-lib-test --bin "$BOTOPINK_BIN"
 --target <t> --strict`, on `{ubuntu-24.04, macos-14} × {commonJS, erlang}` — every row hard, no
 windows row (gate-f: botopink-lang has none; it returns with the compiler's), `ubuntu-24.04`
-because the compiler links against a pinned glibc 2.38 and imports `arc4random_buf`
-(GLIBC_2.36), which ubuntu-22.04's glibc 2.35 cannot load. OTP 28 and Node 20 are installed on
+(the compiler links against a pinned glibc 2.35 — decision 219, ubuntu-22.04's — so it starts
+on either runner; the 22.04 floor is the compiler's own workflow's). OTP 28 and Node 20 are installed on
 every row (OTP 28 pinned on both runners — the release the root `botopink.json`'s `"otp"` names (`"28"`), read by a step before the installs (decision 228; the compiler refuses any other `erl` on PATH) — `erlef/setup-beam` on linux, `brew install erlang@<release> && brew link --force erlang@<release>` with its `bin` on `$GITHUB_PATH` on macos (decision 227; Homebrew's plain `erlang` is the latest OTP), and a step after both fails the job unless `erl` reports that release; `zig build install` runs `erlc`; the cli suites drive `node`); jhonstart, emilia and
 rakun are checked out under `botopink-lang/repository/` as the `path` dependencies the manifests
 declare — dependencies, never rows.
