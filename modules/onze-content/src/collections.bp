@@ -1,16 +1,17 @@
 //// onze-content/collections — content collections (front 121, steps 4–5).
 ////
-//// A collection is a value: a name, a loader and the schema its entries'
-//// data decode with.
+//// A collection is a value: a name, a loader and the parse its entries' data
+//// decode with — a `#[validated]` type's `parse` (validation, decisions 306,
+//// 327: the type is the only schema).
 ////
 ////     pub fn authors() -> Collection<Author> {
-////         return defineCollection("authors", file("content/authors.json"), schemaOfAuthor());
+////         return defineCollection("authors", file("content/authors.json"), { d -> Author.parse(d) });
 ////     }
 ////
 //// A loader is `fn() -> @Task<@Result<Array<RawEntry>, string>>` — `glob`
 //// and `file` build one, an application may write its own. A `RawEntry` is
 //// what a loader read: an id, the entry's data as a `Json` document, a body
-//// and the file it came from. Nothing is typed until the schema decodes the
+//// and the file it came from. Nothing is typed until the parse decodes the
 //// data.
 ////
 //// TWO TIMES. At build, `writeStore(collections, outDir)` — what `onze sync`
@@ -33,7 +34,7 @@
 
 import {markdown.parse, markdown.toElement, markdown.headings, markdown.slug, markdown.Heading};
 import {Element} from "jhonstart";
-import {schemas, schemas.Schema, report.ValidationReport, report.Violation} from "validation";
+import {report.ValidationReport, report.Violation} from "validation";
 import {json, json.Json, io.fs, io.env, path} from "std";
 
 // What a loader read: the entry's id, its data, its body (Markdown; `""` for a
@@ -74,7 +75,7 @@ pub type Rendered(
 pub type Collection<T>(
     name: string,
     loader: Loader,
-    schema: Schema<T>,
+    parse: fn(data: Json) -> @Result<T, ValidationReport>,
     references: Array<Reference>,
 ) {
     // LANGUAGE GAP: A field marker cannot be read by the library that takes the type — `#[reference("authors")] author: string` is the form; the collection names the field until step 10's type decorator reads its fields' markers.
@@ -86,7 +87,7 @@ pub type Collection<T>(
         return Collection(
             name: self.name,
             loader: self.loader,
-            schema: self.schema,
+            parse: self.parse,
             references: self.references.append(
                 [Reference(field: field, collection: collection)],
             ),
@@ -96,17 +97,17 @@ pub type Collection<T>(
     // The collection with its entry type erased — what a list of collections
     // of different types holds (`writeStore`, `syncProblems`).
     pub fn erased(self: Self<T>) -> AnyCollection {
-        val schema = self.schema;
+        val parse = self.parse;
         return AnyCollection(
             name: self.name,
             loader: self.loader,
-            check: { data -> violationsFor(schema, data) },
+            check: { data -> violationsFor(parse, data) },
             references: self.references,
         );
     }
 }
 
-// A collection whose entry type is erased: its schema survives as `check`,
+// A collection whose entry type is erased: its parse survives as `check`,
 // the violations of one entry's data.
 pub type AnyCollection(
     name: string,
@@ -115,20 +116,27 @@ pub type AnyCollection(
     references: Array<Reference>,
 )
 
-fn violationsFor<T>(schema: Schema<T>, data: Json) -> Array<Violation> {
-    return schemas.violationsOf(schema.parse(data));
+fn violationsFor<T>(
+    parse: fn(data: Json) -> @Result<T, ValidationReport>,
+    data: Json,
+) -> Array<Violation> {
+    val none: Array<Violation> = [];
+    return case parse(data) {
+        Ok(_) -> none;
+        Error(report) -> report.violations;
+    };
 }
 
 pub fn defineCollection<T>(
     name: string,
     loader: Loader,
-    schema: Schema<T>,
+    parse: fn(data: Json) -> @Result<T, ValidationReport>,
 ) -> Collection<T> {
     val none: Array<Reference> = [];
     return Collection(
         name: name,
         loader: loader,
-        schema: schema,
+        parse: parse,
         references: none,
     );
 }
@@ -374,7 +382,7 @@ fn rawEntriesOf(
 // ── reading at run time ─────────────────────────────────────────────────────
 
 // Every entry of `c`, in the loader's order, its data decoded by the
-// collection's schema. A collection that cannot be read or an entry that does
+// collection's parse. A collection that cannot be read or an entry that does
 // not decode panics, naming it.
 pub fn getCollection<T>(c: Collection<T>) -> @Task<Array<Entry<T>>> {
     val raw = await rawEntriesOf(c.name, c.loader);
@@ -390,7 +398,8 @@ fn failRead(name: string, problem: string) -> Array<RawEntry> {
 }
 
 fn typedEntry<T>(c: Collection<T>, e: RawEntry) -> Entry<T> {
-    val decoded = c.schema.parse(e.data);
+    val parse = c.parse;
+    val decoded = parse(e.data);
     return case decoded {
         Ok(data) -> Entry(
             id: e.id,

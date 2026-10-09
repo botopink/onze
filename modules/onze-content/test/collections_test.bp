@@ -6,13 +6,12 @@
 
 import {collections, collections.Collection, collections.AnyCollection, collections.Entry, collections.RawEntry};
 import {Element, renderNode} from "jhonstart";
-import {decorators.schema, decorators.validated, decorators.notBlank} from "validation";
+import {decorators.validated, decorators.notBlank} from "validation";
 import {constraints.vNotBlank, table.constraintTableJson} from "validation";
-import {schemas, schemas.Schema, report.ValidationReport, report.Violation} from "validation";
+import {derived, report.ValidationReport, report.Violation} from "validation";
 import {messages.setMessageSource, messages.builtInOnly} from "validation";
 import {json.Json, io.fs, io.env, path} from "std";
 
-#[schema]
 #[validated]
 pub type BlogPost(
     #[notBlank] title: string,
@@ -21,13 +20,13 @@ pub type BlogPost(
     author: string,
 )
 
-#[schema]
+#[validated]
 pub type Author(
     name: string,
     portfolio: string,
 )
 
-#[schema]
+#[validated]
 pub type Note(
     tags: Array<string>,
 )
@@ -91,7 +90,7 @@ fn blog(root: string) -> Collection<BlogPost> {
         .defineCollection(
             "blog",
             collections.glob(path.join([root, "content/blog"]), "**/*.json"),
-            schemaOfBlogPost(),
+            { d -> BlogPost.parse(d) },
         )
         .reference("author", "authors");
 }
@@ -100,7 +99,7 @@ fn authors(root: string) -> Collection<Author> {
     return collections.defineCollection(
         "authors",
         collections.file(path.join([root, "content/authors.json"])),
-        schemaOfAuthor(),
+        { d -> Author.parse(d) },
     );
 }
 
@@ -150,13 +149,13 @@ test "collections: a slug member overrides the id" {
     val c = collections.defineCollection(
         "blog",
         collections.glob(path.join([root, "content/blog"]), "*.json"),
-        schemaOfSlugged(),
+        { d -> Slugged.parse(d) },
     );
     val found = await collections.getCollection(c);
     assert ids(found) == "first";
 }
 
-#[schema]
+#[validated]
 pub type Slugged(
     slug: string,
     title: string,
@@ -169,7 +168,7 @@ test "collections: a path that slugs to nothing is refused" {
     val c = collections.defineCollection(
         "blog",
         collections.glob(path.join([root, "content/blog"]), "*.json"),
-        schemaOfBlogPost(),
+        { d -> BlogPost.parse(d) },
     );
     val problems = await collections.syncProblems([c.erased()]);
     assert relative(root, problems)
@@ -260,7 +259,7 @@ test "collections: a Markdown entry waits for the frontmatter reader" {
     val c = collections.defineCollection(
         "blog",
         collections.glob(path.join([root, "content/blog"]), "*.md"),
-        schemaOfBlogPost(),
+        { d -> BlogPost.parse(d) },
     );
     val problems = await collections.syncProblems([c.erased()]);
     assert relative(root, problems)
@@ -295,12 +294,12 @@ test "collections: file refuses a missing id, a repeated id and a document that 
     val a = collections.defineCollection(
         "a",
         collections.file(path.join([root, "a.json"])),
-        schemaOfAuthor(),
+        { d -> Author.parse(d) },
     );
     val b = collections.defineCollection(
         "b",
         collections.file(path.join([root, "b.json"])),
-        schemaOfAuthor(),
+        { d -> Author.parse(d) },
     );
     val problems = await collections.syncProblems([a.erased(), b.erased()]);
     assert relative(root, problems)
@@ -329,7 +328,11 @@ fn failing() -> @Task<@Result<Array<RawEntry>, string>> {
 
 test "collections: a custom loader is a function answering raw entries" {
     collections.useFiles();
-    val c = collections.defineCollection("notes", notes, schemaOfNote());
+    val c = collections.defineCollection(
+        "notes",
+        notes,
+        { d -> Note.parse(d) },
+    );
     val found = await collections.getCollection(c);
     assert ids(found) == "one";
     assert (found.at(0) ?? Entry(
@@ -340,14 +343,22 @@ test "collections: a custom loader is a function answering raw entries" {
         filePath: "",
     )).data.tags.join(",")
         == "a";
-    val down = collections.defineCollection("down", failing, schemaOfNote());
+    val down = collections.defineCollection(
+        "down",
+        failing,
+        { d -> Note.parse(d) },
+    );
     val problems = await collections.syncProblems([down.erased()]);
     assert problems.join("\n") == "the notes service is down";
 }
 
 test "collections: render answers the element tree and the headings" {
     collections.useFiles();
-    val c = collections.defineCollection("notes", notes, schemaOfNote());
+    val c = collections.defineCollection(
+        "notes",
+        notes,
+        { d -> Note.parse(d) },
+    );
     val hit = await collections.getEntry(c, "one");
     val entry = hit ?? Entry(
         id: "",
@@ -414,12 +425,12 @@ test "collections: a reference to a collection that is not synced is a problem" 
 test "collections: a list of references checks every id" {
     collections.useFiles();
     val c = collections
-        .defineCollection("notes", notes, schemaOfNote())
+        .defineCollection("notes", notes, { d -> Note.parse(d) })
         .reference("tags", "tags");
     val tags = collections.defineCollection(
         "tags",
         tagEntries,
-        schemaOfAuthor(),
+        { d -> Author.parse(d) },
     );
     val problems = await collections.syncProblems([c.erased(), tags.erased()]);
     assert problems.join("\n")
@@ -462,7 +473,7 @@ test "collections: the store is read at run time without the content files" {
     assert fs.exists(collections.storeFile(out, "blog"));
 }
 
-#[schema]
+#[validated]
 pub type Score(
     points: i32,
     ratio: f64,
@@ -489,7 +500,11 @@ fn scores() -> @Task<@Result<Array<RawEntry>, string>> {
 test "collections: the store keeps numbers and text exactly" {
     val root = tree("store-values", []);
     val out = path.join([root, "out"]);
-    val c = collections.defineCollection("scores", scores, schemaOfScore());
+    val c = collections.defineCollection(
+        "scores",
+        scores,
+        { d -> Score.parse(d) },
+    );
     val written = await collections.writeStore([c.erased()], out);
     assert written.isOk();
     collections.useStore(out);
