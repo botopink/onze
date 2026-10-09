@@ -108,7 +108,8 @@ onze/
 └── .github/workflows/ ← test.yml ({ubuntu-24.04, macos-14} × {commonJS, erlang}, every row
                          hard, OTP 28 and Node 20 on every row; one `botopink-lib-test
                          --strict` per row, the members and examples discovered from the root
-                         via BOTOPINK_LIB_ROOTS; the sibling libraries checked out as
+                         via BOTOPINK_LIB_ROOTS; the sibling libraries and the shared
+                         packages actions, routing, validation checked out as
                          dependencies; then the hook's other stages on the row's target),
                          tag.yml
 ```
@@ -200,7 +201,9 @@ windows row (gate-f: botopink-lang has none; it returns with the compiler's), `u
 on either runner; the 22.04 floor is the compiler's own workflow's). OTP 28 and Node 20 are installed on
 every row (OTP 28 pinned on both runners — the release the root `botopink.json`'s `"otp"` names (`"28"`), read by a step before the installs (decision 228; the compiler refuses any other `erl` on PATH) — `erlef/setup-beam` on linux, `brew install erlang@<release> && brew link --force erlang@<release>` with its `bin` on `$GITHUB_PATH` on macos (decision 227; Homebrew's plain `erlang` is the latest OTP), and a step after both fails the job unless `erl` reports that release; `zig build install` runs `erlc`; the cli suites drive `node`); jhonstart, emilia and
 rakun are checked out under `botopink-lang/repository/` as the `path` dependencies the manifests
-declare — dependencies, never rows.
+declare, and `actions`, `routing` and `validation` (at `feat`) as the `git` dependencies they declare,
+transitively — onze's members, jhonstart's and rakun's, and `actions` itself declares `routing`;
+a `git` dependency resolves by name through that root (decision 326) — dependencies, never rows.
 
 A `targets` restriction is audited by building the member on the excluded target: `onze-server`'s
 commonJS build fails on rakun's host bindings, so its `["erlang"]` stands; `onze-cli` (erlang) and
