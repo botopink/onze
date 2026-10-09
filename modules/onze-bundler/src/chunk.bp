@@ -17,7 +17,8 @@
 //// the chunks that contain it.
 
 import {hash, path, io.fs} from "std";
-import {AliasMap, classifyAppFile} from "onze";
+import {AliasMap} from "onze";
+import {conventions.classify, segment.parsePath, segment.patternOf} from "routing";
 import {scan.ImportRef};
 import {graph.AppModule, graph.ClientGraph, graph.GraphNode, graph.rootsFrom, graph.graphOfRoots};
 import {manifest.ChunkRef, manifest.ClientBundleManifest, manifest.staticUrl, manifest.manifestVersion};
@@ -25,13 +26,6 @@ import {manifest.ChunkRef, manifest.ClientBundleManifest, manifest.staticUrl, ma
 pub type ChunkPlan(id: string, base: string, modules: Array<string>)
 
 // ── which client modules each route reaches ─────────────────────────────────
-
-// The route pattern of an app segment: route groups and slots contribute no
-// URL segment (`(marketing)/about` → `/about`).
-pub fn patternOfSegment(segment: string) -> string {
-    val kept = segment.split("/").filter({ s -> s != "" && (s.startsWith("(") && s.endsWith(")")) == false && s.startsWith("@") == false });
-    return "/" + kept.join("/");
-}
 
 fn isAncestorDir(dir: string, child: string) -> bool {
     return dir == "" || dir == child || child.startsWith(dir + "/");
@@ -43,33 +37,46 @@ fn renderKinds() -> string[] {
 
 // Every page route of the app with the render modules it runs — the page, and
 // each layout, template, loading, error and not-found file on its segment
-// path — in the order `appDir`'s files are listed.
-pub fn pageRoutes(modules: Array<AppModule>, appDir: string) -> Array<#(string, string[])> {
+// path — in the order `appDir`'s files are listed. A route's pattern is
+// `routing`'s (`patternOf(parsePath(seg))`: groups and slots contribute no URL
+// segment); a segment `routing` refuses halts with its refusal — `onze-cli`'s
+// scan has already refused it, naming the authored path.
+pub fn pageRoutes(
+    modules: Array<AppModule>,
+    appDir: string,
+) -> Array<#(string, string[])> {
     var out: Array<#(string, string[])> = [];
     for (modules) { m ->
-        val f = classifyAppFile(appDir, m.path);
+        val f = classify(appDir, m.path);
         val kind = f?.kind ?? "";
         if (kind == "page") {
             val seg = f?.segment ?? "";
             var ids: string[] = [];
             for (modules) { other ->
-                val g = classifyAppFile(appDir, other.path);
+                val g = classify(appDir, other.path);
                 val gk = g?.kind ?? "";
                 val gs = g?.segment ?? "";
-                val wraps = renderKinds().contains(gk) && isAncestorDir(gs, seg);
+                val wraps = renderKinds().contains(gk)
+                    && isAncestorDir(gs, seg);
                 if (wraps) ids.push(other.id);
-            };
+            }
             ids.push(m.id);
-            out.push(#(patternOfSegment(seg), ids));
-        };
-    };
+            out.push(#(patternOf(parsePath(seg)), ids));
+        }
+    }
     return out;
 }
 
 // For each page route, the client modules it reaches: the closure of the
 // roots its render modules reach on the server side.
-pub fn routeReach(modules: Array<AppModule>, aliases: AliasMap, appDir: string) -> Array<#(string, string[])> {
-    return pageRoutes(modules, appDir).map({ r -> #(r._0, graphOfRoots(modules, aliases, rootsFrom(modules, aliases, r._1)).nodes.map({ n -> n.moduleId })) });
+pub fn routeReach(
+    modules: Array<AppModule>,
+    aliases: AliasMap,
+    appDir: string,
+) -> Array<#(string, string[])> {
+    return pageRoutes(modules, appDir).map(
+        { r -> #(r._0, graphOfRoots(modules, aliases, rootsFrom(modules, aliases, r._1)).nodes.map({ n -> n.moduleId })) },
+    );
 }
 
 // ── the plan ────────────────────────────────────────────────────────────────
@@ -82,18 +89,35 @@ fn reachCount(reach: Array<#(string, string[])>, id: string) -> i32 {
 // `runtime` — the jhonstart client runtime every page loads), one
 // `route:<pattern>` chunk per route that reaches a module of its own, and the
 // entry. Modules keep the graph's order.
-pub fn planChunks(graph: ClientGraph, reach: Array<#(string, string[])>, runtime: string[], entryModule: string) -> Array<ChunkPlan> {
+pub fn planChunks(
+    graph: ClientGraph,
+    reach: Array<#(string, string[])>,
+    runtime: string[],
+    entryModule: string,
+) -> Array<ChunkPlan> {
     val ids = graph.nodes.map({ n -> n.moduleId });
-    val shared = ids.filter({ id -> reachCount(reach, id) >= 2 }).append(runtime);
-    var plans: Array<ChunkPlan> = [ChunkPlan(id: "shared", base: "shared", modules: shared)];
+    val shared = ids
+        .filter({ id -> reachCount(reach, id) >= 2 })
+        .append(runtime);
+    var plans: Array<ChunkPlan> = [
+        ChunkPlan(id: "shared", base: "shared", modules: shared),
+    ];
     var k = 0;
     for (reach) { r ->
-        val own = ids.filter({ id -> r._1.contains(id) && reachCount(reach, id) == 1 });
+        val own = ids.filter(
+            { id -> r._1.contains(id) && reachCount(reach, id) == 1 },
+        );
         if (own.length > 0) {
             k = k + 1;
-            plans.push(ChunkPlan(id: "route:" + r._0, base: "r" + k.toString(), modules: own));
-        };
-    };
+            plans.push(
+                ChunkPlan(
+                    id: "route:" + r._0,
+                    base: "r" + k.toString(),
+                    modules: own,
+                ),
+            );
+        }
+    }
     plans.push(ChunkPlan(id: "entry", base: "entry", modules: [entryModule]));
     return plans;
 }
@@ -137,14 +161,24 @@ pub fn prelude() -> string {
 
 // One chunk's text: the prelude, then one factory per module, in plan order.
 // `compiled` maps a module id to its compiled JavaScript.
-pub fn linkChunk(plan: ChunkPlan, compiled: Array<#(string, string)>) -> @Result<string, string> {
+pub fn linkChunk(
+    plan: ChunkPlan,
+    compiled: Array<#(string, string)>,
+) -> @Result<string, string> {
     var parts: string[] = [prelude()];
     for (plan.modules) { id ->
         val hit = compiled.filter({ c -> c._0 == id });
-        if (hit.length == 0) throw "chunk " + plan.id + ": module " + id + " was not compiled";
+        if (hit.length == 0)
+            throw "chunk " + plan.id + ": module " + id + " was not compiled";
         val js = (hit.at(0) ?? #("", ""))._1;
-        parts.push("(globalThis.__onze_factories = globalThis.__onze_factories || {})[\"" + compiledPathOf(id) + "\"] = function (module, exports, require) {\n" + js + "\n};");
-    };
+        parts.push(
+            "(globalThis.__onze_factories = globalThis.__onze_factories || {})[\""
+                + compiledPathOf(id)
+                + "\"] = function (module, exports, require) {\n"
+                + js
+                + "\n};",
+        );
+    }
     return parts.join("\n") + "\n";
 }
 
@@ -159,58 +193,100 @@ pub fn chunkFileName(plan: ChunkPlan, text: string) -> string {
 
 pub fn chunkRefOf(buildId: string, plan: ChunkPlan, text: string) -> ChunkRef {
     val file = chunkFileName(plan, text);
-    return ChunkRef(id: plan.id, url: staticUrl(buildId, file), hash: chunkHash(text), bytes: text.length());
+    return ChunkRef(
+        id: plan.id,
+        url: staticUrl(buildId, file),
+        hash: chunkHash(text),
+        bytes: text.length(),
+    );
 }
 
 // The manifest of a linked build: `linked` holds each plan's text, in plan
 // order; `reach` names the routes (a route with no chunk has no `R` line).
-pub fn manifestOf(buildId: string, plans: Array<ChunkPlan>, linked: Array<string>, reach: Array<#(string, string[])>, publicEnv: Array<#(string, string)>) -> ClientBundleManifest {
+pub fn manifestOf(
+    buildId: string,
+    plans: Array<ChunkPlan>,
+    linked: Array<string>,
+    reach: Array<#(string, string[])>,
+    publicEnv: Array<#(string, string)>,
+) -> ClientBundleManifest {
     var entry = ChunkRef(id: "", url: "", hash: "", bytes: 0);
     var shared: Array<ChunkRef> = [];
     var chunks: Array<ChunkRef> = [];
     var i = 0;
     for (plans) { p ->
         val made = chunkRefOf(buildId, p, linked.at(i) ?? "");
-        if (p.id == "entry") {
-            entry = made;
-        } else if (p.id == "shared") {
-            shared.push(made);
-        } else {
+        if (p.id == "entry")
+            entry = made
+        else if (p.id == "shared")
+            shared.push(made)
+        else
             chunks.push(made);
-        };
         i = i + 1;
-    };
-    val routes = reach.filter({ r -> plans.any({ p -> p.id == "route:" + r._0 }) }).map({ r -> #(r._0, "route:" + r._0) });
-    return ClientBundleManifest(version: manifestVersion, buildId: buildId, entry: entry, shared: shared, chunks: chunks, routes: routes, styles: [], publicEnv: publicEnv);
+    }
+    val routes = reach
+        .filter({ r -> plans.any({ p -> p.id == "route:" + r._0 }) })
+        .map({ r -> #(r._0, "route:" + r._0) });
+    return ClientBundleManifest(
+        version: manifestVersion,
+        buildId: buildId,
+        entry: entry,
+        shared: shared,
+        chunks: chunks,
+        routes: routes,
+        styles: [],
+        publicEnv: publicEnv,
+    );
 }
 
 // Writes one linked chunk under `<outDir>/static/<buildId>/`, reading each
 // module's compiled JavaScript from `compiledDir`.
-pub fn emitChunk(plan: ChunkPlan, compiledDir: string, outDir: string, buildId: string) -> @Result<ChunkRef, string> {
+pub fn emitChunk(
+    plan: ChunkPlan,
+    compiledDir: string,
+    outDir: string,
+    buildId: string,
+) -> @Result<ChunkRef, string> {
     var compiled: Array<#(string, string)> = [];
     for (plan.modules) { id ->
         val js = try fs.readText(path.join([compiledDir, compiledPathOf(id)]));
         compiled.push(#(id, js));
-    };
+    }
     val text = try linkChunk(plan, compiled);
     val dir = path.join([outDir, "static", buildId]);
-    val written = try fs.writeText(path.join([dir, chunkFileName(plan, text)]), text);
+    val written = try fs.writeText(
+        path.join([dir, chunkFileName(plan, text)]),
+        text,
+    );
     return chunkRefOf(buildId, plan, text);
 }
 
 // The plan as the `chunks` snapshots record it.
-pub fn describePlan(plans: Array<ChunkPlan>, linked: Array<string>, reach: Array<#(string, string[])>) -> string {
+pub fn describePlan(
+    plans: Array<ChunkPlan>,
+    linked: Array<string>,
+    reach: Array<#(string, string[])>,
+) -> string {
     var rows: string[] = [];
     var i = 0;
     for (plans) { p ->
-        rows.push(p.id.padEnd(20, " ") + " " + chunkFileName(p, linked.at(i) ?? "").padEnd(22, " ") + " " + p.modules.join(", "));
+        rows.push(
+            p.id.padEnd(20, " ")
+                + " "
+                + chunkFileName(p, linked.at(i) ?? "").padEnd(22, " ")
+                + " "
+                + p.modules.join(", "),
+        );
         i = i + 1;
-    };
+    }
     var routes: string[] = [];
     for (reach) { r ->
-        val target = if (plans.any({ p -> p.id == "route:" + r._0 })) { "route:" + r._0 } else { "(none)" };
+        val target = if (plans.any({ p -> p.id == "route:" + r._0 }))
+            "route:" + r._0
+        else
+            "(none)";
         routes.push(r._0 + " -> " + target);
-    };
+    }
     rows.push("routes: " + routes.join(" ; "));
     return rows.join("\n");
 }

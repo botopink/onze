@@ -56,7 +56,8 @@ onze/
 │   │                    `mod` line, per item naming an app module by its path inside the
 │   │                    braces — `lib.db.Post`, decision 206 — and per shorthand sibling),
 │   │                    refusal.bp (+ the styleMap probe and
-│   │                    `styleParity`), chunk.bp, entry.bp (starters through jhonstart's
+│   │                    `styleParity`), chunk.bp (a page's files and pattern read through
+│   │                    `routing`'s `conventions.classify` / `patternOf`), entry.bp (starters through jhonstart's
 │   │                    `registerStarter`, the payload `s` check; components imported by
 │   │                    their path inside the braces),
 │   │                    script.bp, rebuild.bp, hooks.bp (RenderHooks over the tags),
