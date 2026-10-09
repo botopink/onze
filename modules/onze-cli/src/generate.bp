@@ -288,10 +288,7 @@ pub fn stagedManifest(
     extraDeps: Array<#(string, string)>,
 ) -> @Result<string, string> {
     val doc = try decode(manifest);
-    val members = case doc {
-        Obj(members: ms) -> ms;
-        _ -> [];
-    };
+    val members = doc.members();
     var fields: string[] = [];
     for (members) { m ->
         if (m._0 == "src")
@@ -338,10 +335,7 @@ fn rerootDeps(
     workspace: Array<#(string, string)>,
     extraDeps: Array<#(string, string)>,
 ) -> string {
-    val deps = case v {
-        Obj(members: ms) -> ms;
-        _ -> [];
-    };
+    val deps = v.members();
     val own = deps.map(
         { m -> quote(m._0) + ": " + rerootDep(m._0, m._1, root, workspace) },
     );
@@ -368,10 +362,7 @@ fn rerootDep(
     root: string,
     workspace: Array<#(string, string)>,
 ) -> string {
-    val members = case v {
-        Obj(members: ms) -> ms;
-        _ -> [];
-    };
+    val members = v.members();
     val isWorkspace = members.any({ m -> m._0 == "workspace" });
     val hit = workspace.filter({ w -> w._0 == name });
     if (isWorkspace && hit.length > 0) {
@@ -381,7 +372,7 @@ fn rerootDep(
     var fields: string[] = [];
     for (members) { m ->
         val value = if (m._0 == "path")
-            quote(reroot(textOf(m._1), root))
+            quote(reroot(m._1.str(), root))
         else
             jsonText(m._1);
         fields.push(quote(m._0) + ": " + value);
@@ -396,13 +387,6 @@ fn reroot(p: string, root: string) -> string {
         p
     else
         path.normalize(path.join([root, p]));
-}
-
-fn textOf(v: Json) -> string {
-    return case v {
-        Str(value: s) -> s;
-        _ -> "";
-    };
 }
 
 fn jsonText(v: Json) -> string {

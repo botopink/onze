@@ -8,25 +8,9 @@ import {io.fs, io.env, io.process, path, json.Json, json.decode} from "std";
 import {OnzeConfig, defaultConfig, AliasMap, emptyAliases} from "onze";
 import {resolve.Project};
 
-fn membersOf(v: Json) -> Array<#(string, Json)> {
-    return case v {
-        Obj(members: ms) -> ms;
-        _ -> [];
-    };
-}
-
-fn textOf(v: Json) -> string {
-    return case v {
-        Str(value: s) -> s;
-        _ -> "";
-    };
-}
-
+// The member `key` of `doc`, `null` (the JSON value) when there is none.
 fn field(doc: Json, key: string) -> Json {
-    val hit = membersOf(doc).filter({ m -> m._0 == key });
-    if (hit.length == 0) return Json.Null;
-    val pair = hit.at(0) ?? #("", Json.Null);
-    return pair._1;
+    return doc.field(key) ?? Json.Null;
 }
 
 // The version a `botopink.json` names, `(not found)` when it cannot be read.
@@ -34,19 +18,24 @@ pub fn versionAt(manifestPath: string) -> string {
     val text = fs.readText(manifestPath).unwrapOr("");
     if (text == "") return "(not found)";
     val doc = decode(text).unwrapOr(Json.Null);
-    val v = textOf(field(doc, "version"));
+    val v = field(doc, "version").str();
     return if (v == "") "(no version)" else v;
 }
 
 // Every dependency of the project's manifest with its version.
 pub fn dependencyVersions(root: string) -> Array<#(string, string)> {
-    val doc = decode(fs.readText(path.join([root, "botopink.json"])).unwrapOr("{}")).unwrapOr(Json.Null);
+    val doc = decode(
+        fs.readText(path.join([root, "botopink.json"])).unwrapOr("{}"),
+    ).unwrapOr(Json.Null);
     var out: Array<#(string, string)> = [];
-    for (membersOf(field(doc, "dependencies"))) { d ->
-        val p = textOf(field(d._1, "path"));
-        val version = if (p == "") "(git — run bpmp install)" else versionAt(path.join([root, p, "botopink.json"]));
+    for (field(doc, "dependencies").members()) { d ->
+        val p = field(d._1, "path").str();
+        val version = if (p == "")
+            "(git — run bpmp install)"
+        else
+            versionAt(path.join([root, p, "botopink.json"]));
         out.push(#(d._0, version));
-    };
+    }
     return out;
 }
 
@@ -59,26 +48,56 @@ fn row(label: string, value: string) -> string {
 }
 
 // The info text: `tools` are `#(name, version)` rows printed first.
-pub fn infoText(tools: Array<#(string, string)>, project: ?Project, deps: Array<#(string, string)>, portFromEnv: string) -> string {
+pub fn infoText(
+    tools: Array<#(string, string)>,
+    project: ?Project,
+    deps: Array<#(string, string)>,
+    portFromEnv: string,
+) -> string {
     var rows: string[] = tools.map({ t -> row(t._0, t._1) });
     for (deps) { d ->
         rows.push(row(d._0, d._1));
-    };
-    if (project == null) {
-        rows.push(row("project", "(none)"));
-    } else {
+    }
+    if (project == null) rows.push(row("project", "(none)")) else {
         val p = project;
         val c = p.config;
         rows.push(row("project", c.name + "  (" + p.root + ")"));
         rows.push(row("appDir", c.appDir));
         rows.push(row("outDir", c.outDir));
-        rows.push(row("port", if (portFromEnv == "") c.port.toString() else portFromEnv + "  (PORT from the environment; onze.json says " + c.port.toString() + ")"));
-        rows.push(row("basePath", if (c.basePath == "") "(none)" else c.basePath));
-        rows.push(row("alias", if (p.aliases.entries.length == 0) "(none)" else p.aliases.entries.map({ e -> e._0 + " → " + e._1 }).join(", ")));
-    };
+        rows.push(
+            row(
+                "port",
+                if (portFromEnv == "")
+                    c.port.toString()
+                else
+                    portFromEnv
+                        + "  (PORT from the environment; onze.json says "
+                        + c.port.toString()
+                        + ")",
+            ),
+        );
+        rows.push(
+            row("basePath", if (c.basePath == "") "(none)" else c.basePath),
+        );
+        rows.push(
+            row(
+                "alias",
+                if (p.aliases.entries.length == 0)
+                    "(none)"
+                else
+                    p.aliases.entries
+                        .map({ e -> e._0 + " → " + e._1 })
+                        .join(", "),
+            ),
+        );
+    }
     return rows.join("\n");
 }
 
 pub fn tools(botopinkVersion: string) -> Array<#(string, string)> {
-    return [#("onze", "0.0.1"), #("botopink", botopinkVersion), #("OTP", otpRelease())];
+    return [
+        #("onze", "0.0.1"),
+        #("botopink", botopinkVersion),
+        #("OTP", otpRelease()),
+    ];
 }

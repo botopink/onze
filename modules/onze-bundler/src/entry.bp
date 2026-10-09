@@ -49,13 +49,11 @@ fn identPrefix(text: string) -> string {
     var out = "";
     var open = true;
     for (text.split("")) { c ->
-        val word = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_".contains(c);
-        if (open && word) {
-            out = out + c;
-        } else {
-            open = false;
-        };
-    };
+        val word = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_".contains(
+            c,
+        );
+        if (open && word) out = out + c else open = false;
+    }
     return out;
 }
 
@@ -65,14 +63,18 @@ fn fieldsOf(list: string) -> Array<#(string, string)> {
     for (list.split(",")) { part ->
         val p = part.trim();
         val colon = p.indexOf(":");
-        if (colon > 0) out.push(#(p.slice(0, colon).trim(), p.slice(colon + 1).trim()));
-    };
+        if (colon > 0)
+            out.push(#(p.slice(0, colon).trim(), p.slice(colon + 1).trim()));
+    }
     return out;
 }
 
 // The fields of `pub type <name>(…)` in `source`, the declaration possibly
 // spanning lines; `[]` when there is none.
-pub fn recordFieldsOf(source: string, name: string) -> Array<#(string, string)> {
+pub fn recordFieldsOf(
+    source: string,
+    name: string,
+) -> Array<#(string, string)> {
     val flat = source.split("\n").map({ l -> l.trim() }).join(" ");
     val head = "type " + name + "(";
     val at = flat.indexOf(head);
@@ -85,30 +87,55 @@ pub fn recordFieldsOf(source: string, name: string) -> Array<#(string, string)> 
 
 // The `#[client]` components of the client graph, each with its props record
 // when it takes one.
-pub fn clientComponents(graph: ClientGraph, modules: Array<AppModule>) -> Array<ClientComponent> {
+pub fn clientComponents(
+    graph: ClientGraph,
+    modules: Array<AppModule>,
+) -> Array<ClientComponent> {
     var out: Array<ClientComponent> = [];
     for (graph.nodes) { n ->
-        val m = modules.filter({ x -> x.id == n.moduleId }).at(0) ?? AppModule(id: "", path: "", source: "", refs: [], client: false);
+        val m = modules.filter({ x -> x.id == n.moduleId }).at(0) ?? AppModule(
+            id: "",
+            path: "",
+            source: "",
+            refs: [],
+            client: false,
+        );
         var armed = false;
         for (m.source.split("\n")) { raw ->
             val l = raw.trim();
-            if (l.startsWith("#[client]")) {
-                armed = true;
-            } else if (armed && l.startsWith("pub fn ")) {
+            if (l.startsWith("#[client]")) armed = true else if (armed
+                && l.startsWith("pub fn ")) {
                 val name = identPrefix(l.slice(7));
                 val params = l.slice(l.indexOf("(") + 1, l.indexOf(")"));
-                val typeName = if (params.contains(":")) params.slice(params.indexOf(":") + 1).trim() else "";
-                val home = if (typeName == "") #("", []) else propsRecordOf(modules, typeName);
-                out.push(ClientComponent(moduleId: m.id, name: name, propsType: typeName, propsModule: home._0, fields: home._1));
+                val typeName = if (params.contains(":"))
+                    params.slice(params.indexOf(":") + 1).trim()
+                else
+                    "";
+                val home = if (typeName == "")
+                    #("", [])
+                else
+                    propsRecordOf(modules, typeName);
+                out.push(
+                    ClientComponent(
+                        moduleId: m.id,
+                        name: name,
+                        propsType: typeName,
+                        propsModule: home._0,
+                        fields: home._1,
+                    ),
+                );
                 armed = false;
-            };
-        };
-    };
+            }
+        }
+    }
     return out;
 }
 
 // The module declaring the record `typeName`, and its fields.
-fn propsRecordOf(modules: Array<AppModule>, typeName: string) -> #(string, Array<#(string, string)>) {
+fn propsRecordOf(
+    modules: Array<AppModule>,
+    typeName: string,
+) -> #(string, Array<#(string, string)>) {
     var home = "";
     var found: Array<#(string, string)> = [];
     for (modules) { m ->
@@ -117,8 +144,8 @@ fn propsRecordOf(modules: Array<AppModule>, typeName: string) -> #(string, Array
         if (first) {
             home = m.id;
             found = f;
-        };
-    };
+        }
+    }
     return #(home, found);
 }
 
@@ -127,17 +154,31 @@ fn propsRecordOf(modules: Array<AppModule>, typeName: string) -> #(string, Array
 // The mismatches between the document and the payload: an island id on one
 // side only, a hole id in the payload with no `[data-jh-h]` element. Empty
 // when they agree; the generated entry raises the first.
-pub fn islandMismatches(domIslands: string[], payloadIslands: string[], domHoles: string[], payloadHoles: string[]) -> string[] {
+pub fn islandMismatches(
+    domIslands: string[],
+    payloadIslands: string[],
+    domHoles: string[],
+    payloadHoles: string[],
+) -> string[] {
     var out: string[] = [];
     for (payloadIslands) { id ->
-        if (domIslands.contains(id) == false) out.push("island " + id + " is in the payload and not in the document");
-    };
+        if (domIslands.contains(id) == false)
+            out.push(
+                "island " + id + " is in the payload and not in the document",
+            );
+    }
     for (domIslands) { id ->
-        if (payloadIslands.contains(id) == false) out.push("island " + id + " is in the document and not in the payload");
-    };
+        if (payloadIslands.contains(id) == false)
+            out.push(
+                "island " + id + " is in the document and not in the payload",
+            );
+    }
     for (payloadHoles) { id ->
-        if (domHoles.contains(id) == false) out.push("hole " + id + " is in the payload and not in the document");
-    };
+        if (domHoles.contains(id) == false)
+            out.push(
+                "hole " + id + " is in the payload and not in the document",
+            );
+    }
     return out;
 }
 
@@ -146,7 +187,7 @@ fn isEmiliaClass(name: string) -> bool {
     var hex = true;
     for (name.slice(2).split("")) { c ->
         if ("0123456789abcdef".contains(c) == false) hex = false;
-    };
+    }
     return hex;
 }
 
@@ -156,15 +197,14 @@ pub fn classNamesIn(html: string) -> string[] {
     var out: string[] = [];
     var first = true;
     for (html.split("class=\"")) { piece ->
-        if (first) {
-            first = false;
-        } else {
+        if (first) first = false else {
             val value = piece.split("\"").at(0) ?? "";
             for (value.split(" ")) { name ->
-                if (isEmiliaClass(name) && out.contains(name) == false) out.push(name);
-            };
-        };
-    };
+                if (isEmiliaClass(name) && out.contains(name) == false)
+                    out.push(name);
+            }
+        }
+    }
     return out;
 }
 
@@ -174,23 +214,14 @@ pub fn classNamesIn(html: string) -> string[] {
 pub fn unknownClasses(computed: string[], known: string[]) -> string[] {
     var out: string[] = [];
     for (computed) { name ->
-        if (known.contains(name) == false) out.push("class " + name + " is not in the payload's s key - the server's stylesheet has no rule for it");
-    };
+        if (known.contains(name) == false)
+            out.push(
+                "class "
+                    + name
+                    + " is not in the payload's s key - the server's stylesheet has no rule for it",
+            );
+    }
     return out;
-}
-
-fn itemsOf(v: Json) -> Array<Json> {
-    return case v {
-        Arr(items: xs) -> xs;
-        _ -> [];
-    };
-}
-
-fn textOf(v: Json) -> string {
-    return case v {
-        Str(value: s) -> s;
-        _ -> "";
-    };
 }
 
 // The islands of a payload's `i` value — a JSON array of `[id, component,
@@ -199,11 +230,20 @@ fn textOf(v: Json) -> string {
 pub fn parseIslands(field: string) -> @Result<Array<Island>, string> {
     val doc = try decode(field);
     var out: Array<Island> = [];
-    for (itemsOf(doc)) { row ->
-        val cells = itemsOf(row);
-        if (cells.length != 3) throw "payload i: a row is [id, component, props], not " + cells.length.toString() + " cells";
-        out.push(Island(id: textOf(cells.at(0) ?? Json.Null), component: textOf(cells.at(1) ?? Json.Null), props: propsOf(textOf(cells.at(2) ?? Json.Null))));
-    };
+    for (doc.items()) { row ->
+        val cells = row.items();
+        if (cells.length != 3)
+            throw "payload i: a row is [id, component, props], not "
+                + cells.length.toString()
+                + " cells";
+        out.push(
+            Island(
+                id: (cells.at(0) ?? Json.Null).str(),
+                component: (cells.at(1) ?? Json.Null).str(),
+                props: propsOf((cells.at(2) ?? Json.Null).str()),
+            ),
+        );
+    }
     return out;
 }
 
@@ -215,16 +255,35 @@ fn quote(s: string) -> string {
 
 fn decodeField(f: #(string, string)) -> string {
     val raw = "prop(p, " + quote(f._0) + ")";
-    val value = if (f._1 == "i32") "toI32(" + raw + ")" else if (f._1 == "f64") "toF64(" + raw + ")" else if (f._1 == "bool") "(" + raw + " == \"true\")" else raw;
+    val value = if (f._1 == "i32")
+        "toI32(" + raw + ")"
+    else if (f._1 == "f64")
+        "toF64(" + raw + ")"
+    else if (f._1 == "bool")
+        "(" + raw + " == \"true\")"
+    else
+        raw;
     return f._0 + ": " + value;
 }
 
 fn starterOf(c: ClientComponent) -> string {
-    val call = if (c.propsType == "") c.name + "()" else c.name + "(" + c.propsType + "(" + c.fields.map({ f -> decodeField(f) }).join(", ") + "))";
+    val call = if (c.propsType == "")
+        c.name + "()"
+    else
+        c.name
+            + "("
+            + c.propsType
+            + "("
+            + c.fields.map({ f -> decodeField(f) }).join(", ")
+            + "))";
     return [
-        "fn start" + c.name + "(raw: string, commit: fn(html: string) -> i32) -> i32 {",
+        "fn start"
+            + c.name
+            + "(raw: string, commit: fn(html: string) -> i32) -> i32 {",
         "    val p = propsOf(raw);",
-        "    return clientRender({ -> " + call + " }, { tree -> commitTree(commit, tree) });",
+        "    return clientRender({ -> "
+            + call
+            + " }, { tree -> commitTree(commit, tree) });",
         "}",
     ].join("\n");
 }
@@ -236,11 +295,23 @@ fn importsOfComponents(cs: Array<ClientComponent>) -> string[] {
         // its path inside the braces (decision 206 — `from` names a package).
         val at = c.moduleId.replaceAll("/", ".") + ".";
         val together = c.propsType != "" && c.propsModule == c.moduleId;
-        val names = if (together) at + c.name + ", " + at + c.propsType else at + c.name;
+        val names = if (together)
+            at + c.name + ", " + at + c.propsType
+        else
+            at + c.name;
         out.push("import {" + names + "};");
-        val apart = c.propsType != "" && c.propsModule != c.moduleId && c.propsModule != "";
-        if (apart) out.push("import {" + c.propsModule.replaceAll("/", ".") + "." + c.propsType + "};");
-    };
+        val apart = c.propsType != ""
+            && c.propsModule != c.moduleId
+            && c.propsModule != "";
+        if (apart)
+            out.push(
+                "import {"
+                    + c.propsModule.replaceAll("/", ".")
+                    + "."
+                    + c.propsType
+                    + "};",
+            );
+    }
     return out;
 }
 
@@ -310,8 +381,13 @@ pub fn classCheckSource() -> string {
 }
 
 // The entry module's source.
-pub fn generateEntry(components: Array<ClientComponent>, config: EntryConfig) -> string {
-    val redirects = "[" + config.allowedRedirects.map({ r -> quote(r) }).join(", ") + "]";
+pub fn generateEntry(
+    components: Array<ClientComponent>,
+    config: EntryConfig,
+) -> string {
+    val redirects = "["
+        + config.allowedRedirects.map({ r -> quote(r) }).join(", ")
+        + "]";
     val attr = islandAttrOf("")._0;
     var lines: string[] = [
         "// GENERATED by onze build — do not edit.",
@@ -323,79 +399,93 @@ pub fn generateEntry(components: Array<ClientComponent>, config: EntryConfig) ->
     ];
     for (importsOfComponents(components)) { l ->
         lines.push(l);
-    };
-    lines = lines.append([
-        "",
-        "#[@External.Node(\"\"\"(globalThis.document ? Array.from(globalThis.document.querySelectorAll(\"[\" + $0 + \"]\")).map(function (onzeNode) { return onzeNode.getAttribute($0); }) : [])\"\"\")]",
-        "declare fn domIds(attr: string) -> string[];",
-        "",
-        "#[@External.Node(\"\"\"(function (onzeName) { var onzeValue = globalThis[onzeName]; return onzeValue && Array.isArray(onzeValue[$1]) ? onzeValue[$1].map(function (onzeRow) { return String(Array.isArray(onzeRow) ? onzeRow[0] : onzeRow); }) : []; })($0)\"\"\")]",
-        "declare fn payloadIds(payload: string, key: string) -> string[];",
-        "",
-        "#[@External.Node(\"\"\"(function (onzeSrc, onzeOnLoad) { if (!globalThis.document) return 0; var onzeTag = globalThis.document.createElement(\"script\"); onzeTag.src = onzeSrc; if (onzeOnLoad) onzeTag.onload = function () { if (typeof globalThis[onzeOnLoad] === \"function\") globalThis[onzeOnLoad](); }; globalThis.document.body.appendChild(onzeTag); return 0; })($0, $1)\"\"\")]",
-        "declare fn scheduleNow(src: string, onLoad: string) -> i32;",
-        "",
-        "#[@External.Node(\"\"\"(function (onzeSrc, onzeOnLoad) { if (!globalThis.document) return 0; var onzeGo = function () { var onzeTag = globalThis.document.createElement(\"script\"); onzeTag.src = onzeSrc; if (onzeOnLoad) onzeTag.onload = function () { if (typeof globalThis[onzeOnLoad] === \"function\") globalThis[onzeOnLoad](); }; globalThis.document.body.appendChild(onzeTag); }; if (globalThis.document.readyState === \"complete\") onzeGo(); else globalThis.addEventListener(\"load\", onzeGo); return 0; })($0, $1)\"\"\")]",
-        "declare fn scheduleLazy(src: string, onLoad: string) -> i32;",
-        "",
-        "#[@External.Node(\"\"\"(typeof globalThis.Worker === \"function\" ? (new globalThis.Worker($0), 0) : 0)\"\"\")]",
-        "declare fn startWorker(src: string) -> i32;",
-        "",
-        "#[@External.Node(\"\"\"(function (onzeProblems) { if (onzeProblems.length > 0) throw new Error(onzeProblems[0]); return 0; })($0)\"\"\")]",
-        "declare fn raiseFirst(problems: string[]) -> i32;",
-        "",
-        "#[@External.Node(\"\"\"(parseInt($0, 10) || 0)\"\"\")]",
-        "declare fn toI32(s: string) -> i32;",
-        "",
-        "#[@External.Node(\"\"\"(parseFloat($0) || 0)\"\"\")]",
-        "declare fn toF64(s: string) -> f64;",
-        "",
-        "fn prop(p: Array<#(string, string)>, name: string) -> string {",
-        "    val hit = p.filter({ kv -> kv._0 == name });",
-        "    if (hit.length == 0) return \"\";",
-        "    val first = hit.at(0) ?? #(\"\", \"\");",
-        "    return first._1;",
-        "}",
-        "",
-        "fn commitTree(commit: fn(html: string) -> i32, tree: Element) {",
-        "    val html = renderNode(tree);",
-        "    raiseFirst(unknownClasses(classNamesIn(html), payloadIds(globals.payload, \"s\")));",
-        "    val done = commit(html);",
-        "}",
-        "",
-        islandMismatchesSource(),
-        "",
-        classCheckSource(),
-    ]);
+    }
+    lines = lines.append(
+        [
+            "",
+            "#[@External.Node(\"\"\"(globalThis.document ? Array.from(globalThis.document.querySelectorAll(\"[\" + $0 + \"]\")).map(function (onzeNode) { return onzeNode.getAttribute($0); }) : [])\"\"\")]",
+            "declare fn domIds(attr: string) -> string[];",
+            "",
+            "#[@External.Node(\"\"\"(function (onzeName) { var onzeValue = globalThis[onzeName]; return onzeValue && Array.isArray(onzeValue[$1]) ? onzeValue[$1].map(function (onzeRow) { return String(Array.isArray(onzeRow) ? onzeRow[0] : onzeRow); }) : []; })($0)\"\"\")]",
+            "declare fn payloadIds(payload: string, key: string) -> string[];",
+            "",
+            "#[@External.Node(\"\"\"(function (onzeSrc, onzeOnLoad) { if (!globalThis.document) return 0; var onzeTag = globalThis.document.createElement(\"script\"); onzeTag.src = onzeSrc; if (onzeOnLoad) onzeTag.onload = function () { if (typeof globalThis[onzeOnLoad] === \"function\") globalThis[onzeOnLoad](); }; globalThis.document.body.appendChild(onzeTag); return 0; })($0, $1)\"\"\")]",
+            "declare fn scheduleNow(src: string, onLoad: string) -> i32;",
+            "",
+            "#[@External.Node(\"\"\"(function (onzeSrc, onzeOnLoad) { if (!globalThis.document) return 0; var onzeGo = function () { var onzeTag = globalThis.document.createElement(\"script\"); onzeTag.src = onzeSrc; if (onzeOnLoad) onzeTag.onload = function () { if (typeof globalThis[onzeOnLoad] === \"function\") globalThis[onzeOnLoad](); }; globalThis.document.body.appendChild(onzeTag); }; if (globalThis.document.readyState === \"complete\") onzeGo(); else globalThis.addEventListener(\"load\", onzeGo); return 0; })($0, $1)\"\"\")]",
+            "declare fn scheduleLazy(src: string, onLoad: string) -> i32;",
+            "",
+            "#[@External.Node(\"\"\"(typeof globalThis.Worker === \"function\" ? (new globalThis.Worker($0), 0) : 0)\"\"\")]",
+            "declare fn startWorker(src: string) -> i32;",
+            "",
+            "#[@External.Node(\"\"\"(function (onzeProblems) { if (onzeProblems.length > 0) throw new Error(onzeProblems[0]); return 0; })($0)\"\"\")]",
+            "declare fn raiseFirst(problems: string[]) -> i32;",
+            "",
+            "#[@External.Node(\"\"\"(parseInt($0, 10) || 0)\"\"\")]",
+            "declare fn toI32(s: string) -> i32;",
+            "",
+            "#[@External.Node(\"\"\"(parseFloat($0) || 0)\"\"\")]",
+            "declare fn toF64(s: string) -> f64;",
+            "",
+            "fn prop(p: Array<#(string, string)>, name: string) -> string {",
+            "    val hit = p.filter({ kv -> kv._0 == name });",
+            "    if (hit.length == 0) return \"\";",
+            "    val first = hit.at(0) ?? #(\"\", \"\");",
+            "    return first._1;",
+            "}",
+            "",
+            "fn commitTree(commit: fn(html: string) -> i32, tree: Element) {",
+            "    val html = renderNode(tree);",
+            "    raiseFirst(unknownClasses(classNamesIn(html), payloadIds(globals.payload, \"s\")));",
+            "    val done = commit(html);",
+            "}",
+            "",
+            islandMismatchesSource(),
+            "",
+            classCheckSource(),
+        ],
+    );
     for (components) { c ->
         lines.push("");
         lines.push(starterOf(c));
-    };
-    lines = lines.append([
-        "",
-        "pub fn onzeEntryMain() {",
-        "    setMessageSource(builtInOnly());",
-        "    registerFill(globals.fill, payloadIds(globals.payload, \"h\"));",
-        "    registerSignal(globals.signal, " + redirects + ");",
-    ]);
+    }
+    lines = lines.append(
+        [
+            "",
+            "pub fn onzeEntryMain() {",
+            "    setMessageSource(builtInOnly());",
+            "    registerFill(globals.fill, payloadIds(globals.payload, \"h\"));",
+            "    registerSignal(globals.signal, " + redirects + ");",
+        ],
+    );
     for (components) { c ->
-        lines.push("    registerStarter(" + quote(c.name) + ", { raw, commit -> start" + c.name + "(raw, commit) });");
-    };
-    lines = lines.append([
-        "    raiseFirst(islandMismatches(domIds(" + quote(attr) + "), payloadIds(globals.payload, \"i\"), domIds(\"data-jh-h\"), payloadIds(globals.payload, \"h\")));",
-        "    hydrate();",
-        "    linkMount();",
-        "    formMount(" + quote(config.actionHeader) + ");",
-    ]);
+        lines.push(
+            "    registerStarter("
+                + quote(c.name)
+                + ", { raw, commit -> start"
+                + c.name
+                + "(raw, commit) });",
+        );
+    }
+    lines = lines.append(
+        [
+            "    raiseFirst(islandMismatches(domIds("
+                + quote(attr)
+                + "), payloadIds(globals.payload, \"i\"), domIds(\"data-jh-h\"), payloadIds(globals.payload, \"h\")));",
+            "    hydrate();",
+            "    linkMount();",
+            "    formMount(" + quote(config.actionHeader) + ");",
+        ],
+    );
     for (config.scripts.filter({ s -> s._1 == "afterInteractive" })) { s ->
         lines.push(scheduleLine(s));
-    };
+    }
     for (config.scripts.filter({ s -> s._1 == "lazyOnload" })) { s ->
         lines.push(scheduleLine(s));
-    };
+    }
     for (config.scripts.filter({ s -> s._1 == "worker" })) { s ->
         lines.push("    startWorker(" + quote(s._0) + ");");
-    };
+    }
     lines.push("}");
     return lines.join("\n") + "\n";
 }
