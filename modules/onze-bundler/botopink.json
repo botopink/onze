@@ -25,6 +25,10 @@
     },
     "onze": {
       "workspace": true
+    },
+    "routing": {
+      "git": "https://github.com/botopink/routing.git",
+      "branch": "feat"
     }
   }
 }

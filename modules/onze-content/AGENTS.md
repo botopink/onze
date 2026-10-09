@@ -9,9 +9,9 @@ an `MdNode` tree, written as HTML or built as jhonstart's `Element`; content col
 RSS feed. Steps 1–2, 4–5 of front 121; frontmatter (`frontmatter.bp`, step 3 — waits on the `08-f`
 decision) arrives later, and until then a `.md` entry under `glob` is a sync problem naming the
 step. Depends on jhonstart (`Element`, `el`, `voidEl`, `fragment`, `text`, `raw`), std and the
-bundled `validation` (`Schema<T>`, `Violation`; never listed in `dependencies` — after front 138
-moves it out of the compiler it becomes `"validation": { "git":
-"https://github.com/botopink/validation.git", "branch": "feat" }`); nothing in onze imports it yet.
+library `validation` (`Schema<T>`, `Violation`; declared in `dependencies` as `"validation": {
+"git": "https://github.com/botopink/validation.git", "branch": "feat" }` since front 138 moved it
+out of the compiler); nothing in onze imports it yet.
 
 | File | What |
 |---|---|

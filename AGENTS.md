@@ -79,7 +79,7 @@ onze/
 │   │                    headings), md_text.bp, md_entities.bp, collections.bp
 │   │                    (loaders, typed entries, the sync and its store),
 │   │                    feeds.bp (RSS 2.0); frontmatter arrives with step 3 —
-│   │                    depends on jhonstart (and the bundled validation);
+│   │                    depends on jhonstart and validation;
 │   │                    nothing imports it yet
 │   └── onze-release/  ← front 71: spec.bp (ReleaseSpec, the build id), otp.bp (.rel,
 │                        sys.config, vm.args, bin/onze, systools), docker.bp, package.bp
@@ -118,8 +118,9 @@ onze/
 - A member depends on a sibling with `{ "workspace": true }` only; on another library's member by
   `path` (`{ "rakun": { "path": "../../../rakun/modules/rakun" } }`) — added by the front whose
   code needs the edge, never ahead of it. A member lists exactly the packages its sources and
-  tests import: dependencies load transitively (decision 143). A bundled package (`std`,
-  `routing`, `actions`, `validation`) is never listed.
+  tests import: dependencies load transitively (decision 143). `std` — the one bundled
+  package (decision 326) — is never listed; `routing`, `actions`, `validation` are declared
+  like any library (`{ "git": "https://github.com/botopink/<pkg>.git", "branch": "feat" }`).
 - A member may only **restrict** the workspace's `targets`, and only structurally (gate-d): the
   excluded target's `botopink build` must fail on a host binding (`has no #[@External.<Target>]`),
   never on a checker error, and a member that builds there runs there. Today one member

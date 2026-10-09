@@ -23,6 +23,10 @@
     },
     "jhonstart-emilia": {
       "path": "../../../jhonstart/modules/jhonstart-emilia"
+    },
+    "routing": {
+      "git": "https://github.com/botopink/routing.git",
+      "branch": "feat"
     }
   }
 }

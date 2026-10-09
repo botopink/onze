@@ -187,7 +187,7 @@ pub fn routesModule(appDir: string, entries: Array<RouteEntry>, staged: Array<#(
 // staged tree, each relative `path` dependency made absolute against the
 // project's `root` (the staged package may sit anywhere — `<root>/<outDir>/`,
 // or an `outDir` outside the project), plus `extraDeps` as `#(name, absolute
-// directory)`.
+// directory or git URL)`.
 pub fn stagedManifest(manifest: string, files: string[], root: string, workspace: Array<#(string, string)>, extraDeps: Array<#(string, string)>) -> @Result<string, string> {
     val doc = try decode(manifest);
     val members = case doc {
@@ -221,8 +221,16 @@ fn rerootDeps(v: Json, root: string, workspace: Array<#(string, string)>, extraD
         _ -> [];
     };
     val own = deps.map({ m -> quote(m._0) + ": " + rerootDep(m._0, m._1, root, workspace) });
-    val extra = extraDeps.filter({ d -> deps.any({ m -> m._0 == d._0 }) == false }).map({ d -> quote(d._0) + ": { \"path\": " + quote(d._1) + " }" });
+    val extra = extraDeps.filter({ d -> deps.any({ m -> m._0 == d._0 }) == false }).map({ d -> quote(d._0) + ": " + extraDep(d._1) });
     return "{ " + own.append(extra).join(", ") + " }";
+}
+
+// An extra dependency's entry: a git URL (`https://…`) is `{ "git": …, "branch": "feat" }` —
+// resolved by name through the library roots, as any git dependency —, else a
+// directory, `{ "path": … }`.
+fn extraDep(source: string) -> string {
+    if (source.startsWith("https://")) return "{ \"git\": " + quote(source) + ", \"branch\": \"feat\" }";
+    return "{ \"path\": " + quote(source) + " }";
 }
 
 // A `{ "workspace": true }` dependency becomes a `path` to the member the

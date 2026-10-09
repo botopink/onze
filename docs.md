@@ -6,7 +6,7 @@ together, and wires them into an application with an `app/` convention (decision
 and rakun never import each other, emilia imports nobody, and neither jhonstart nor rakun names
 onze: every value that crosses between them is handed across here.
 
-**onze is opt-in.** Nothing in `libs/std`, the bundled libraries (`routing`, `actions`,
+**onze is opt-in.** Nothing in `libs/std`, the shared libraries (`routing`, `actions`,
 `validation`) or the compiler references it; a project that does not list it never loads it.
 
 **Requirements.** OTP 28 or later for the server half (the release OTP the botopink CI runs;
@@ -60,7 +60,7 @@ and build-time: `onze-cli`'s staging rewrites the import before the compiler see
 Not at comptime: `@Decl` carries no source location, so a decorator cannot learn which file it
 annotates. The answer is an explicit argument — `#[page("blog/[slug]")]`, `#[layout("blog")]`
 (jhonstart front 30), `#[getRoute("api/posts")]` (rakun front 25) — where the argument is the
-app-relative directory and the segment grammar is the bundled `routing`'s. `onze-cli` generates
+app-relative directory and the segment grammar is the library `routing`'s. `onze-cli` generates
 the `pub mod` lines from the tree and **fails the scan when a file's location and its decorator
 argument disagree**. `AppFile.segment` is the value it compares:
 
@@ -374,7 +374,7 @@ SVG, the faces and the size, so a template change invalidates it with no version
 | `PageProps` / `LayoutProps` / `Params` | jhonstart delivers `PageContext` and `LayoutProps`, and `params` is read with `ctxParam(route, name)`. A second vocabulary is a translation layer and a class of bugs |
 | `registerPage` / `registerLayout` / `registerAction` | jhonstart's `#[page]` / `#[layout]` decorators fill jhonstart's UI registry, the boot copies it into rakun's table, rakun's `#[serverAction]` registers actions, and `onze-cli` generates the `pub mod` lines that make the decorated modules load |
 | `renderDocument` | jhonstart owns the document and the moments the render plugin is called, because only the render knows whether the response is streaming |
-| `ActionResponse<S>(state, success, message)` | rakun's `ActionResult` (the bundled `actions`' envelope) is the action envelope |
+| `ActionResponse<S>(state, success, message)` | rakun's `ActionResult` (the library `actions`' envelope) is the action envelope |
 | `RouteSegmentConfig(dynamic, revalidate)` | rakun front 60's `SegmentConfig(dynamic, dynamicParams, revalidate, fetchCache)` |
 
 ## The commands

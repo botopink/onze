@@ -16,6 +16,10 @@
   "dependencies": {
     "jhonstart": {
       "path": "../../../jhonstart/modules/jhonstart"
+    },
+    "validation": {
+      "git": "https://github.com/botopink/validation.git",
+      "branch": "feat"
     }
   }
 }

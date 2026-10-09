@@ -159,7 +159,10 @@ pub fn buildProject(p: Project, bin: string) -> @Result<BuildResult, string> {
     val clientDir = path.join([outDir, "client"]);
     val linkDir = try memberBeside(manifest, p.root, workspace, "jhonstart", "jhonstart-link");
     val formsDir = try memberBeside(manifest, p.root, workspace, "jhonstart", "jhonstart-forms");
-    val clientFiles = try stageAt(p.aliases, appRel, appDir, sources.append(styleSources).append(styleMod).append(probeFiles).append([#("onze_entry.bp", entrySource)]), entries, manifest, p.root, extraMods.append(probeMods).append(["onze_entry"]), workspace, [#("jhonstart-link", linkDir), #("jhonstart-forms", formsDir)]);
+    // the generated entry imports `validation` (its message source): a
+    // library of its own since decision 326, declared like any dependency.
+    val validationGit = "https://github.com/botopink/validation.git";
+    val clientFiles = try stageAt(p.aliases, appRel, appDir, sources.append(styleSources).append(styleMod).append(probeFiles).append([#("onze_entry.bp", entrySource)]), entries, manifest, p.root, extraMods.append(probeMods).append(["onze_entry"]), workspace, [#("jhonstart-link", linkDir), #("jhonstart-forms", formsDir), #("validation", validationGit)]);
     try writeAll(clientDir, clientFiles.map({ f -> if (f._0 == "botopink.json") #(f._0, restrictToCommonJs(f._1)) else f }));
     val jsDir = path.join([outDir, "client-js"]);
     try run(clientDir, bin, ["build", "--target", "commonJS", "--out", jsDir]);
