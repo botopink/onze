@@ -130,14 +130,10 @@ pub fn parseWith(source: string, options: MarkdownOptions) -> MdDoc {
         done = done + 1;
     }
     val used = ctx.used;
-    val counted = footnotes.map({ f -> withRefs(f, refsOf(used, f.index)) });
+    val counted = footnotes.map(
+        { f -> Footnote(..f, refs: refsOf(used, f.index)) },
+    );
     return MdDoc(nodes: main._0, footnotes: counted);
-}
-
-// LANGUAGE GAP: the update form with a lambda parameter as its base drops
-// the fields it does not write — a named function takes the record instead.
-fn withRefs(f: Footnote, refs: i32) -> Footnote {
-    return Footnote(..f, refs: refs);
 }
 
 // ── blocks ──────────────────────────────────────────────────────────────────
@@ -576,37 +572,31 @@ fn incorporateLine(p0: P, ln: string) -> P {
 
 // What is left of the line once the containers are matched: a line of the
 // leaf block, a table row, or a new paragraph.
-//
-// LANGUAGE GAP: on erlang a `var` written inside an `if` block that ends in
-// `return` is read under its new name after the block — each branch is its
-// own function here.
-fn addText(p: P, container: i32) -> P {
+fn addText(p0: P, container: i32) -> P {
+    var p = p0;
     val kind = kindAt(p, container);
-    if (acceptsLines(kind)) return addLeafLine(p, container, kind);
-    if (kind == Kind.BTable) return addTableRow(p);
+    if (acceptsLines(kind)) {
+        p = addLine(p);
+        val html = openAt(p, container);
+        val ended = kind == Kind.BHtml
+            && html.htmlType >= 1
+            && html.htmlType <= 5
+            && htmlBlockEnds(html.htmlType, p.line.text(p.offset, p.line.size));
+        if (ended) p = finalizeTop(p, p.lineNumber);
+        return p;
+    }
+    if (kind == Kind.BTable) {
+        if (p.blank) return p;
+        val top = topOf(p);
+        val row = p.line.text(p.offset, p.line.size);
+        p = setTop(p, Open(..top, lines: top.lines.append([row])));
+        return p;
+    }
     if (p.offset < p.line.size && !p.blank) {
-        val opened = addChild(p, Open(kind: Kind.BPara, startLine: 0));
-        return addLine(advanceNextNonspace(opened));
+        p = addChild(p, Open(kind: Kind.BPara, startLine: 0));
+        return addLine(advanceNextNonspace(p));
     }
     return p;
-}
-
-fn addLeafLine(p0: P, container: i32, kind: Kind) -> P {
-    val p = addLine(p0);
-    val html = openAt(p, container);
-    val ended = kind == Kind.BHtml
-        && html.htmlType >= 1
-        && html.htmlType <= 5
-        && htmlBlockEnds(html.htmlType, p.line.text(p.offset, p.line.size));
-    if (ended) return finalizeTop(p, p.lineNumber);
-    return p;
-}
-
-fn addTableRow(p: P) -> P {
-    if (p.blank) return p;
-    val top = topOf(p);
-    val row = p.line.text(p.offset, p.line.size);
-    return setTop(p, Open(..top, lines: top.lines.append([row])));
 }
 
 // `[#`~*+_=<>0-9-]` — a character that may begin a block; with the
@@ -2279,7 +2269,7 @@ fn openBracket(
     literal: string,
 ) -> IP {
     val id = ip.nextId;
-    val marked = ip.brackets.map({ b -> markAfter(b) });
+    val marked = ip.brackets.map({ b -> Brk(..b, bracketAfter: true) });
     val brk = Brk(
         id: id,
         index: index,
@@ -2295,17 +2285,6 @@ fn openBracket(
         nextId: id + 1,
         brackets: marked.append([brk]),
     );
-}
-
-// LANGUAGE GAP: the update form with a lambda parameter as its base drops
-// the fields it does not write — the two bracket updates are named functions.
-fn markAfter(b: Brk) -> Brk {
-    return Brk(..b, bracketAfter: true);
-}
-
-fn deactivate(b: Brk) -> Brk {
-    if (b.image) return b;
-    return Brk(..b, active: false);
 }
 
 fn dropBracket(ip: IP) -> IP {
@@ -2389,7 +2368,10 @@ fn closeBracket(ip0: IP) -> IP {
     else
         MdNode.Link(href: dest, title: title, kids: kids);
     var brackets = processed.brackets.slice(0, processed.brackets.length - 1);
-    if (!opener.image) brackets = brackets.map({ b -> deactivate(b) });
+    if (!opener.image)
+        brackets = brackets.map(
+            { b -> if (b.image) b else Brk(..b, active: false) },
+        );
     return IP(
         ..processed,
         items: processed.items.slice(0, po).append([Inl.Done(node: node)]),
@@ -2439,36 +2421,23 @@ fn footnoteRef(ip: IP, opener: Brk, startpos: i32) -> #(IP, bool) {
     return #(next, true);
 }
 
-fn isLit(item: Inl) -> bool {
-    return case item {
-        Lit(_, _) -> true;
-        Done(_) -> false;
-    };
-}
-
-fn doneNode(item: Inl) -> MdNode {
-    return case item {
-        Lit(_, value) -> MdNode.Text(value: value);
-        Done(node) -> node;
-    };
-}
-
 // Pending items as nodes, adjacent text merged.
-//
-// LANGUAGE GAP: a `var` written in the arms of a statement `case` is lost on
-// erlang, and an arm ending in a `for` falls into the next arm on commonJS —
-// every `case` here is an expression and the writes happen outside it.
 fn itemsToNodes(items: Array<Inl>) -> Array<MdNode> {
     var out: MdNode[] = [];
     var pending: string[] = [];
     for (items) { item ->
-        if (isLit(item)) pending.push(litValue(item)) else {
-            if (pending.length > 0) {
-                val joined = pending.join("");
-                if (joined != "") out.push(MdNode.Text(value: joined));
-                pending = [];
+        case item {
+            Lit(_, value) {
+                pending.push(value);
             }
-            out.push(doneNode(item));
+            Done(node) {
+                if (pending.length > 0) {
+                    val joined = pending.join("");
+                    if (joined != "") out.push(MdNode.Text(value: joined));
+                    pending = [];
+                }
+                out.push(node);
+            }
         }
     }
     if (pending.length > 0) {
@@ -2504,23 +2473,31 @@ fn plainOf(n: MdNode) -> string {
 
 // ── extended autolinks (GFM) ────────────────────────────────────────────────
 
+// Text outside links and code, with its extended autolinks.
 fn autolinkAll(nodes: Array<MdNode>) -> Array<MdNode> {
     var out: MdNode[] = [];
     for (nodes) { n ->
-        out = out.append(autolinkNode(n));
+        case n {
+            Text(value) {
+                for (autolinkText(value)) { k ->
+                    out.push(k);
+                }
+            }
+            Emph(kids) {
+                out.push(MdNode.Emph(kids: autolinkAll(kids)));
+            }
+            Strong(kids) {
+                out.push(MdNode.Strong(kids: autolinkAll(kids)));
+            }
+            Strike(kids) {
+                out.push(MdNode.Strike(kids: autolinkAll(kids)));
+            }
+            _ {
+                out.push(n);
+            }
+        }
     }
     return out;
-}
-
-// Text outside links and code, with its extended autolinks.
-fn autolinkNode(n: MdNode) -> Array<MdNode> {
-    return case n {
-        Text(value) -> autolinkText(value);
-        Emph(kids) -> [MdNode.Emph(kids: autolinkAll(kids))];
-        Strong(kids) -> [MdNode.Strong(kids: autolinkAll(kids))];
-        Strike(kids) -> [MdNode.Strike(kids: autolinkAll(kids))];
-        _ -> [n];
-    };
 }
 
 fn isDomainChar(c: i32) -> bool {
@@ -2556,9 +2533,6 @@ fn domainEnd(c: Chars, begin: i32) -> i32 {
 
 // The end of an extended autolink's path from `begin`, trailing punctuation
 // and unmatched `)` and an entity-like `&…;` trimmed.
-//
-// LANGUAGE GAP: on erlang two `var`s of one name in sibling branches of a loop
-// body leave one of them unbound — each trim is its own function.
 fn pathEnd(c: Chars, begin: i32) -> i32 {
     var end = begin;
     while (end < c.size && !isUnicodeSpace(c.at(end)) && c.at(end) != 60) {
@@ -2575,40 +2549,30 @@ fn pathEnd(c: Chars, begin: i32) -> i32 {
             || last == 42
             || last == 95
             || last == 126;
-        val cut = if (trail)
-            end - 1
-        else if (last == 41)
-            unmatchedParenCut(c, begin, end)
-        else if (last == 59)
-            entityCut(c, begin, end)
-        else
-            end;
-        if (cut == end) trimming = false else end = cut;
+        if (trail) end = end - 1 else if (last == 41) {
+            // `)` is trimmed while the path has more `)` than `(`.
+            var opens = 0;
+            var closes = 0;
+            var k = begin;
+            while (k < end) {
+                if (c.at(k) == 40) opens = opens + 1;
+                if (c.at(k) == 41) closes = closes + 1;
+                k = k + 1;
+            }
+            if (closes > opens) end = end - 1 else trimming = false;
+        } else if (last == 59) {
+            // An entity-like tail: `&` + alphanumerics + `;`.
+            var k = end - 2;
+            while (k >= begin && isAsciiAlnum(c.at(k))) {
+                k = k - 1;
+            }
+            if (k >= begin && k < end - 2 && c.at(k) == 38)
+                end = k
+            else
+                trimming = false;
+        } else trimming = false;
     }
     return end;
-}
-
-// `end - 1` when the path has more `)` than `(`, else `end`.
-fn unmatchedParenCut(c: Chars, begin: i32, end: i32) -> i32 {
-    var opens = 0;
-    var closes = 0;
-    var k = begin;
-    while (k < end) {
-        if (c.at(k) == 40) opens = opens + 1;
-        if (c.at(k) == 41) closes = closes + 1;
-        k = k + 1;
-    }
-    return if (closes > opens) end - 1 else end;
-}
-
-// The index of the `&` when the path ends in `&` + alphanumerics + `;`
-// (an entity-like tail), else `end`.
-fn entityCut(c: Chars, begin: i32, end: i32) -> i32 {
-    var k = end - 2;
-    while (k >= begin && isAsciiAlnum(c.at(k))) {
-        k = k - 1;
-    }
-    return if (k >= begin && k < end - 2 && c.at(k) == 38) k else end;
 }
 
 fn autolinkBoundary(c: Chars, i: i32) -> bool {
@@ -2903,8 +2867,6 @@ fn tableHtml(
     ].join("");
 }
 
-// LANGUAGE GAP: on erlang a `case` binder named like the `val` it initialises
-// is read under its renamed name after the `case` — the binder is `ks`.
 fn rowHtml(cells: Array<MdNode>, aligns: Array<string>, tag: string) -> string {
     var out: string[] = ["<tr>\n"];
     var i = 0;
@@ -2912,7 +2874,7 @@ fn rowHtml(cells: Array<MdNode>, aligns: Array<string>, tag: string) -> string {
         val align = aligns.at(i) ?? "";
         val alignAttr = if (align == "") "" else attr("align", align);
         val kids = case cell {
-            Cell(ks) -> ks;
+            Cell(kids) -> kids;
             _ -> [];
         };
         out.push(
@@ -3200,7 +3162,6 @@ fn tableElement(
     return el("table", parts, attrs: []);
 }
 
-// LANGUAGE GAP: the binder is `ks`, not `kids` — see `rowHtml`.
 fn rowElement(
     cells: Array<MdNode>,
     aligns: Array<string>,
@@ -3215,7 +3176,7 @@ fn rowElement(
         else
             [#("style", "text-align:" + align)];
         val kids = case cell {
-            Cell(ks) -> ks;
+            Cell(kids) -> kids;
             _ -> [];
         };
         out.push(el(tag, inlineElements(kids), attrs: attrs));

@@ -16,12 +16,6 @@ frontmatter (`frontmatter.bp`, step 3 — waits on the `08-f` decision), collect
 | `src/md_text.bp` | `Chars` — a string's code points with constant-time reads (a JS array / an erlang tuple behind two host cells; `string.at` walks the whole value on erlang), character classes (Unicode punctuation through one host cell per row), `escapeHtml`, `matchEntity`, `unescapeString`, `normalizeLabel`, `normalizeUri` |
 | `src/md_entities.bp` | `entityText(name)` — the 2 125 HTML5 named references ending in `;`, generated from <https://html.spec.whatwg.org/entities.json> |
 
-The parser avoids four shapes the compiler mistranslates today (each marked `// LANGUAGE GAP` and
-a row of the milestone's `language-gaps.md`): the record update form on a lambda parameter, a
-`var` written in a statement `case` arm (erlang) or an arm ending in `for` (commonJS), a `var`
-written in an `if` block that returns (erlang), and a `case` binder named like the `val` it
-initialises (erlang).
-
 Tests (`test/`, both rows): `commonmark/<section>_test.bp` — the 652 examples of
 <https://spec.commonmark.org/0.31.2/spec.json>, one test per example named by its number
 (`commonmark 042: …`), generated from that file, rendered with `commonmarkOptions()`;
