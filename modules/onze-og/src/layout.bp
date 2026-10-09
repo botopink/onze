@@ -117,12 +117,12 @@ fn lengthOf(value: string, whole: i32, fallback: i32) -> i32 {
     if (value == "") return fallback;
     if (value.endsWith("%")) return ((whole * pxOf(value.slice(0, value.length() - 1))) / 100);
     val n = pxOf(value);
-    return if (n == 0 - 2147483648) fallback else n;
+    return if (n == -2147483648) fallback else n;
 }
 
 // Padding as top, right, bottom, left.
 pub fn paddingOf(s: Style) -> #(i32, i32, i32, i32) {
-    val parts = s.padding.split(" ").filter({ p -> p != "" }).map({ p -> pxOf(p) }).map({ n -> if (n == 0 - 2147483648) 0 else n });
+    val parts = s.padding.split(" ").filter({ p -> p != "" }).map({ p -> pxOf(p) }).map({ n -> if (n == -2147483648) 0 else n });
     if (parts.length == 0) return #(0, 0, 0, 0);
     val a = parts.at(0) ?? 0;
     val b = parts.at(1) ?? a;

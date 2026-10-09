@@ -92,7 +92,7 @@ declare fn hundredths(s: string) -> i32;
 
 fn intOr(value: string, fallback: i32) -> i32 {
     val n = pxOf(value);
-    return if (n == 0 - 2147483648) fallback else n;
+    return if (n == -2147483648) fallback else n;
 }
 
 fn withProp(s: Style, name: string, v: string) -> Style {
