@@ -85,7 +85,7 @@ test "boot: the rakun keys carry the config, the wire names and the asset prefix
 
 test "boot: /_onze is appended once, never twice" {
     val entries = rakunEntries(defaultConfig(), ["/_onze"]);
-    assert entries.at(4).unwrapOr(#("", ""))._1 == "/_onze";
+    assert (entries.at(4) ?? #("", ""))._1 == "/_onze";
 }
 
 // ── the response adapter ────────────────────────────────────────────────────
@@ -114,13 +114,13 @@ test "boot: a styled page renders through the bridge, with one <style> and the b
     val cls = emilia([.Gap.All.4]);
     val drained = await flush();
     val doc = document();
-    val head = doc.split("</head>").at(0).unwrapOr("");
+    val head = doc.split("</head>").at(0) ?? "";
     assert head.split("<style>").length == 2;
     assert head.contains("." + cls);
     assert doc.contains("class=\"" + cls + "\"");
     assert doc.contains("\"s\":[\"" + cls + "\"]");
     assert doc.contains(bodyTag("/"));
-    assert recEvents().at(0).unwrapOr("") == "setStatus 200";
+    assert recEvents().at(0) ?? "" == "setStatus 200";
     assert recEvents().filter({ e -> e == "close" }).length == 1;
 }
 

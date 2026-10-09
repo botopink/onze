@@ -99,7 +99,7 @@ test "read path: / renders with the hero image, the nav and one <style>" {
     assert doc.contains("fetchpriority=\"high\"");
     assert doc.contains("Notes on building onze");
     assert styleCount(doc) == 1;
-    assert recEvents().at(0).unwrapOr("") == "status 200";
+    assert recEvents().at(0) ?? "" == "status 200";
 }
 
 test "read path: /blog lists three posts, each in a PostCard with one emilia class" {
@@ -115,8 +115,8 @@ test "read path: /blog lists three posts, each in a PostCard with one emilia cla
 test "read path: two consecutive requests both carry a non-empty <style>" {
     val first = await renderBlog();
     val second = await renderBlog();
-    val sheet1 = first.split("<style>").at(1).unwrapOr("").split("</style>").at(0).unwrapOr("");
-    val sheet2 = second.split("<style>").at(1).unwrapOr("").split("</style>").at(0).unwrapOr("");
+    val sheet1 = (first.split("<style>").at(1) ?? "").split("</style>").at(0) ?? "";
+    val sheet2 = (second.split("<style>").at(1) ?? "").split("</style>").at(0) ?? "";
     assert sheet1.contains(".e_");
     assert sheet2.contains(".e_");
 }
@@ -142,6 +142,6 @@ test "write path: with a session cookie the dashboard renders the page" {
     val doc = await renderNewPost([#("session", "s1")]);
     assert doc.contains("<h1>New post</h1>");
     assert doc.contains("class=\"dashboard\"");
-    assert recEvents().at(0).unwrapOr("") == "status 200";
+    assert recEvents().at(0) ?? "" == "status 200";
     assert newPostRenders() == before + 1;
 }

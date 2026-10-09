@@ -71,9 +71,9 @@ pub fn moduleIdOf(packageRoot: string, filePath: string) -> string {
     val rel = if (rel0.startsWith("./")) rel0.slice(2) else rel0;
     val noExt = if (rel.endsWith(".bp")) rel.slice(0, rel.length() - 3) else rel;
     val parts = noExt.split("/").filter({ p -> p != "" });
-    val trimmed = if (parts.length > 1 && parts.at(parts.length - 1).unwrapOr("") == "mod") parts.take(parts.length - 1) else parts;
+    val trimmed = if (parts.length > 1 && (parts.at(parts.length - 1) ?? "") == "mod") parts.take(parts.length - 1) else parts;
     val dirs = trimmed.take(trimmed.length - 1).map({ p -> stagedSegment(p) });
-    val last = stagedStem(trimmed.at(trimmed.length - 1).unwrapOr(""));
+    val last = stagedStem(trimmed.at(trimmed.length - 1) ?? "");
     return dirs.append([last]).join(".");
 }
 
@@ -168,7 +168,7 @@ pub fn importsOf(file: string, source: string) -> @Result<Array<ImportRef>, stri
             val parsed = readImport(pending);
             if (parsed == null) throw [file, ":", pendingLine.toString(), ": an import the scanner cannot read: ", pending].join("");
             val none: #(string, string[]) = #("", []);
-            val ok = parsed ?? none;
+            val ok = parsed;
             refs.push(ImportRef(spec: ok._0, names: ok._1, isModDecl: false, line: pendingLine));
             pending = "";
         };

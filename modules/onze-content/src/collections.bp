@@ -469,7 +469,7 @@ fn entryProblems(c: AnyCollection, entries: Array<RawEntry>) -> Array<string> {
                         + ": id \""
                         + e.id
                         + "\" is also the id of "
-                        + entries.at(first).unwrapOr(e).filePath,
+                        + (entries.at(first) ?? e).filePath,
                 ],
             );
         ids = ids.append([e.id]);
@@ -505,7 +505,7 @@ fn referenceProblems(loaded: Array<Loaded>) -> Array<string> {
                     ],
                 )
             else {
-                val ids = targets ?? [];
+                val ids = targets;
                 for (l.entries) { e ->
                     for (referencedIds(
                         e.data.field(r.field) ?? Json.Null,

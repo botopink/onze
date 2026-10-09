@@ -28,7 +28,7 @@ pub fn shortHash(text: string) -> string {
 
 // The file's stem: `app/blog/blog.module.css` → `blog`.
 pub fn moduleStem(sourcePath: string) -> string {
-    val file = sourcePath.split("/").at(sourcePath.split("/").length - 1).unwrapOr(sourcePath);
+    val file = sourcePath.split("/").at(sourcePath.split("/").length - 1) ?? sourcePath;
     return if (file.endsWith(".module.css")) file.slice(0, file.length() - 11) else file;
 }
 
@@ -92,7 +92,7 @@ fn definedClasses(css: string) -> string[] {
         for (sel.split(",")) { item ->
             val t = item.trim();
             if (t.startsWith(".")) {
-                val first = classesOfSelector(t).at(0).unwrapOr("");
+                val first = classesOfSelector(t).at(0) ?? "";
                 if (first != "" && out.contains(first) == false) out.push(first);
             };
         };
@@ -103,7 +103,7 @@ fn definedClasses(css: string) -> string[] {
 fn scopedOr(names: Array<#(string, string)>, cls: string) -> string {
     val hit = names.filter({ n -> n._0 == cls });
     if (hit.length == 0) return cls;
-    val pair = hit.at(0).unwrapOr(#(cls, cls));
+    val pair = hit.at(0) ?? #(cls, cls);
     return pair._1;
 }
 

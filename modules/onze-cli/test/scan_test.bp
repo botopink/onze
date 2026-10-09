@@ -69,7 +69,7 @@ test "scan: every folder form ---- the staging table" {
 
 test "scan: the group does not reach the pattern" {
     val entries = try scanFiles("", "app", [#("app/(marketing)/about/page.bp", page("(marketing)/about"))]);
-    assert entries.at(0).unwrapOr(RouteEntry(pattern: "", kind: "", authoredPath: "", modulePath: "", declared: "")).pattern == "/about";
+    assert (entries.at(0) ?? RouteEntry(pattern: "", kind: "", authoredPath: "", modulePath: "", declared: "")).pattern == "/about";
 }
 
 test "scan: refusals ---- page and route together, a missing decorator, a staging clash" {

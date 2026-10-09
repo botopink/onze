@@ -25,7 +25,7 @@ fn textOf(v: Json) -> string {
 fn field(doc: Json, key: string) -> Json {
     val hit = membersOf(doc).filter({ m -> m._0 == key });
     if (hit.length == 0) return Json.Null;
-    val pair = hit.at(0).unwrapOr(#("", Json.Null));
+    val pair = hit.at(0) ?? #("", Json.Null);
     return pair._1;
 }
 
@@ -67,7 +67,7 @@ pub fn infoText(tools: Array<#(string, string)>, project: ?Project, deps: Array<
     if (project == null) {
         rows.push(row("project", "(none)"));
     } else {
-        val p = project ?? Project(root: "", config: defaultConfig(), aliases: emptyAliases());
+        val p = project;
         val c = p.config;
         rows.push(row("project", c.name + "  (" + p.root + ")"));
         rows.push(row("appDir", c.appDir));

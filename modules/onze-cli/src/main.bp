@@ -63,7 +63,7 @@ fn botopinkBin() -> string {
 }
 
 fn buildCommand(cwd: string, args: string[]) -> Outcome {
-    if (args.length > 0) return Outcome(code: 1, text: "onze build: unexpected argument " + args.at(0).unwrapOr(""));
+    if (args.length > 0) return Outcome(code: 1, text: "onze build: unexpected argument " + args.at(0) ?? "");
     val resolved = resolveProject(cwd);
     if (resolved.isError()) return Outcome(code: 1, text: projectError(resolved));
     val p = resolved.unwrapOr(Project(root: "", config: defaultConfig(), aliases: AliasMap(entries: [])));
@@ -94,7 +94,7 @@ fn projectError(r: @Result<Project, string>) -> string {
 // The dispatch: `args` without the program name.
 pub fn run(cwd: string, args: string[], botopinkVersion: string) -> Outcome {
     if (args.length == 0) return Outcome(code: 1, text: commands());
-    val cmd = args.at(0).unwrapOr("");
+    val cmd = args.at(0) ?? "";
     val rest = args.drop(1);
     if (cmd == "create") return createCommand(cwd, rest);
     if (cmd == "info") return infoCommand(cwd, botopinkVersion);

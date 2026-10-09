@@ -54,7 +54,7 @@ pub fn checkTree(appDir: string, entries: Array<RouteEntry>) -> Array<string> {
 pub fn stagedPath(rel: string) -> string {
     val parts = rel.split("/");
     val dirs = parts.take(parts.length - 1).map({ d -> stagedSegment(d) });
-    val file = parts.at(parts.length - 1).unwrapOr("");
+    val file = parts.at(parts.length - 1) ?? "";
     val stem = if (file.endsWith(".bp")) stagedStem(file.slice(0, file.length() - 3)) + ".bp" else file;
     return dirs.append([stem]).join("/");
 }
@@ -156,7 +156,7 @@ pub fn routesModule(appDir: string, entries: Array<RouteEntry>, staged: Array<#(
     for (entries.filter({ e -> decoratorFor(e.kind) != "" })) { e ->
         val file = e.modulePath.replaceAll(".", "/") + ".bp";
         val text = staged.filter({ f -> f._0 == file }).map({ f -> f._1 }).join("");
-        val first = publicNamesOf(text).at(0).unwrapOr("");
+        val first = publicNamesOf(text).at(0) ?? "";
         if (first != "") {
             imports.push("import {" + e.modulePath + "." + first + " as onze_" + identOf(e.modulePath) + "};");
             decorated = decorated + 1;
@@ -243,7 +243,7 @@ fn rerootDep(name: string, v: Json, root: string, workspace: Array<#(string, str
     val isWorkspace = members.any({ m -> m._0 == "workspace" });
     val hit = workspace.filter({ w -> w._0 == name });
     if (isWorkspace && hit.length > 0) {
-        val pair = hit.at(0).unwrapOr(#("", ""));
+        val pair = hit.at(0) ?? #("", "");
         return "{ \"path\": " + quote(pair._1) + " }";
     }
     var fields: string[] = [];
@@ -325,7 +325,7 @@ pub fn stageAt(aliases: AliasMap, appRel: string, appDir: string, sources: Array
     val stagedApp = stagedPath(appRel + "/x.bp").split("/").take(appRel.split("/").length).join("/");
     val mods = modFiles(stagedApp, staged.map({ f -> f._0 }));
     val all = staged.append(mods).append([#("onze_routes.bp", routesModule(appDir, entries, staged))]);
-    val appTop = stagedApp.split("/").at(0).unwrapOr("app");
+    val appTop = stagedApp.split("/").at(0) ?? "app";
     val declaresApp = rootText.split("\n").any({ l -> l.trim() == "pub mod " + appTop + ";" });
     val appLine = if (declaresApp) "" else "pub mod " + appTop + ";\n";
     val extra = extraMods.map({ m -> "pub mod " + m + ";\n" }).join("");

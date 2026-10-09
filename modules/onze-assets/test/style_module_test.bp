@@ -34,9 +34,9 @@ test "css module: two files defining .container get two names; a rebuild the sam
     val a = try compileStyleModule("app/blog/blog.module.css", ".container { padding: 24px; }");
     val b = try compileStyleModule("app/ui/card.module.css", ".container { display: flex; }");
     val a2 = try compileStyleModule("app/blog/blog.module.css", ".container { padding: 24px; }");
-    val na = a.names.at(0).unwrapOr(#("", ""))._1;
-    assert na != b.names.at(0).unwrapOr(#("", ""))._1;
-    assert na == a2.names.at(0).unwrapOr(#("", ""))._1;
+    val na = (a.names.at(0) ?? #("", ""))._1;
+    assert na != (b.names.at(0) ?? #("", ""))._1;
+    assert na == (a2.names.at(0) ?? #("", ""))._1;
     assert na == scopeName("app/blog/blog.module.css", "container", a.hash);
 }
 

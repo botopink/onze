@@ -77,8 +77,8 @@ pub fn parseCreateOpts(args: string[]) -> @Result<CreateOpts, string> {
     var i = 0;
     var named = false;
     while (i < args.length) {
-        val a = args.at(i).unwrapOr("");
-        val next = args.at(i + 1).unwrapOr("");
+        val a = args.at(i) ?? "";
+        val next = args.at(i + 1) ?? "";
         val takesValue = a == "--port" || a == "--import-alias" || a == "--example" || a == "--lang" || a == "--libs";
         if (takesValue) {
             if (next == "" || next.startsWith("--")) throw "onze create: " + a + " needs a value";

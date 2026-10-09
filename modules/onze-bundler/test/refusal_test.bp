@@ -107,7 +107,7 @@ test "refusal: the styleMap probe ---- its source, and the two backends compared
     val parity = styleParity(map, js, beam);
     assert parity._0.map({ c -> c._0 + " " + c._1 }).join(",") == "components.card#1 e_39b87d03";
     assert parity._1.map({ r -> r.kind + " " + r.moduleId }).join(",") == "emilia-hash-split components.w#2,emilia-unevaluated components.x#1";
-    assert refusalMessage(parity._1.at(0).unwrapOr(BuildRefusal(kind: "", subject: "", moduleId: "", chain: []))).contains("emilia([.Gap.All.4])");
+    assert refusalMessage(parity._1.at(0) ?? BuildRefusal(kind: "", subject: "", moduleId: "", chain: [])).contains("emilia([.Gap.All.4])");
 }
 
 test "refusal: a module outside the client graph is never checked" {

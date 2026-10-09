@@ -15,7 +15,7 @@ import {spec.ReleaseSpec};
 // The file name of a chunk URL: its last path segment.
 pub fn fileOfUrl(url: string) -> string {
     val parts = url.split("/");
-    return parts.at(parts.length - 1).unwrapOr(url);
+    return parts.at(parts.length - 1) ?? url;
 }
 
 // The static files the manifest promises: every chunk, the entry and every

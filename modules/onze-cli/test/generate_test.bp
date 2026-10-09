@@ -78,9 +78,9 @@ test "generate: check ---- a decorator that disagrees with its directory" {
     val es = try scanFiles("", "app", [#("app/blog/[slug]/page.bp", "#[page(\"posts/[slug]\")] pub fn post(route: PageContext) -> @Component<ElementBase, Element> { return p([]); }")]);
     val problems = checkTree("app", es);
     assert problems.length == 1;
-    assert problems.at(0).unwrapOr("").contains("app/blog/[slug]/page.bp");
-    assert problems.at(0).unwrapOr("").contains("posts/[slug]");
-    assert problems.at(0).unwrapOr("").contains("\"blog/[slug]\"");
+    assert (problems.at(0) ?? "").contains("app/blog/[slug]/page.bp");
+    assert (problems.at(0) ?? "").contains("posts/[slug]");
+    assert (problems.at(0) ?? "").contains("\"blog/[slug]\"");
 }
 
 test "generate: staged ---- the tree, sorted, deterministic" {

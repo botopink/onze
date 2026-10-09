@@ -93,11 +93,11 @@ pub fn rfc822(epochMillis: i64) -> string {
         "Dec",
     ];
     return [
-        days.at(c.weekday - 1).unwrapOr(""),
+        days.at(c.weekday - 1) ?? "",
         ", ",
         twoDigits(c.day),
         " ",
-        months.at(c.month - 1).unwrapOr(""),
+        months.at(c.month - 1) ?? "",
         " ",
         c.year.toString(),
         " ",

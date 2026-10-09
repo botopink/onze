@@ -51,7 +51,7 @@ fn membersOf(v: Json) -> Array<#(string, Json)> {
 pub fn srcDirOf(manifest: string) -> string {
     val doc = decode(manifest).unwrapOr(Json.Null);
     val hit = membersOf(doc).filter({ m -> m._0 == "src" });
-    val raw = if (hit.length == 0) "src/" else textOf(hit.at(0).unwrapOr(#("", Json.Null))._1);
+    val raw = if (hit.length == 0) "src/" else textOf((hit.at(0) ?? #("", Json.Null))._1);
     val trimmed = if (raw.endsWith("/")) raw.slice(0, raw.length() - 1) else raw;
     return if (trimmed == "") "." else trimmed;
 }
@@ -235,13 +235,13 @@ fn compileBeam(server: string) -> @Result<void, string> {
 // The directory of the dependency `name` the project names — a workspace
 // member or a `path` — or an error naming the manifest.
 pub fn dependencyDir(manifest: string, root: string, workspace: Array<#(string, string)>, name: string) -> @Result<string, string> {
-    val deps = membersOf(decode(manifest).unwrapOr(Json.Null)).filter({ m -> m._0 == "dependencies" }).map({ m -> membersOf(m._1) }).at(0).unwrapOr([]);
+    val deps = membersOf(decode(manifest).unwrapOr(Json.Null)).filter({ m -> m._0 == "dependencies" }).map({ m -> membersOf(m._1) }).at(0) ?? [];
     val hit = deps.filter({ d -> d._0 == name });
     if (hit.length == 0) throw "onze build: " + path.join([root, "botopink.json"]) + " does not depend on " + name;
-    val spec = membersOf(hit.at(0).unwrapOr(#("", Json.Null))._1);
+    val spec = membersOf((hit.at(0) ?? #("", Json.Null))._1);
     val fromWorkspace = spec.any({ f -> f._0 == "workspace" });
-    val rel = textOf(spec.filter({ f -> f._0 == "path" }).at(0).unwrapOr(#("", Json.Null))._1);
-    val member = workspace.filter({ w -> w._0 == name }).map({ w -> w._1 }).at(0).unwrapOr("");
+    val rel = textOf((spec.filter({ f -> f._0 == "path" }).at(0) ?? #("", Json.Null))._1);
+    val member = workspace.filter({ w -> w._0 == name }).map({ w -> w._1 }).at(0) ?? "";
     val dir = if (fromWorkspace) member else if (rel.startsWith("/")) rel else if (rel == "") "" else path.normalize(path.join([root, rel]));
     if (dir == "") throw "onze build: the `" + name + "` dependency names no directory (a git dependency is not staged yet)";
     return dir;
@@ -271,7 +271,7 @@ pub fn workspaceMembers(root: string) -> Array<#(string, string)> {
                 for (fs.list(path.join([dir, group])).unwrapOr([])) { m ->
                     val member = path.join([dir, group, m]);
                     val text = fs.readText(path.join([member, "botopink.json"])).unwrapOr("");
-                    val name = textOf(membersOf(decode(text).unwrapOr(Json.Null)).filter({ f -> f._0 == "name" }).at(0).unwrapOr(#("", Json.Null))._1);
+                    val name = textOf((membersOf(decode(text).unwrapOr(Json.Null)).filter({ f -> f._0 == "name" }).at(0) ?? #("", Json.Null))._1);
                     if (name != "") out.push(#(name, member));
                 };
             };

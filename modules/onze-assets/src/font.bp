@@ -201,7 +201,7 @@ pub fn googleFontWith(family: string, opts: GoogleFontOptions, build: FontBuild)
         val name = base + "." + fileHash(tmp) + ".woff2";
         val moved = try process.run("mv", [tmp, path.join([dir, name])]);
         if (row != null) {
-            val r = row ?? MetricsRow(family: "", category: "", metrics: FontMetrics(unitsPerEm: 1, ascent: 0, descent: 0, lineGap: 0, avgCharWidth: 0), localFallback: "");
+            val r = row;
             val side = try fs.writeText(path.join([dir, base + "." + fileHash(path.join([dir, name])) + ".metrics.txt"]), metricsSidecar(r.metrics));
         };
         faces.push(#(f.style, f.weight, "/_onze/static/" + build.buildId + "/fonts/" + name, f.unicodeRange));
@@ -213,10 +213,10 @@ pub fn googleFontWith(family: string, opts: GoogleFontOptions, build: FontBuild)
 fn adjustedFor(family: string) -> string {
     val row = metricsOf(family);
     if (row == null) return "";
-    val r = row ?? MetricsRow(family: "", category: "", metrics: FontMetrics(unitsPerEm: 1, ascent: 0, descent: 0, lineGap: 0, avgCharWidth: 0), localFallback: "");
+    val r = row;
     val local = metricsOf(r.localFallback);
     if (local == null) return "";
-    val l = local ?? r;
+    val l = local;
     return fallbackFace(family, r.localFallback, r.metrics, l.metrics);
 }
 
@@ -262,7 +262,7 @@ pub fn localFont(family: string, opts: LocalFontOptions, root: string, buildId: 
         if (metrics == null) metrics = probe(normalized);
         faces.push(#(s.style, s.weight, "/_onze/static/" + buildId + "/fonts/" + name, ""));
     };
-    val adjusted = if (opts.adjustFontFallback == false) "" else if (metrics == null) "" else fallbackFace(family, "Arial", metrics ?? FontMetrics(unitsPerEm: 1, ascent: 0, descent: 0, lineGap: 0, avgCharWidth: 0), (metricsOf("Arial") ?? MetricsRow(family: "", category: "", metrics: FontMetrics(unitsPerEm: 1, ascent: 0, descent: 0, lineGap: 0, avgCharWidth: 1), localFallback: "")).metrics);
+    val adjusted = if (opts.adjustFontFallback == false) "" else if (metrics == null) "" else fallbackFace(family, "Arial", metrics, (metricsOf("Arial") ?? MetricsRow(family: "", category: "", metrics: FontMetrics(unitsPerEm: 1, ascent: 0, descent: 0, lineGap: 0, avgCharWidth: 1), localFallback: "")).metrics);
     val degraded = opts.adjustFontFallback && metrics == null;
     if (degraded) logged("font " + family + ": no metrics probe available - the fallback is unadjusted and layout shift mitigation is off for this family");
     return assemble(family, faces, opts.display, opts.preload, opts.variable, opts.fallback, adjusted);

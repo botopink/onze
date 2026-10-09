@@ -105,7 +105,7 @@ fn dec(s: string) -> @Result<string, string> {
 declare fn digitsToI32(s: string) -> i32;
 
 fn fieldAt(fields: string[], i: i32) -> string {
-    return fields.at(i).unwrapOr("");
+    return fields.at(i) ?? "";
 }
 
 fn chunkOf(line: string, fields: string[]) -> @Result<ChunkRef, string> {
@@ -169,9 +169,9 @@ pub fn parseManifest(text: string) -> @Result<ClientBundleManifest, string> {
 pub fn chunkFor(m: ClientBundleManifest, route: string) -> ChunkRef {
     val hit = m.routes.filter({ r -> r._0 == route });
     if (hit.length == 0) return emptyChunk();
-    val id = hit.at(0).unwrapOr(#("", ""))._1;
+    val id = (hit.at(0) ?? #("", ""))._1;
     val found = m.chunks.filter({ c -> c.id == id });
-    return found.at(0).unwrapOr(emptyChunk());
+    return found.at(0) ?? emptyChunk();
 }
 
 fn deferTag(url: string) -> string {

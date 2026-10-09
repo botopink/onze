@@ -61,7 +61,7 @@ fn importShape(refs: Array<ImportRef>) -> string {
 pub fn rebuild(setup: BundleSetup, state: BundleState, path: string, source: string, compiledJs: string, envOf: fn(name: string) -> string) -> @Result<RebuildResult, string> {
     val old = state.modules.filter({ m -> m.path == path });
     if (old.length == 0) throw "dev: " + path + " is not a module of this app";
-    val before = old.at(0).unwrapOr(AppModule(id: "", path: "", source: "", refs: [], client: false));
+    val before = old.at(0) ?? AppModule(id: "", path: "", source: "", refs: [], client: false);
     val refs = try importsOf(path, source);
     val after = AppModule(id: before.id, path: path, source: source, refs: refs, client: isClientModule(source));
     val modules = state.modules.map({ m -> if (m.path == path) after else m });
@@ -76,7 +76,7 @@ pub fn rebuild(setup: BundleSetup, state: BundleState, path: string, source: str
     var changed: string[] = [];
     var i = 0;
     for (plans) { p ->
-        val now = chunkFileName(p, linked.at(i).unwrapOr(""));
+        val now = chunkFileName(p, linked.at(i) ?? "");
         val was = plansFile(state, p.id);
         if (now != was) changed.push(p.id);
         i = i + 1;
@@ -89,7 +89,7 @@ fn plansFile(state: BundleState, id: string) -> string {
     var found = "";
     var i = 0;
     for (state.plans) { p ->
-        if (p.id == id) found = chunkFileName(p, state.linked.at(i).unwrapOr(""));
+        if (p.id == id) found = chunkFileName(p, state.linked.at(i) ?? "");
         i = i + 1;
     };
     return found;

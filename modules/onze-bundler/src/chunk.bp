@@ -142,7 +142,7 @@ pub fn linkChunk(plan: ChunkPlan, compiled: Array<#(string, string)>) -> @Result
     for (plan.modules) { id ->
         val hit = compiled.filter({ c -> c._0 == id });
         if (hit.length == 0) throw "chunk " + plan.id + ": module " + id + " was not compiled";
-        val js = hit.at(0).unwrapOr(#("", ""))._1;
+        val js = (hit.at(0) ?? #("", ""))._1;
         parts.push("(globalThis.__onze_factories = globalThis.__onze_factories || {})[\"" + compiledPathOf(id) + "\"] = function (module, exports, require) {\n" + js + "\n};");
     };
     return parts.join("\n") + "\n";
@@ -170,7 +170,7 @@ pub fn manifestOf(buildId: string, plans: Array<ChunkPlan>, linked: Array<string
     var chunks: Array<ChunkRef> = [];
     var i = 0;
     for (plans) { p ->
-        val made = chunkRefOf(buildId, p, linked.at(i).unwrapOr(""));
+        val made = chunkRefOf(buildId, p, linked.at(i) ?? "");
         if (p.id == "entry") {
             entry = made;
         } else if (p.id == "shared") {
@@ -203,7 +203,7 @@ pub fn describePlan(plans: Array<ChunkPlan>, linked: Array<string>, reach: Array
     var rows: string[] = [];
     var i = 0;
     for (plans) { p ->
-        rows.push(p.id.padEnd(20, " ") + " " + chunkFileName(p, linked.at(i).unwrapOr("")).padEnd(22, " ") + " " + p.modules.join(", "));
+        rows.push(p.id.padEnd(20, " ") + " " + chunkFileName(p, linked.at(i) ?? "").padEnd(22, " ") + " " + p.modules.join(", "));
         i = i + 1;
     };
     var routes: string[] = [];

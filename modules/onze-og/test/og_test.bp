@@ -54,8 +54,8 @@ test "og: metrics ---- the sidecar, .notdef, monotonic measure" {
 
 test "og: layout ---- row space-between inside 64px padding" {
     val box = layout(card(), ImageSize(width: 1200, height: 630), [inter()]);
-    val first = box.children.at(0).unwrapOr(box);
-    val second = box.children.at(1).unwrapOr(box);
+    val first = box.children.at(0) ?? box;
+    val second = box.children.at(1) ?? box;
     assert first.x == 64;
     assert second.x + second.width == 1200 - 64;
     assert first.y == second.y;
@@ -77,9 +77,9 @@ test "og: layout ---- a column's gap, padding and an absolute child" {
         span([text("pin", attrs: [])], attrs: [#("style", "position:absolute;top:10px;left:20px;fontSize:20px")]),
     ], attrs: [#("style", "display:flex;flexDirection:column;gap:16;padding:10px")]);
     val box = layout(tree, ImageSize(width: 400, height: 300), [inter()]);
-    val a = box.children.at(0).unwrapOr(box);
-    val b = box.children.at(1).unwrapOr(box);
-    val pin = box.children.at(2).unwrapOr(box);
+    val a = box.children.at(0) ?? box;
+    val b = box.children.at(1) ?? box;
+    val pin = box.children.at(2) ?? box;
     assert a.x == 10;
     assert a.y == 10;
     assert b.y == a.y + a.height + 16;
@@ -90,8 +90,8 @@ test "og: layout ---- a column's gap, padding and an absolute child" {
 test "og: wrap ---- spaces only, an overflowing word, the ellipsis fits" {
     val lines = wrapText("Hydration is a contract, not a hope", 400, inter(), 48, 2);
     assert lines.length == 2;
-    assert lines.at(1).unwrapOr("").endsWith("…");
-    assert measure(inter(), lines.at(1).unwrapOr(""), 48) <= 400;
+    assert (lines.at(1) ?? "").endsWith("…");
+    assert measure(inter(), lines.at(1) ?? "", 48) <= 400;
     assert wrapText("Supercalifragilistic", 100, inter(), 48, 0).join("|") == "Supercalifragilistic";
 }
 
@@ -131,7 +131,7 @@ test "og: response ---- defaults, no bytes, text needs a face" {
     assert r.contentType == defaultContentType();
     assert checkResponse("app/og.bp", r).length == 1;
     val withFace = withFonts(r, [FontRef(family: "Inter", weight: 700, path: "x.woff2", metricsPath: "/nonexistent/x.metrics.txt")]);
-    assert checkResponse("app/og.bp", withFace).at(0).unwrapOr("").contains("no metrics sidecar");
+    assert (checkResponse("app/og.bp", withFace).at(0) ?? "").contains("no metrics sidecar");
 }
 
 test "og: cache key ---- template, fonts and params each change it" {

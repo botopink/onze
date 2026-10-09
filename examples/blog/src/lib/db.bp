@@ -52,10 +52,10 @@ fn slugOf(fileName: string) -> string {
 // dropped on the beam backend).
 pub fn parsePost(slug: string, raw: string) -> Post {
     val lines = raw.split("\n");
-    val title = lines.at(0).unwrapOr("(untitled)");
-    val published = lines.at(1).unwrapOr("");
+    val title = lines.at(0) ?? "(untitled)";
+    val published = lines.at(1) ?? "";
     val body = lines.drop(2).join("\n").trimEnd();
-    val firstLine = body.split("\n").at(0).unwrapOr("");
+    val firstLine = body.split("\n").at(0) ?? "";
     return Post(slug: slug, title: title, published: published, excerpt: firstLine, body: body);
 }
 

@@ -67,7 +67,7 @@ test "rebuild: a non-public env read fails dev with the build's message" {
 
 test "rebuild: an unchanged save changes nothing and pushes nothing" {
     val s = try start();
-    val same = s.modules.filter({ m -> m.path == "lib/format.bp" }).at(0).unwrapOr(AppModule(id: "", path: "", source: "", refs: [], client: false));
+    val same = s.modules.filter({ m -> m.path == "lib/format.bp" }).at(0) ?? AppModule(id: "", path: "", source: "", refs: [], client: false);
     val r = try rebuild(setup(), s, "lib/format.bp", same.source, "// lib.format", { n -> noEnv(n) });
     assert r.changed.length == 0;
     assert r.steps.length == 0;

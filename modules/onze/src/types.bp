@@ -46,7 +46,7 @@ pub fn loadAliases(botopinkJson: string) -> @Result<AliasMap, string> {
     if (isObject(doc) == false) throw "botopink.json: the document must be an object, not " + kindName(doc);
     val hit = membersOf(doc).filter({ m -> m._0 == "alias" });
     if (hit.length == 0) return emptyAliases();
-    val v = hit.at(0).unwrapOr(#("", Json.Null))._1;
+    val v = (hit.at(0) ?? #("", Json.Null))._1;
     if (isObject(v) == false) throw "botopink.json: \"alias\" must be an object, not " + kindName(v);
     var entries: Array<#(string, string)> = [];
     for (membersOf(v)) { m ->
@@ -117,7 +117,7 @@ pub fn classifyAppFile(appDir: string, path: string) -> ?AppFile {
     if (path.startsWith(prefix) == false) return null;
     val rel = path.slice(prefix.length());
     val parts = rel.split("/");
-    val file = parts.at(parts.length - 1).unwrapOr("");
+    val file = parts.at(parts.length - 1) ?? "";
     if (file.endsWith(".bp") == false) return null;
     val kind = file.slice(0, file.length() - 3);
     if (appFileKinds().contains(kind) == false) return null;
@@ -142,11 +142,11 @@ pub fn describeAppFiles(appDir: string, paths: string[]) -> string {
 fn segmentCell(appDir: string, path: string) -> string {
     val f = classifyAppFile(appDir, path);
     if (f == null) return "-";
-    return f?.segment ?? "-";
+    return f.segment;
 }
 
 fn kindCellOf(appDir: string, path: string) -> string {
     val f = classifyAppFile(appDir, path);
     if (f == null) return "(not an app file)";
-    return f?.kind ?? "(not an app file)";
+    return f.kind;
 }

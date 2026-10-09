@@ -43,10 +43,10 @@ pub fn declaredArgument(source: string, decorators: string) -> ?string {
         val open = "#[" + name + "(\"";
         val parts = source.split(open);
         if (hit == false && parts.length > 1) {
-            val rest = parts.at(1).unwrapOr("");
+            val rest = parts.at(1) ?? "";
             val closed = rest.split("\"");
             if (closed.length > 1) {
-                found = closed.at(0).unwrapOr("");
+                found = closed.at(0) ?? "";
                 hit = true;
             };
         };
@@ -69,7 +69,7 @@ pub fn scanFiles(srcDir: string, appDir: string, files: Array<#(string, string)>
     for (files) { f ->
         val classified = classifyAppFile(appDir, f._0);
         if (classified != null) {
-            val af = classified ?? AppFile(authoredPath: "", segment: "", kind: "");
+            val af = classified;
             val problem = pathProblem(af.segment);
             if (problem != "") problems.push(af.authoredPath + ": " + problem);
             val needs = decoratorFor(af.kind);
@@ -78,7 +78,7 @@ pub fn scanFiles(srcDir: string, appDir: string, files: Array<#(string, string)>
             val carried = found ?? "";
             val declared = if (needs == "") af.segment else carried;
             val routeHint = if (af.kind == "route") { " (or another verb's route decorator)" } else { "" };
-            if (missing) problems.push(af.authoredPath + ": a " + af.kind + " file needs #[" + needs.split("|").at(0).unwrapOr(needs) + "(\"" + af.segment + "\")]" + routeHint);
+            if (missing) problems.push(af.authoredPath + ": a " + af.kind + " file needs #[" + needs.split("|").at(0) ?? needs + "(\"" + af.segment + "\")]" + routeHint);
             entries.push(RouteEntry(pattern: patternOfSegment(af.segment), kind: af.kind, authoredPath: af.authoredPath, modulePath: moduleIdOf(srcDir, af.authoredPath), declared: declared));
         };
     };

@@ -33,7 +33,7 @@ pub fn loadModules(files: Array<SourceFile>) -> @Result<Array<AppModule>, string
 fn moduleById(modules: Array<AppModule>, id: string) -> ?AppModule {
     val hit = modules.filter({ m -> m.id == id });
     if (hit.length == 0) return null;
-    return hit.at(0).unwrapOr(AppModule(id: "", path: "", source: "", refs: [], client: false));
+    return hit.at(0) ?? AppModule(id: "", path: "", source: "", refs: [], client: false);
 }
 
 fn hasModule(modules: Array<AppModule>, id: string) -> bool {
@@ -109,7 +109,7 @@ pub fn routeModuleIds(modules: Array<AppModule>, appDir: string) -> string[] {
 fn isRenderFile(appDir: string, path: string) -> bool {
     val f = classifyAppFile(appDir, path);
     if (f == null) return false;
-    return (f?.kind ?? "route") != "route";
+    return (f.kind) != "route";
 }
 
 // The client roots the server-side walk from `starts` reaches, in discovery
@@ -119,13 +119,13 @@ pub fn rootsFrom(modules: Array<AppModule>, aliases: AliasMap, starts: string[])
     var seen: string[] = [];
     var stack: string[] = starts.reverse();
     while (stack.length > 0) {
-        val id = stack.at(stack.length - 1).unwrapOr("");
+        val id = stack.at(stack.length - 1) ?? "";
         stack = stack.take(stack.length - 1);
         if (seen.contains(id) == false) {
             seen.push(id);
             val m = moduleById(modules, id);
             if (m != null) {
-                val found = m ?? AppModule(id: "", path: "", source: "", refs: [], client: false);
+                val found = m;
                 if (found.client) {
                     if (roots.contains(id) == false) roots.push(id);
                 } else {
@@ -154,7 +154,7 @@ pub fn graphOfRoots(modules: Array<AppModule>, aliases: AliasMap, roots: string[
     for (roots) { root ->
         var stack: Array<#(string, string[])> = [#(root, [root])];
         while (stack.length > 0) {
-            val top = stack.at(stack.length - 1).unwrapOr(#("", []));
+            val top = stack.at(stack.length - 1) ?? #("", []);
             stack = stack.take(stack.length - 1);
             val id = top._0;
             if (placed.contains(id) == false) {
@@ -177,7 +177,7 @@ pub fn graphOfRoots(modules: Array<AppModule>, aliases: AliasMap, roots: string[
 pub fn chainOf(graph: ClientGraph, moduleId: string) -> Array<string> {
     val hit = graph.nodes.filter({ n -> n.moduleId == moduleId });
     if (hit.length == 0) return [];
-    return hit.at(0).unwrapOr(GraphNode(moduleId: "", path: "", chain: [], isRoot: false)).chain;
+    return (hit.at(0) ?? GraphNode(moduleId: "", path: "", chain: [], isRoot: false)).chain;
 }
 
 pub fn inGraph(graph: ClientGraph, moduleId: string) -> bool {

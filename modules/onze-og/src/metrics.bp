@@ -27,7 +27,7 @@ pub fn parseMetrics(family: string, weight: i32, text: string) -> FontMetrics {
         val line = raw.trim();
         if (line.contains("|")) {
             val parts = line.split("|");
-            advances.push(#(intOf(parts.at(0).unwrapOr("0")), intOf(parts.at(1).unwrapOr("0"))));
+            advances.push(#(intOf(parts.at(0) ?? "0"), intOf(parts.at(1) ?? "0")));
         } else if (line.contains(" ")) {
             val key = line.slice(0, line.indexOf(" "));
             val v = intOf(line.slice(line.indexOf(" ") + 1, line.length()).trim());
@@ -43,7 +43,7 @@ pub fn parseMetrics(family: string, weight: i32, text: string) -> FontMetrics {
 pub fn advanceOf(m: FontMetrics, codepoint: i32) -> i32 {
     val hit = m.advances.filter({ a -> a._0 == codepoint });
     if (hit.length == 0) return m.notdef;
-    val pair = hit.at(0).unwrapOr(#(0, m.notdef));
+    val pair = hit.at(0) ?? #(0, m.notdef);
     return pair._1;
 }
 

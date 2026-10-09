@@ -121,7 +121,7 @@ test "collections: glob reads one entry per file, ids slugged from the path" {
     val root = blogTree("glob");
     val posts = await collections.getCollection(blog(root));
     assert ids(posts) == "2026/second,hello-world";
-    val first = posts.at(1).unwrapOr(posts.at(0).unwrapOr(missing()));
+    val first = posts.at(1) ?? (posts.at(0) ?? missing());
     assert first.data.title == "Hello, world";
     assert first.collection == "blog";
     assert first.filePath == path.join([root, "content/blog/Hello World.json"]);
@@ -271,17 +271,13 @@ test "collections: file reads an array of objects by id, the id out of the data"
     val root = blogTree("file");
     val found = await collections.getCollection(authors(root));
     assert ids(found) == "ana";
-    assert found
-        .at(0)
-        .unwrapOr(
-            Entry(
-                id: "",
-                collection: "",
-                data: Author(name: "", portfolio: ""),
-                body: "",
-                filePath: "",
-            ),
-        ).data.name
+    assert (found.at(0) ?? Entry(
+        id: "",
+        collection: "",
+        data: Author(name: "", portfolio: ""),
+        body: "",
+        filePath: "",
+    )).data.name
         == "Ana";
 }
 
@@ -336,17 +332,13 @@ test "collections: a custom loader is a function answering raw entries" {
     val c = collections.defineCollection("notes", notes, schemaOfNote());
     val found = await collections.getCollection(c);
     assert ids(found) == "one";
-    assert found
-        .at(0)
-        .unwrapOr(
-            Entry(
-                id: "",
-                collection: "",
-                data: Note(tags: []),
-                body: "",
-                filePath: "",
-            ),
-        ).data.tags.join(",")
+    assert (found.at(0) ?? Entry(
+        id: "",
+        collection: "",
+        data: Note(tags: []),
+        body: "",
+        filePath: "",
+    )).data.tags.join(",")
         == "a";
     val down = collections.defineCollection("down", failing, schemaOfNote());
     val problems = await collections.syncProblems([down.erased()]);
@@ -465,7 +457,7 @@ test "collections: the store is read at run time without the content files" {
     val people = await collections.getCollection(authors(root));
     collections.useFiles();
     assert ids(posts) == "2026/second,hello-world";
-    assert posts.at(0).unwrapOr(missing()).data.draft == true;
+    assert (posts.at(0) ?? missing()).data.draft == true;
     assert ids(people) == "ana";
     assert fs.exists(collections.storeFile(out, "blog"));
 }
@@ -503,17 +495,13 @@ test "collections: the store keeps numbers and text exactly" {
     collections.useStore(out);
     val found = await collections.getCollection(c);
     collections.useFiles();
-    val s = found
-        .at(0)
-        .unwrapOr(
-            Entry(
-                id: "",
-                collection: "",
-                data: Score(points: 0, ratio: 0.0, label: null),
-                body: "",
-                filePath: "",
-            ),
-        );
+    val s = found.at(0) ?? Entry(
+        id: "",
+        collection: "",
+        data: Score(points: 0, ratio: 0.0, label: null),
+        body: "",
+        filePath: "",
+    );
     assert s.data.points == 42;
     assert s.data.ratio == 0.1;
     assert s.data.label == "a \"quoted\"\nline";

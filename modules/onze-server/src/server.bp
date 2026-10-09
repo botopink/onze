@@ -130,7 +130,7 @@ pub fn uiRecords(table: string) -> Array<#(string, string, string)> {
     var out: Array<#(string, string, string)> = [];
     for (table.split("\n")) { line ->
         val fields = line.split("|");
-        if (fields.length >= 2) out.push(#(fields.at(0).unwrapOr(""), fields.at(1).unwrapOr(""), line));
+        if (fields.length >= 2) out.push(#(fields.at(0) ?? "", fields.at(1) ?? "", line));
     };
     return out;
 }

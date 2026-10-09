@@ -35,7 +35,7 @@ test "manifest: round trip ---- both targets, same literal, pipe escaped" {
     val text = formatManifest(full());
     val back = try parseManifest(text);
     assert sameManifest(back, full());
-    assert back.publicEnv.at(1).unwrapOr(#("", ""))._1 == "a|b\nc";
+    assert (back.publicEnv.at(1) ?? #("", ""))._1 == "a|b\nc";
     val withUnknown = try parseManifest(text + "Z|x|y\n");
     assert sameManifest(withUnknown, full());
     val v2 = errorOf(parseManifest("V|2|b7f2a1\n"));

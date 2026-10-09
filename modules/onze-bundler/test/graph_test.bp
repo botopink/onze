@@ -32,18 +32,18 @@ fn scanError(source: string) -> string {
 test "scan: a named import is one ref with its names" {
     val refs = refsOf("import { div, text } from \"jhonstart\";");
     assert refs.length == 1;
-    assert refs.at(0).unwrapOr(ImportRef(spec: "", names: [], isModDecl: false, line: 0)).spec == "jhonstart";
-    assert refs.at(0).unwrapOr(ImportRef(spec: "", names: [], isModDecl: false, line: 0)).names.join(",") == "div,text";
+    assert (refs.at(0) ?? ImportRef(spec: "", names: [], isModDecl: false, line: 0)).spec == "jhonstart";
+    assert (refs.at(0) ?? ImportRef(spec: "", names: [], isModDecl: false, line: 0)).names.join(",") == "div,text";
 }
 
 test "scan: the sibling shorthand, a mod line, a comment and a multi-line import" {
     val refs = refsOf("import { perimeter };\npub mod tokens;\n// import { gone } from \"x\";\nimport {\n    a,\n    b: {c, d},\n} from \"lib.x\";");
     assert refs.length == 3;
-    val short = refs.at(0).unwrapOr(ImportRef(spec: "?", names: [], isModDecl: true, line: 0));
+    val short = refs.at(0) ?? ImportRef(spec: "?", names: [], isModDecl: true, line: 0);
     assert short.spec == "";
     assert short.isModDecl == false;
-    assert refs.at(1).unwrapOr(ImportRef(spec: "", names: [], isModDecl: false, line: 0)).isModDecl;
-    val multi = refs.at(2).unwrapOr(ImportRef(spec: "", names: [], isModDecl: false, line: 0));
+    assert (refs.at(1) ?? ImportRef(spec: "", names: [], isModDecl: false, line: 0)).isModDecl;
+    val multi = refs.at(2) ?? ImportRef(spec: "", names: [], isModDecl: false, line: 0);
     assert multi.spec == "lib.x";
     assert multi.names.join("|") == "a|b: {c, d}";
     assert multi.line == 4;

@@ -77,7 +77,7 @@ pub fn serverMainSource(c: OnzeConfig) -> string {
 pub fn startPort(args: string[], envPort: string, configPort: i32) -> @Result<i32, string> {
     val at = args.indexOf("-p");
     if (at >= 0) {
-        val given = args.at(at + 1).unwrapOr("");
+        val given = args.at(at + 1) ?? "";
         return try parsePort(given, "onze start -p");
     }
     if (envPort != "") return try parsePort(envPort, "PORT");
@@ -89,7 +89,7 @@ pub fn startArgsProblem(args: string[]) -> string {
     var i = 0;
     var problem = "";
     while (i < args.length && problem == "") {
-        val a = args.at(i).unwrapOr("");
+        val a = args.at(i) ?? "";
         if (a == "-p") {
             i = i + 2;
         } else {

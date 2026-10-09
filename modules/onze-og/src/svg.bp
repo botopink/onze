@@ -34,9 +34,9 @@ pub fn gradientOf(background: string) -> #(i32, string, string) {
     val inner = background.slice(head.length(), background.length() - 1);
     val parts = inner.split(",").map({ p -> p.trim() });
     if (parts.length != 3) return none;
-    val angleText = parts.at(0).unwrapOr("");
+    val angleText = parts.at(0) ?? "";
     if (angleText.endsWith("deg") == false) return none;
-    return #(intOf(angleText.slice(0, angleText.length() - 3)), parts.at(1).unwrapOr(""), parts.at(2).unwrapOr(""));
+    return #(intOf(angleText.slice(0, angleText.length() - 3)), parts.at(1) ?? "", parts.at(2) ?? "");
 }
 
 fn flatten(b: LayoutBox) -> Array<LayoutBox> {

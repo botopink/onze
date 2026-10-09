@@ -117,7 +117,7 @@ fn splitUrl(src: string) -> ?#(string, string, string, string) {
     val colon = authority.indexOf(":");
     val host = if (colon < 0) authority else authority.slice(0, colon);
     val port = if (colon < 0) "" else authority.slice(colon + 1, authority.length());
-    return #(protocol, host, port, pathPart.split("?").at(0).unwrapOr(pathPart));
+    return #(protocol, host, port, pathPart.split("?").at(0) ?? pathPart);
 }
 
 // The accepted source, or the refusal naming it.
@@ -126,15 +126,15 @@ pub fn validateSource(cfg: ImageConfig, publicDir: string, src: string) -> @Resu
     if (src.startsWith("/")) {
         val norm = normalizeUrlPath(src);
         if (norm == null) throw "Image: " + src + " escapes " + publicDir;
-        return norm ?? src;
+        return norm;
     }
     val parts = splitUrl(src);
     if (parts == null) throw "Image: " + src + " is neither a /-rooted public path nor an absolute URL";
     val none: #(string, string, string, string) = #("", "", "", "");
-    val u = parts ?? none;
+    val u = parts;
     val cleanPath = normalizeUrlPath(u._3);
     if (cleanPath == null) throw "Image: " + src + " escapes its host's root";
-    val clean = cleanPath ?? "/";
+    val clean = cleanPath;
     val ok = cfg.remotePatterns.any({ p -> p.protocol == u._0 && hostMatches(p.hostname, u._1) && p.port == u._2 && clean.startsWith(p.pathPrefix) });
     val portSuffix = if (u._2 == "") { "" } else { ":" + u._2 };
     if (ok == false) throw "Image: host " + u._1 + portSuffix + " not in remotePatterns (" + src + ")";
@@ -150,8 +150,8 @@ pub fn optimizedUrl(src: string, width: i32, quality: i32, format: string) -> st
 // at least `w`, else the largest — the handler refuses any other.
 pub fn servedWidth(cfg: ImageConfig, w: i32) -> i32 {
     val atLeast = cfg.deviceWidths.filter({ d -> d >= w });
-    val largest = cfg.deviceWidths.at(cfg.deviceWidths.length - 1).unwrapOr(w);
-    return atLeast.at(0).unwrapOr(largest);
+    val largest = cfg.deviceWidths.at(cfg.deviceWidths.length - 1) ?? w;
+    return atLeast.at(0) ?? largest;
 }
 
 fn widthsFor(cfg: ImageConfig, p: ImageProps) -> Array<i32> {
@@ -163,7 +163,7 @@ fn widthsFor(cfg: ImageConfig, p: ImageProps) -> Array<i32> {
 // The `srcset`: one candidate per device width up to `width` with `sizes`,
 // the 1× and 2× pair without.
 pub fn srcsetOf(cfg: ImageConfig, p: ImageProps, src: string) -> string {
-    val format = cfg.formats.at(0).unwrapOr("image/webp");
+    val format = cfg.formats.at(0) ?? "image/webp";
     val responsive = p.sizes != "" || p.fill;
     if (responsive) return widthsFor(cfg, p).map({ w -> optimizedUrl(src, w, p.quality, format) + " " + w.toString() + "w" }).join(", ");
     return optimizedUrl(src, servedWidth(cfg, p.width), p.quality, format) + " 1x, " + optimizedUrl(src, servedWidth(cfg, p.width * 2), p.quality, format) + " 2x";
@@ -205,7 +205,7 @@ pub fn Image(p: ImageProps, cfg: ImageConfig, publicDir: string) -> Element {
         return nothing();
     }
     val src = checked.unwrapOr(p.src);
-    val format = cfg.formats.at(0).unwrapOr("image/webp");
+    val format = cfg.formats.at(0) ?? "image/webp";
     val mainWidth = if (p.fill) servedWidth(cfg, 1920) else servedWidth(cfg, p.width);
     val main = optimizedUrl(src, mainWidth, p.quality, format);
     val blur = p.placeholder == "blur";

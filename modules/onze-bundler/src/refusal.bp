@@ -47,7 +47,7 @@ fn graphModules(graph: ClientGraph, modules: Array<AppModule>) -> Array<AppModul
 
 fn moduleOf(modules: Array<AppModule>, id: string) -> AppModule {
     val hit = modules.filter({ m -> m.id == id });
-    return hit.at(0).unwrapOr(AppModule(id: id, path: "", source: "", refs: [], client: false));
+    return hit.at(0) ?? AppModule(id: id, path: "", source: "", refs: [], client: false);
 }
 
 // ── refusal 1 — server-only and request scope ───────────────────────────────
@@ -164,7 +164,7 @@ fn literalVals(source: string) -> Array<#(string, string)> {
         val l = raw.trim();
         val decl = l.startsWith("val ") && l.contains("= [") && l.contains("emilia(") == false;
         if (decl) {
-            val name = l.slice(4, l.indexOf("=")).trim().split(":").at(0).unwrapOr("").trim();
+            val name = (l.slice(4, l.indexOf("=")).trim().split(":").at(0) ?? "").trim();
             val rhs = l.slice(l.indexOf("=") + 1).trim();
             out.push(#(name, if (rhs.endsWith(";")) rhs.slice(0, rhs.length() - 1).trim() else rhs));
         };
@@ -187,7 +187,7 @@ pub fn emiliaCallsOf(moduleId: string, source: string) -> Array<EmiliaCall> {
                 val arg = argAfter(line, at + 6);
                 val named = vals.filter({ v -> v._0 == arg });
                 val literal = (arg.startsWith("[") && arg.endsWith("]")) || named.length > 0;
-                val tokens = if (named.length > 0) named.at(0).unwrapOr(#("", ""))._1 else arg;
+                val tokens = if (named.length > 0) (named.at(0) ?? #("", ""))._1 else arg;
                 out.push(EmiliaCall(moduleId: moduleId, line: n, text: "emilia(" + arg + ")", literal: literal, tokens: tokens));
             };
         };
@@ -279,13 +279,13 @@ pub fn parseStyleProbe(text: string) -> Array<StyleProbe> {
     var out: Array<StyleProbe> = [];
     for (text.split("\n")) { line ->
         val f = line.trim().split("|");
-        if (f.length == 3) out.push(StyleProbe(site: f.at(0).unwrapOr(""), className: f.at(1).unwrapOr(""), bodyHash: f.at(2).unwrapOr("")));
+        if (f.length == 3) out.push(StyleProbe(site: f.at(0) ?? "", className: f.at(1) ?? "", bodyHash: f.at(2) ?? ""));
     };
     return out;
 }
 
 fn probeAt(rows: Array<StyleProbe>, site: string) -> StyleProbe {
-    return rows.filter({ r -> r.site == site }).at(0).unwrapOr(StyleProbe(site: "", className: "", bodyHash: ""));
+    return rows.filter({ r -> r.site == site }).at(0) ?? StyleProbe(site: "", className: "", bodyHash: "");
 }
 
 // The two backends' evaluations against each other: `#(site, class)` for
@@ -322,8 +322,8 @@ pub fn checkBuild(graph: ClientGraph, modules: Array<AppModule>, config: OnzeCon
 
 pub fn refusalMessage(r: BuildRefusal) -> string {
     val chain = chainText(r.chain);
-    if (r.kind == "server-only") return "server-only module " + r.moduleId + " reached from client root " + r.chain.at(0).unwrapOr(r.moduleId) + "\n  " + chain;
-    if (r.kind == "request-scope") return "request scope (" + r.subject + ") read in " + r.moduleId + ", reached from client root " + r.chain.at(0).unwrapOr(r.moduleId) + "\n  " + chain;
+    if (r.kind == "server-only") return "server-only module " + r.moduleId + " reached from client root " + r.chain.at(0) ?? r.moduleId + "\n  " + chain;
+    if (r.kind == "request-scope") return "request scope (" + r.subject + ") read in " + r.moduleId + ", reached from client root " + r.chain.at(0) ?? r.moduleId + "\n  " + chain;
     return [r.kind.padEnd(18, " "), r.subject.padEnd(26, " "), r.moduleId.padEnd(22, " "), chain].join("  ");
 }
 

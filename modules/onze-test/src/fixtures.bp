@@ -10,7 +10,7 @@ pub type Fixture(files: Array<FixtureFile>) {
     // The content of `path`, `""` when the fixture has no such file.
     pub fn read(self: Self, path: string) -> string {
         val hit = self.files.filter({ f -> f.path == path });
-        return hit.at(0).unwrapOr(FixtureFile(path: "", content: "")).content;
+        return (hit.at(0) ?? FixtureFile(path: "", content: "")).content;
     }
 
     pub fn paths(self: Self) -> string[] {

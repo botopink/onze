@@ -1616,7 +1616,7 @@ fn convertItem(b: Blk, ctx: Ctx) -> #(MdNode, bool, Ctx) {
     var task = 0;
     val first = children.at(0);
     if (ctx.options.gfm && first != null) {
-        val para = first ?? b;
+        val para = first;
         val c = charsOf(para.content);
         val mark = c.at(1);
         val isTask = para.kind == Kind.BPara
@@ -2241,7 +2241,7 @@ fn processEmphasis(ip0: IP, bottom: i32) -> IP {
                 if (!found) {
                     val below = delims.at(ci - 1);
                     val floorId = if (ci - 1 >= 0 && below != null)
-                        (below ?? closer).id
+                        below.id
                     else
                         -1;
                     floors = floors
@@ -2296,14 +2296,7 @@ fn closeBracket(ip0: IP) -> IP {
     val ip = IP(..ip0, pos: startpos);
     val top = ip.brackets.at(ip.brackets.length - 1);
     if (top == null) return pushText(ip, "]", startpos);
-    val opener = top ?? Brk(
-        id: 0,
-        index: 0,
-        image: false,
-        active: false,
-        bracketAfter: false,
-        below: 0,
-    );
+    val opener = top;
     if (!opener.active) return pushText(dropBracket(ip), "]", startpos);
     var matched = false;
     var dest = "";

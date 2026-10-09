@@ -19,7 +19,7 @@ fn testTmp() -> string {
 fn optsError(args: string[]) -> string {
     return case parseCreateOpts(args) {
         Ok(o) -> "ok";
-        Error(e) -> e.split("\n").at(0).unwrapOr(e);
+        Error(e) -> e.split("\n").at(0) ?? e;
     };
 }
 
@@ -57,11 +57,11 @@ test "create: the defaults, --src-dir, --import-alias" {
     assert d.importAlias == "@/";
     assert d.srcDir == false;
     val s = try parseCreateOpts(["my-app", "--yes", "--src-dir"]);
-    val onzeJson = scaffoldFiles(s).filter({ f -> f._0 == "onze.json" }).at(0).unwrapOr(#("", ""))._1;
+    val onzeJson = (scaffoldFiles(s).filter({ f -> f._0 == "onze.json" }).at(0) ?? #("", ""))._1;
     assert onzeJson.contains("\"appDir\": \"src/app\"");
     assert scaffoldFiles(s).any({ f -> f._0 == "src/app/page.bp" });
     val a = try parseCreateOpts(["my-app", "--yes", "--import-alias", "~/"]);
-    val manifest = scaffoldFiles(a).filter({ f -> f._0 == "botopink.json" }).at(0).unwrapOr(#("", ""))._1;
+    val manifest = (scaffoldFiles(a).filter({ f -> f._0 == "botopink.json" }).at(0) ?? #("", ""))._1;
     assert manifest.contains("\"~/components\": \"components\"");
 }
 
@@ -108,11 +108,11 @@ test "create: the default puts the app at the project root; --src-dir under src/
     assert bin != "";
     val flat = scaffoldFiles(try parseCreateOpts(["flat", "--yes"]));
     assert flat.any({ f -> f._0 == "app/page.bp" });
-    assert flat.filter({ f -> f._0 == "botopink.json" }).at(0).unwrapOr(#("", ""))._1.contains("\"src\": \".\"");
-    assert flat.filter({ f -> f._0 == "onze.json" }).at(0).unwrapOr(#("", ""))._1.contains("\"appDir\": \"app\"");
+    assert (flat.filter({ f -> f._0 == "botopink.json" }).at(0) ?? #("", ""))._1.contains("\"src\": \".\"");
+    assert (flat.filter({ f -> f._0 == "onze.json" }).at(0) ?? #("", ""))._1.contains("\"appDir\": \"app\"");
     val nested = scaffoldFiles(try parseCreateOpts(["nested", "--yes", "--src-dir"]));
     assert nested.any({ f -> f._0 == "src/app/page.bp" });
-    assert nested.filter({ f -> f._0 == "botopink.json" }).at(0).unwrapOr(#("", ""))._1.contains("\"src\": \"src/\"");
+    assert (nested.filter({ f -> f._0 == "botopink.json" }).at(0) ?? #("", ""))._1.contains("\"src\": \"src/\"");
     val dir = scratch();
     val out = run(dir, ["create", "nested", "--yes", "--src-dir", "--libs", repositoryDir()], "test");
     assert out.code == 0;

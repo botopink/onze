@@ -33,7 +33,7 @@ test "db: listPosts returns the three seeded posts, newest first" {
     val posts = listPosts();
     assert posts.length == 3;
     assert posts.map({ p -> p.slug }).join(",") == "styles-that-stay-put,streaming-explained,hello-world";
-    assert posts.at(2).unwrapOr(parsePost("", "")).title == "Hello, world";
+    assert (posts.at(2) ?? parsePost("", "")).title == "Hello, world";
 }
 
 test "db: readPost of a missing slug names the slug" {
@@ -52,7 +52,7 @@ test "db: writePost then listPosts shows four" {
     assert w.isOk();
     val after = listPostsIn(dir).unwrapOr([]);
     assert after.length == 4;
-    assert after.at(0).unwrapOr(parsePost("", "")).slug == "a-fourth";
+    assert (after.at(0) ?? parsePost("", "")).slug == "a-fourth";
     assert readPostIn(dir, "a-fourth").isOk();
     drop(dir);
 }

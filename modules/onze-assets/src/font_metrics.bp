@@ -36,7 +36,7 @@ pub fn metricsTable() -> Array<MetricsRow> {
 pub fn metricsOf(family: string) -> ?MetricsRow {
     val hit = metricsTable().filter({ r -> r.family == family });
     if (hit.length == 0) return null;
-    return hit.at(0).unwrapOr(MetricsRow(family: "", category: "", metrics: FontMetrics(unitsPerEm: 1, ascent: 0, descent: 0, lineGap: 0, avgCharWidth: 0), localFallback: ""));
+    return hit.at(0) ?? MetricsRow(family: "", category: "", metrics: FontMetrics(unitsPerEm: 1, ascent: 0, descent: 0, lineGap: 0, avgCharWidth: 0), localFallback: "");
 }
 
 // The sidecar front 70 reads beside a face: one `key value` line each.

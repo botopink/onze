@@ -155,7 +155,7 @@ test "font: local ---- copied under its hash, refused outside the root, degraded
     val f = try localFont("Brand", opts, dir, "b7f2a1", path.join([dir, ".onze"]), { file -> noProbe(file) }, { line -> logLine(line) });
     val copied = fs.list(path.join([dir, ".onze", "static", "b7f2a1", "fonts"])).unwrapOr([]);
     assert copied.length == 1;
-    assert f.css.contains("/_onze/static/b7f2a1/fonts/" + copied.at(0).unwrapOr(""));
+    assert f.css.contains("/_onze/static/b7f2a1/fonts/" + copied.at(0) ?? "");
     assert logged().any({ l -> l.startsWith("font Brand: no metrics probe") });
     val outside = LocalFontOptions(sources: [LocalFontSource(path: "../../etc/passwd", weight: "400", style: "normal")], display: "swap", preload: false, variable: "", fallback: [], adjustFontFallback: false);
     assert errorOf(localFont("Brand", outside, dir, "b7f2a1", dir, { file -> noProbe(file) }, { line -> logLine(line) })).contains("outside the project root");

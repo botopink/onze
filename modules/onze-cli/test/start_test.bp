@@ -62,7 +62,7 @@ fn get(port: i32, pathname: string) -> @Result<string, string> {
 fn getWith(port: i32, pathname: string, extra: string[]) -> @Result<string, string> {
     val r = try process.run("curl", ["-s", "-o", "-", "-w", "\n%{http_code}", "--retry", "180", "--retry-connrefused", "--retry-delay", "1", "--max-time", "120"].append(extra).append(["http://127.0.0.1:" + port.toString() + pathname]));
     val lines = r.stdout.split("\n");
-    val status = lines.at(lines.length - 1).unwrapOr("");
+    val status = lines.at(lines.length - 1) ?? "";
     return status + "\n" + lines.take(lines.length - 1).join("\n");
 }
 
@@ -127,13 +127,13 @@ test "start: the blog through onze build && onze start ---- its pages, not-found
     assert fs.exists(path.join([out, "client-manifest.txt"]));
     assert fs.exists(path.join([out, "client", "src", "onze_entry.bp"]));
     assert fs.exists(path.join([out, "client-js", "onze_entry.js"]));
-    val sharedChunk = fs.readText(path.join([out, "static", built.buildId, built.chunks.at(0).unwrapOr("")])).unwrapOr("");
+    val sharedChunk = fs.readText(path.join([out, "static", built.buildId, built.chunks.at(0) ?? ""])).unwrapOr("");
     // A chunk registers each module it carries as `["<path>.js"] = function`;
     // the module table is what is asserted, not any text a comment may hold.
     assert sharedChunk.contains("[\"components/like_button.js\"] = function");
     assert sharedChunk.contains("[\"lib/db.js\"]") == false;
-    val entryChunk = built.chunks.at(1).unwrapOr("");
-    val sheet = built.chunks.at(2).unwrapOr("");
+    val entryChunk = built.chunks.at(1) ?? "";
+    val sheet = built.chunks.at(2) ?? "";
     val pid = try spawnServer(p, 43102);
     val post = get(43102, "/blog/hello-world");
     val about = get(43102, "/about");

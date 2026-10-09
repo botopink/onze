@@ -33,7 +33,7 @@ pub type ImageSize(width: i32, height: i32)
 fn attrOf(e: Element, name: string) -> string {
     val hit = e.attrs.filter({ a -> a._0 == name });
     if (hit.length == 0) return "";
-    val pair = hit.at(0).unwrapOr(#("", ""));
+    val pair = hit.at(0) ?? #("", "");
     return pair._1;
 }
 
@@ -69,9 +69,9 @@ pub fn faceFor(faces: Array<FontMetrics>, family: string, weight: i32) -> FontMe
     val exact = faces.filter({ f -> f.family == family && f.weight == weight });
     val byFamily = faces.filter({ f -> f.family == family });
     val stand = FontMetrics(family: "", weight: 400, unitsPerEm: 1000, ascent: 800, descent: 200, notdef: 500, advances: []);
-    if (exact.length > 0) return exact.at(0).unwrapOr(stand);
-    if (byFamily.length > 0) return byFamily.at(0).unwrapOr(stand);
-    return faces.at(0).unwrapOr(stand);
+    if (exact.length > 0) return exact.at(0) ?? stand;
+    if (byFamily.length > 0) return byFamily.at(0) ?? stand;
+    return faces.at(0) ?? stand;
 }
 
 pub fn lineHeightOf(s: Style) -> i32 {
@@ -97,7 +97,7 @@ pub fn wrapText(text: string, widthPx: i32, m: FontMetrics, fontSize: i32, maxLi
     val over = maxLines > 0 && lines.length > maxLines;
     if (over == false) return lines;
     val kept = lines.take(maxLines);
-    var last = kept.at(maxLines - 1).unwrapOr("");
+    var last = kept.at(maxLines - 1) ?? "";
     while (last != "" && measure(m, last + "…", fontSize) > widthPx) {
         last = last.slice(0, last.length() - 1).trimEnd();
     };
@@ -124,10 +124,10 @@ fn lengthOf(value: string, whole: i32, fallback: i32) -> i32 {
 pub fn paddingOf(s: Style) -> #(i32, i32, i32, i32) {
     val parts = s.padding.split(" ").filter({ p -> p != "" }).map({ p -> pxOf(p) }).map({ n -> if (n == 0 - 2147483648) 0 else n });
     if (parts.length == 0) return #(0, 0, 0, 0);
-    val a = parts.at(0).unwrapOr(0);
-    val b = parts.at(1).unwrapOr(a);
-    val c = parts.at(2).unwrapOr(a);
-    val d = parts.at(3).unwrapOr(b);
+    val a = parts.at(0) ?? 0;
+    val b = parts.at(1) ?? a;
+    val c = parts.at(2) ?? a;
+    val d = parts.at(3) ?? b;
     return #(a, b, c, d);
 }
 
@@ -204,7 +204,7 @@ pub fn place(e: Element, s: Style, x: i32, y: i32, w: i32, h: i32, faces: Array<
     var boxes: Array<LayoutBox> = [];
     var i = 0;
     for (flow) { c ->
-        val z = sizes.at(i).unwrapOr(#(0, 0));
+        val z = sizes.at(i) ?? #(0, 0);
         val cs = styled(s, c);
         val cross = if (row) ch else cw;
         val own = if (row) z._1 else z._0;

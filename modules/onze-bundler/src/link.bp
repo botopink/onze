@@ -82,7 +82,7 @@ pub fn jsClosure(outDir: string, roots: string[], substitutions: Array<#(string,
     var seen: string[] = [];
     var queue: string[] = roots;
     while (queue.length > 0) {
-        val file = queue.at(0).unwrapOr("");
+        val file = queue.at(0) ?? "";
         queue = queue.drop(1);
         if (seen.contains(file) == false) {
             seen.push(file);
@@ -100,7 +100,7 @@ pub fn jsClosure(outDir: string, roots: string[], substitutions: Array<#(string,
 fn substituted(file: string, substitutions: Array<#(string, string)>) -> string {
     val hit = substitutions.filter({ s -> s._0 == file });
     if (hit.length == 0) return file;
-    val pair = hit.at(0).unwrapOr(#(file, file));
+    val pair = hit.at(0) ?? #(file, file);
     return pair._1;
 }
 

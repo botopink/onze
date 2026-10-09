@@ -77,7 +77,7 @@ test "entry: the runtime class check names every class the payload's s key lacks
 test "entry: parseIslands reads the payload's i triples" {
     val rows = try parseIslands("[[\"i0\",\"Nav\",\"title=Hi&count=2\"],[\"i1\",\"LikeButton\",\"\"]]");
     assert rows.length == 2;
-    val first = rows.at(0).unwrapOr(Island(id: "", component: "", props: []));
+    val first = rows.at(0) ?? Island(id: "", component: "", props: []);
     assert first.component == "Nav";
     assert first.props.map({ kv -> kv._0 + "=" + kv._1 }).join(",") == "title=Hi,count=2";
     assert parseIslands("[[\"i0\",\"Nav\"]]").isError();

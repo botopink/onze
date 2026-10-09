@@ -40,7 +40,7 @@ declare fn toF64(s: string) -> f64;
 fn prop(p: Array<#(string, string)>, name: string) -> string {
     val hit = p.filter({ kv -> kv._0 == name });
     if (hit.length == 0) return "";
-    val first = hit.at(0).unwrapOr(#("", ""));
+    val first = hit.at(0) ?? #("", "");
     return first._1;
 }
 
@@ -80,7 +80,7 @@ fn classNamesIn(html: string) -> string[] {
         if (first) {
             first = false;
         } else {
-            val value = piece.split("\"").at(0).unwrapOr("");
+            val value = piece.split("\"").at(0) ?? "";
             for (value.split(" ")) { name ->
                 if (isEmiliaClass(name) && out.contains(name) == false) out.push(name);
             };
