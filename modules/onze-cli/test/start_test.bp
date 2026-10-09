@@ -86,6 +86,8 @@ test "start: the server's main ---- the config build resolved, PORT over it" {
     assert src.contains("OnzeConfig(name: \"\", port: 3000, basePath: \"\", appDir: \"app\", publicDir: \"public\", outDir: \".onze\", dev: false, actionsBodyLimit: 1048576, allowedRedirects: [], lang: \"en\")");
     assert src.contains("import {Onze} from \"onze-server\";");
     assert src.contains("import {onze_routes.routeModules};");
+    assert src.contains("import {page, layout, template, defaultView, jhRegisterRoutes} from \"jhonstart\";");
+    assert src.contains("    @TypeInfo" + ".all(with: page),");
     assert src.contains("Onze.run(withPort(c, portOr(c.port)));");
 }
 

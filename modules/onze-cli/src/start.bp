@@ -4,8 +4,11 @@
 //// `onze_main.bp` (`serverMainSource`): the configuration `build` resolved,
 //// written as a literal, and `main()` calling onze-server's `Onze.run` with
 //// the port `PORT` names. It imports `onze_routes`, which imports every
-//// decorated app module, so the program runs their `#[page]` / `#[layout]`
-//// registrations before `main` (decision 140).
+//// decorated app module and registers the conventions without a decorator,
+//// and it registers every `#[page]` / `#[layout]` / `#[template]` /
+//// `#[defaultView]` function itself, from the program's catalogue —
+//// `jhRegisterRoutes(@TypeInfo.all(with: page), …)` (decision 216): a module
+//// reading `@TypeInfo.all` is imported by nobody, and this one is the entry.
 ////
 //// `start` compiles nothing. With no `<outDir>/build-id` it exits non-zero
 //// naming the directory; otherwise it runs
@@ -35,6 +38,7 @@ pub fn serverMainSource(c: OnzeConfig) -> string {
         "import {io.env} from \"std\";",
         "import {OnzeConfig, withPort, parsePort} from \"onze\";",
         "import {Onze} from \"onze-server\";",
+        "import {page, layout, template, defaultView, jhRegisterRoutes} from \"jhonstart\";",
         "import {onze_routes.routeModules};",
         "",
         "pub fn onzeConfig() -> OnzeConfig {",
@@ -53,6 +57,13 @@ pub fn serverMainSource(c: OnzeConfig) -> string {
         "        Error(e) -> refuse(e);",
         "    };",
         "}",
+        "",
+        "val routes = jhRegisterRoutes(",
+        "    @TypeInfo.all(with: page),",
+        "    @TypeInfo.all(with: layout),",
+        "    @TypeInfo.all(with: template),",
+        "    @TypeInfo.all(with: defaultView),",
+        ");",
         "",
         "pub fn main() {",
         "    val loaded = routeModules();",

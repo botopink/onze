@@ -124,9 +124,12 @@ onze/
   jhonstart's only as the core's `SiteRender` function value.
 - The front that adds a module appends its `pub mod` line and its `files` entry in its own commit
   (`06-onze/modules.md` § Front → submodule ownership names the owner of each `root.bp`).
-- An imported module's body — its `#[page]` / `#[layout]` registrations — runs before the
-  importer's, on every backend (decision 140). The staged app's `onze_routes.bp` imports every
-  decorated convention file, and the server's `onze_main.bp` imports `onze_routes`.
+- An imported module's body runs before the importer's, on every backend (decision 140). The
+  staged app's `onze_routes.bp` imports every decorated convention file and registers the
+  undecorated ones (`loading`, `error`, `not-found`); the server's `onze_main.bp` imports
+  `onze_routes` and registers every `#[page]` / `#[layout]` / `#[template]` / `#[defaultView]`
+  function from the program's catalogue — `jhRegisterRoutes(@TypeInfo.all(with: page), …)`
+  (decision 216); a marker registers nothing itself.
 - A test writes only under `BOTOPINK_TEST_TMPDIR` (each suite's `testTmp()`); a build a test
   runs moves its `outDir` there, so nothing is written into the checkout.
 - A test reads only tracked sources, never a tree another cell writes: the gate's cells run side by

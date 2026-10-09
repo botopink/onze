@@ -1,15 +1,16 @@
 // `botopink test` suite for `src/server.bp` (front 49 step 4, 69 step 3):
 // onze's boot handing rakun its keys, jhonstart's pages and the static
-// roots, then `Onze.run` listening. The pages are this file's own; the build
-// `Onze.run` reads is a manifest and an id written under the run's
-// `BOTOPINK_TEST_TMPDIR`. rakun's registries are process-wide, so the boot
-// happens once (`running()`), and every later test reads what it left.
+// roots, then `Onze.run` listening. The pages are this file's own, registered
+// from `@TypeInfo.all` (decision 216); the build `Onze.run` reads is a
+// manifest and an id written under the run's `BOTOPINK_TEST_TMPDIR`. rakun's
+// registries are process-wide, so the boot happens once (`running()`), and
+// every later test reads what it left.
 
 import {io.env, io.fs, io.process, path} from "std";
 import {rkDispatchHttp, rkProp, rkSetProp, Response as RakunResponse} from "rakun";
 import {rkAppTable} from "rakun-app";
 import {staticRootCount} from "rakun-web";
-import {page, layout, jhPage, jhLayout, ctxParam, ctxRest, PageContext, LayoutProps, Element, ElementBase, main, p, text, redirect} from "jhonstart";
+import {page, layout, jhRegisterRoutes, ctxParam, ctxRest, PageContext, LayoutProps, Element, ElementBase, main, p, text, redirect} from "jhonstart";
 import {OnzeConfig, defaultConfig} from "onze";
 import {formatManifest, emptyManifest} from "onze-bundler";
 import {server.Onze, server.paramPairs, server.cookiePairs, server.uiRecords, server.staticRootOf, server.servedRoots, server.readBuild, server.rakunApp};
@@ -37,6 +38,8 @@ pub fn dashboard(route: PageContext) -> @Component<ElementBase, Element> {
 pub fn login(route: PageContext) -> @Component<ElementBase, Element> {
     return p([text("sign in", attrs: [])], attrs: []);
 }
+
+val __routes = jhRegisterRoutes(@TypeInfo.all(with: page), @TypeInfo.all(with: layout), [], []);
 
 // ── the build and the boot ──────────────────────────────────────────────────
 

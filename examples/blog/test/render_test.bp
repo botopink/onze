@@ -1,11 +1,12 @@
 // `botopink test` suite for the blog's read path (front 53 step 2), rendered
 // IN PROCESS through onze's boot: `bootSite` registers the jhonstart-emilia
-// bridge, the chain comes from jhonstart's UI registry the #[page] /
-// #[layout] decorators fill, and the writer is a recorder. `/blog/[slug]`
+// bridge, the chain comes from jhonstart's UI registry — filled below from
+// the #[page] / #[layout] functions `@TypeInfo.all` answers (decision 216)
+// — and the writer is a recorder. `/blog/[slug]`
 // and `/about` sit in directories no `mod` path reaches; `onze build`
 // compiles them (onze-cli's build test).
 
-import {Element, ElementBase, RequestData, Response, RenderHooks, defaultHooks, PageContext, LayoutProps} from "jhonstart";
+import {Element, ElementBase, RequestData, Response, RenderHooks, defaultHooks, PageContext, LayoutProps, page, layout, template, defaultView, jhRegisterRoutes} from "jhonstart";
 import {defaultConfig} from "onze";
 import {bootSite, pageInput, responseOver} from "onze";
 import {app.layout.rootLayout};
@@ -15,6 +16,13 @@ import {app.blog.page.blogIndex};
 import {lib.db.listPosts};
 import {app.dashboard.layout.dashboardLayout};
 import {app.dashboard.posts.new.page.newPostPage, app.dashboard.posts.new.page.newPostRenders};
+
+val __routes = jhRegisterRoutes(
+    @TypeInfo.all(with: page),
+    @TypeInfo.all(with: layout),
+    @TypeInfo.all(with: template),
+    @TypeInfo.all(with: defaultView),
+);
 
 #[@External.Node("""(globalThis.__blogRec = [], 0)""")]
 #[@External.Erlang("""(fun() -> put(blog_rec, []), 0 end)()""")]

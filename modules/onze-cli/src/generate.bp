@@ -144,9 +144,10 @@ pub fn modFiles(stagedApp: string, stagedFiles: string[]) -> Array<#(string, str
 // The registrations of the conventions without a decorator, and one import
 // of every decorated convention file (by its first public name, `staged` is
 // the staged tree as `#(path under src/, text)`): a program importing this
-// module runs the bodies — the `#[page]` / `#[layout]` registrations — of
-// every module it imports first (decision 140). `routeModules()` answers how
-// many app modules it imports. Each is a module of the staged package, so it
+// module runs the bodies of every module it imports first (decision 140); the
+// decorated functions themselves are registered by `onze_main.bp` from
+// `@TypeInfo.all` (decision 216). `routeModules()` answers how many app
+// modules it imports. Each is a module of the staged package, so it
 // is imported by its path inside the braces (decision 206).
 pub fn routesModule(appDir: string, entries: Array<RouteEntry>, staged: Array<#(string, string)>) -> string {
     var imports: string[] = [];

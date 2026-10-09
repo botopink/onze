@@ -383,8 +383,10 @@ SVG, the faces and the size, so a template change invalidates it with no version
 a dependency on `onze-server`) compiled for erlang and by `erlc` into `<outDir>/server/beam/`, and
 the client package (the app and the generated entry) compiled for commonJS — then links the client
 chunks, writes the stylesheet, the build id, `static/<buildId>/` and `client-manifest.txt`. The
-generated `onze_routes.bp` imports every decorated convention file, so the server program runs
-their `#[page]` / `#[layout]` registrations before `main` (decision 140).
+generated `onze_routes.bp` imports every decorated convention file and registers the undecorated
+ones before `main` (decision 140); the generated `onze_main.bp` registers every `#[page]` /
+`#[layout]` / `#[template]` / `#[defaultView]` function from the program's catalogue
+(`@TypeInfo.all`, decision 216) — a marker registers nothing itself.
 
 `onze start [-p <port>]` compiles nothing: with no `<outDir>/build-id` it exits non-zero naming the
 directory; otherwise it runs `erl -noshell -pa <outDir>/server/beam -eval
