@@ -86,12 +86,12 @@ onze/
 │   │                    sidecars), layout.bp, svg.bp, raster.bp (the port; NIF
 │   │                    declared, never shipped), response.bp — depends on jhonstart (it
 │   │                    parses the sidecar text itself, so no onze-assets edge)
-│   ├── onze-content/  ← front 121 — both rows (see its AGENTS.md): markdown.bp
-│   │                    (CommonMark 0.31.2 + GFM to MdNode, toHtml, toElement,
-│   │                    headings), md_text.bp, md_entities.bp, collections.bp
-│   │                    (loaders, typed entries, the sync and its store),
-│   │                    feeds.bp (RSS 2.0); frontmatter arrives with step 3 —
-│   │                    depends on jhonstart and validation;
+│   ├── onze-content/  ← front 121 — both rows (see its AGENTS.md): element.bp
+│   │                    (the `markdown` library's tree as jhonstart's Element),
+│   │                    collections.bp (loaders, typed entries, the sync and its
+│   │                    store), feeds.bp (RSS 2.0); the Markdown reader is the
+│   │                    `markdown` library's (decision 396); frontmatter arrives with
+│   │                    step 3 — depends on markdown, jhonstart and validation;
 │   │                    nothing imports it yet
 │   └── onze-release/  ← front 71: spec.bp (ReleaseSpec, the build id), otp.bp (.rel,
 │                        sys.config, vm.args, bin/onze, systools), docker.bp, package.bp

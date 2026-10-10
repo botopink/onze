@@ -1,9 +1,11 @@
-// `markdown` beyond the spec fixtures (front 121, step 2): the default
-// options (extensions, smart punctuation, heading ids), the `Element` tree
-// rendered with jhonstart's escaping walker, `headings`, the node tree itself
-// — the Markdown half of the front's `examples/markdown-example.bp`.
+// The `markdown` library's tree as `Element` (front 121, step 2; front 142,
+// step 3): the default options (extensions, smart punctuation, heading ids),
+// the tree mapped by `element.toElement` and rendered with jhonstart's escaping
+// walker — the Markdown half of the front's `examples/markdown-example.bp`.
+// The tree, `headings`, the options and the HTML are the library's own tests.
 
-import {markdown, markdown.MdNode, markdown.MarkdownOptions};
+import {markdown.parse, markdown.parseWith, markdown.MarkdownOptions} from "markdown";
+import {element};
 import {Element, renderNode} from "jhonstart";
 
 fn post() -> string {
@@ -28,7 +30,7 @@ Here is my _great_ post, with a [link](https://botopink.dev) and `code`.
 }
 
 fn rendered(source: string) -> string {
-    return renderNode(markdown.toElement(markdown.parse(source)));
+    return renderNode(element.toElement(parse(source)));
 }
 
 fn contains(html: string, part: string) -> @Result<void, string> {
@@ -59,25 +61,9 @@ test "content: GitHub-flavoured extensions as elements" {
 }
 
 test "content: headings get ids, and a repeated heading gets a suffix" {
-    val doc = markdown.parse(post());
-    val slugs = markdown
-        .headings(doc)
-        .map({ h -> h.depth.toString() + ":" + h.slug })
-        .join(" ");
-    assert slugs == "2:introduction 2:conclusion 2:conclusion-1", slugs;
-    try contains(rendered(post()), "<h2 id=\"introduction\">Introduction</h2>");
-    try contains(
-        markdown.toHtml(doc),
-        "<h2 id=\"conclusion-1\">Conclusion</h2>",
-    );
-}
-
-test "content: a slug drops punctuation and keeps letters of any script" {
-    val doc = markdown.parse(
-        "# Hello, *World*!\n\n## Ação & reação: 2nd_take\n",
-    );
-    val slugs = markdown.headings(doc).map({ h -> h.slug }).join(" ");
-    assert slugs == "hello-world ação--reação-2nd_take", slugs;
+    val html = rendered(post());
+    try contains(html, "<h2 id=\"introduction\">Introduction</h2>");
+    try contains(html, "<h2 id=\"conclusion-1\">Conclusion</h2>");
 }
 
 test "content: text in a document is escaped; raw HTML passes through" {
@@ -89,48 +75,11 @@ test "content: text in a document is escaped; raw HTML passes through" {
 test "content: smart punctuation is on, and a field turns it off" {
     val smart = rendered("\"quoted\" -- and... 'single'");
     try contains(smart, "“quoted” – and… ‘single’");
-    val plainDoc = markdown.parseWith(
+    val plainDoc = parseWith(
         "\"quoted\"",
         MarkdownOptions(smartPunctuation: false),
     );
-    assert renderNode(markdown.toElement(plainDoc)) == "<p>\"quoted\"</p>";
-}
-
-test "content: the extensions and the ids are options" {
-    val plain = markdown.parseWith(
-        "# Title\n\n~~x~~ www.botopink.dev\n",
-        markdown.commonmarkOptions(),
-    );
-    assert markdown.toHtml(plain)
-        == "<h1>Title</h1>\n<p>~~x~~ www.botopink.dev</p>\n", markdown.toHtml(
-        plain,
-    );
-    val gfm = markdown.parse("~~x~~ www.botopink.dev\n");
-    assert markdown.toHtml(gfm)
-        == "<p><del>x</del> <a href=\"http://www.botopink.dev\">www.botopink.dev</a></p>\n", markdown.toHtml(
-        gfm,
-    );
-}
-
-test "content: the tree is the document's structure" {
-    val doc = markdown.parse("# A\n\n- one\n- two\n\n```bp\nval x = 1;\n```\n");
-    assert doc.nodes.length == 3;
-    val kinds = doc.nodes
-        .map({ n ->
-            case n {
-                Heading(depth, id, _) -> "h" + depth.toString() + "#" + id;
-                List(ordered, _, tight: t, items) -> "list:"
-                    + items.length.toString()
-                    + ":"
-                    + t.toString()
-                    + ":"
-                    + ordered.toString();
-                Code(lang, body) -> "code:" + lang + ":" + body;
-                _ -> "?";
-            }
-        })
-        .join(" ");
-    assert kinds == "h1#a list:2:true:false code:bp:val x = 1;\n", kinds;
+    assert renderNode(element.toElement(plainDoc)) == "<p>\"quoted\"</p>";
 }
 
 test "content: a code block keeps its text and names its language" {
@@ -140,9 +89,7 @@ test "content: a code block keeps its text and names its language" {
 }
 
 test "content: footnotes are numbered by first reference and rendered last" {
-    val doc = markdown.parse(
-        "A[^b] and B[^a].\n\n[^a]: First.\n[^b]: Second.\n",
-    );
+    val doc = parse("A[^b] and B[^a].\n\n[^a]: First.\n[^b]: Second.\n");
     assert doc.footnotes
         .map({ f -> f.label + ":" + f.index.toString() })
         .join(" ")

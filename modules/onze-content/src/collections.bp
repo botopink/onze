@@ -32,7 +32,8 @@
 //// frontmatter reader, which is step 3's (decision `08-f`, pending): until it
 //// lands a `.md` file under a `glob` is a problem naming the step.
 
-import {markdown.parse, markdown.toElement, markdown.headings, markdown.slug, markdown.Heading};
+import {markdown.parse, markdown.headings, markdown.slug, markdown.TocEntry} from "markdown";
+import {element.toElement};
 import {Element} from "jhonstart";
 import {report.ValidationReport, report.Violation} from "validation";
 import {json, json.Json, io.fs, io.env, path} from "std";
@@ -69,7 +70,7 @@ pub type Entry<T>(
 // What `render` answers: the body as an element tree and its headings.
 pub type Rendered(
     content: Element,
-    headings: Array<Heading>,
+    headings: Array<TocEntry>,
 )
 
 pub type Collection<T>(
