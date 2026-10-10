@@ -1,7 +1,7 @@
 // `botopink test` suite for `src/style_module.bp` (front 69 step 1).
 
 import {style_module.StyleModule, style_module.compileStyleModule, style_module.generateStyleModuleSource, style_module.scopeName, style_module.generatedPath, style_module.reportOf};
-import {testing.snapshots} from "std";
+import {assertAs} from "snap";
 
 fn blog() -> string {
     return [
@@ -22,7 +22,7 @@ fn errorOf(r: @Result<StyleModule, string>) -> string {
 
 test "css module: scoped names ---- blog.module.css" {
     val m = try compileStyleModule("app/blog/blog.module.css", blog());
-    try snapshots.assertAs(@src(), "css module", [
+    try assertAs(@src(), "css module", [
         "== hash", m.hash,
         "== " + generatedPath(".onze", m.sourcePath), generateStyleModuleSource(m).trimEnd(),
         "== rewritten css", m.css,

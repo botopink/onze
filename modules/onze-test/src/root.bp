@@ -4,7 +4,7 @@
 //// The test-helper member every library carries (front 95,
 //// `specs/1.0.10-beta/02-packaging/README.md` § 5): `assert<Subject>(loc, …)
 //// -> @Result<void, string>` helpers that render a domain value to one
-//// canonical text and hand it to std's `snapshots.assertAs` with the
+//// canonical text and hand it to `snap`'s `assertAs` with the
 //// CALLER's `@src()`, and the fixture builders. It re-exports nothing from
 //// std, and mocking is std's (decision 71).
 

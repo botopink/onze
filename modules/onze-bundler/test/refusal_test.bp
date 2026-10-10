@@ -5,7 +5,7 @@ import {scan.parseFixture, scan.ImportRef};
 import {graph.AppModule, graph.ClientGraph, graph.GraphNode, graph.loadModules, graph.clientGraph};
 import {refusal.BuildReport, refusal.BuildRefusal, refusal.checkBuild, refusal.describeReport, refusal.refusalMessage, refusal.emiliaCallsOf, refusal.StyleProbe, refusal.styleProbeSource, refusal.parseStyleProbe, refusal.styleParity};
 import {AliasMap, OnzeConfig, defaultConfig, loadConfig} from "onze";
-import {testing.snapshots} from "std";
+import {assertAs} from "snap";
 
 fn aliases() -> AliasMap {
     return AliasMap(entries: [#("@/components", "components"), #("@/lib", "lib")]);
@@ -33,12 +33,12 @@ test "refusal: server-only ---- the chain from the root" {
     val r = try report(["== app/page.bp", "import { Status } from \"@/components.status\";", "#[page(\"\")] pub fn home(route: PageContext) -> @Component<Element> { return p([]); }", "== components/status.bp", "#[client]", "import { fmt } from \"@/lib.format\";", "pub fn Status(props: P) -> Element { return p([]); }", "== lib/format.bp", "import { listPosts } from \"@/lib.db\";", "pub fn fmt() -> string { return \"\"; }", "== lib/db.bp", "import { serverOnly } from \"jhonstart\";", "pub fn listPosts() -> Post[] { return []; }"].join("\n"));
     val text = describeReport(r);
     assert text.contains("components.status > lib.format > lib.db");
-    try snapshots.assertAs(@src(), "refusals", text);
+    try assertAs(@src(), "refusals", text);
 }
 
 test "refusal: request scope ---- cookies from a client module" {
     val r = try report(page("W") + "\nimport { cookies } from \"jhonstart\";\npub fn W(props: P) -> Element { return p([]); }");
-    try snapshots.assertAs(@src(), "refusals", describeReport(r));
+    try assertAs(@src(), "refusals", describeReport(r));
 }
 
 test "refusal: env ---- every row of the environment table" {
@@ -58,7 +58,7 @@ test "refusal: env ---- every row of the environment table" {
     val text = describeReport(r);
     assert text.contains("DATABASE_URL");
     assert text.contains("components.w");
-    try snapshots.assertAs(@src(), "refusals", text);
+    try assertAs(@src(), "refusals", text);
 }
 
 test "refusal: adversarial config ---- no setting relaxes anything" {
@@ -68,7 +68,7 @@ test "refusal: adversarial config ---- no setting relaxes anything" {
     val adversarial = try reportWith(tree, loose);
     assert describeReport(adversarial) == describeReport(plain);
     val keys = ["allowEnv", "publicEnvPrefix", "strict", "bundler"].map({ k -> k + ": " + loadError(k) });
-    try snapshots.assertAs(@src(), "refusals", keys.join("\n") + "\n" + describeReport(adversarial));
+    try assertAs(@src(), "refusals", keys.join("\n") + "\n" + describeReport(adversarial));
 }
 
 fn loadError(key: string) -> string {
@@ -91,7 +91,7 @@ test "refusal: emilia ---- non-literal tokens, a client flush, a hash split" {
         "    return span([text(\"x\", attrs: [])], attrs: [#(\"class\", cls)]);",
         "}",
     ].join("\n"));
-    try snapshots.assertAs(@src(), "refusals", describeReport(r));
+    try assertAs(@src(), "refusals", describeReport(r));
 }
 
 test "refusal: the styleMap probe ---- its source, and the two backends compared" {

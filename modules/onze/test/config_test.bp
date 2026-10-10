@@ -2,7 +2,7 @@
 // only std and the package's own modules, so a red here is onze's.
 
 import {config.OnzeConfig, config.defaultConfig, config.withPort, config.withDev, config.loadConfig, config.describeConfig, config.publicEnvPrefix, config.isPublicEnvName, config.publicEnvFrom, config.describePublicEnv, config.defaultActionField, config.defaultActionHeader, config.defaultActionsBodyLimit, config.parsePort};
-import {testing.snapshots} from "std";
+import {assertAs} from "snap";
 
 fn lookupIn(pairs: Array<#(string, string)>, name: string) -> ?string {
     val hit = pairs.filter({ p -> p._0 == name });
@@ -41,12 +41,12 @@ test "config: withPort copies every other field" {
 
 test "config: defaults ---- every field onze.json may omit" {
     val c = try loadConfig("{ \"name\": \"fixture\" }", "{}");
-    try snapshots.assertAs(@src(), "config", describeConfig(c));
+    try assertAs(@src(), "config", describeConfig(c));
 }
 
 test "config: override ---- port from onze.json and basePath through" {
     val c = try loadConfig("{ \"name\": \"docs\" }", "{ \"port\": 4000, \"basePath\": \"/docs\", \"appDir\": \"src/app\", \"allowedRedirects\": [\"https://auth.example.com\"] }");
-    try snapshots.assertAs(@src(), "config", describeConfig(c));
+    try assertAs(@src(), "config", describeConfig(c));
 }
 
 test "config: refusals ---- every malformed onze.json names its key" {
@@ -61,7 +61,7 @@ test "config: refusals ---- every malformed onze.json names its key" {
         "[]",
     ];
     val out = cases.map({ text -> text + "\n  " + errorOf(loadConfig("{ \"name\": \"x\" }", text)) });
-    try snapshots.assertAs(@src(), "errors", out.join("\n"));
+    try assertAs(@src(), "errors", out.join("\n"));
 }
 
 test "config: the action wire names are onze's defaults" {
@@ -93,7 +93,7 @@ test "env: public prefix ---- case-sensitive filter" {
         #("Onze_Public_Secret", "leak"),
         #("DATABASE_URL", "postgres://db"),
     ];
-    try snapshots.assertAs(@src(), "env", describePublicEnv(env, ["ONZE_PUBLIC_API_URL", "onze_public_x", "Onze_Public_Secret", "DATABASE_URL", "ONZE_PUBLIC_MISSING"]));
+    try assertAs(@src(), "env", describePublicEnv(env, ["ONZE_PUBLIC_API_URL", "onze_public_x", "Onze_Public_Secret", "DATABASE_URL", "ONZE_PUBLIC_MISSING"]));
 }
 
 test "config: a port given as text ---- digits in 1..65535, the source named" {

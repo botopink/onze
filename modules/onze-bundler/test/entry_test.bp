@@ -9,7 +9,7 @@ import {manifest.ChunkRef};
 import {fixture.fixtureApp};
 import {AliasMap} from "onze";
 import {islandAttr, globals, Island} from "jhonstart";
-import {testing.snapshots} from "std";
+import {assertAs} from "snap";
 
 fn aliases() -> AliasMap {
     return AliasMap(entries: [#("@/components", "components"), #("@/lib", "lib")]);
@@ -58,7 +58,7 @@ test "entry: generated ---- islands, holes, mounts" {
     assert src.contains(classCheckSource());
     val check = src.indexOf("raiseFirst(unknownClasses(classNamesIn(html), payloadIds(globals.payload, \"s\")));");
     assert check > 0 && check < src.indexOf("    val done = commit(html);");
-    try snapshots.assertAs(@src(), "entry", src);
+    try assertAs(@src(), "entry", src);
 }
 
 test "entry: the runtime mismatches name their ids" {
@@ -101,5 +101,5 @@ test "script: strategies ---- the four placements and two refusals" {
     assert plan.workers.map({ w -> w.id }).join(",") == "worker:crunch";
     assert plan.scheduled.length == 3;
     assert plan.refusals.length == 2;
-    try snapshots.assertAs(@src(), "scripts", describeScripts(decls));
+    try assertAs(@src(), "scripts", describeScripts(decls));
 }

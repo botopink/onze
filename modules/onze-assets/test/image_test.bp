@@ -6,7 +6,8 @@
 import {image.ImageProps, image.RemotePattern, image.ImageConfig, image.defaultImageProps, image.defaultImageConfig, image.validateSource, image.validateConfig, image.validateProps, image.Image, image.srcsetOf, image.refusedImages};
 import {image_handler.EncodeRequest, image_handler.ImageOutcome, image_handler.encode, image_handler.encoderArgs, image_handler.imageResponse, image_handler.negotiate, image_handler.cacheKey};
 import {Element, renderNode} from "jhonstart";
-import {io.fs, io.process, io.process.Exit, io.clock, path, testing.snapshots, io.env} from "std";
+import {io.fs, io.process, io.process.Exit, io.clock, path, io.env} from "std";
+import {assertAs} from "snap";
 
 // The run's own scratch directory — `botopink test` names it in
 // `BOTOPINK_TEST_TMPDIR`, and it is the one place a test writes.
@@ -51,7 +52,7 @@ fn html(e: Element) -> string {
 
 test "image: allowlist ---- the matrix" {
     val d = defaultImageConfig();
-    try snapshots.assertAs(@src(), "allowlist", [
+    try assertAs(@src(), "allowlist", [
         verdict(d, "https://cdn.example.com/photos/a.jpg"),
         verdict(cdn(), "https://cdn.example.com/photos/a.jpg"),
         verdict(cdn(), "http://cdn.example.com/photos/a.jpg"),
@@ -101,7 +102,7 @@ test "image: markup ---- lazy with sizes, priority, fill, blur" {
     assert heroHtml.contains("sizes=") == false;
     val fillHtml = html(Image(fill, cfg, "public"));
     assert fillHtml.contains("width=") == false;
-    try snapshots.assertAs(@src(), "image", [lazyHtml, heroHtml, fillHtml, html(Image(blurred, cfg, "public"))].join("\n"));
+    try assertAs(@src(), "image", [lazyHtml, heroHtml, fillHtml, html(Image(blurred, cfg, "public"))].join("\n"));
 }
 
 test "image: a refused source renders nothing and is reported" {
@@ -133,7 +134,7 @@ test "image: encoder ---- an argument vector, pass-through, a timeout, a failure
     val pass = imageResponse(missingCfg, q, "image/webp", dir, "public", path.join([dir, ".onze"]), "1");
     assert pass.status == 200;
     assert pass.file.endsWith("hero.jpg");
-    try snapshots.assertAs(@src(), "handler", [
+    try assertAs(@src(), "handler", [
         "#1 " + miss.status.toString() + "  " + miss.headers.map({ h -> h._0 + ": " + h._1 }).join("  ").replace(cacheKey("/images/hero.jpg", 640, 75, "image/webp", "1"), "<key>"),
         "#2 " + hit.status.toString() + "  " + hit.message,
         "#3 " + imageResponse(cfg, [#("src", "/images/hero.jpg"), #("w", "999"), #("q", "75")], "image/webp", dir, "public", dir, "1").message,

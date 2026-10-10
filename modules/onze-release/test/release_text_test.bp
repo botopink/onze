@@ -5,7 +5,7 @@ import {spec.ReleaseSpec, spec.releaseSpec, spec.withErts};
 import {otp.relFileText, otp.sysConfigText, otp.vmArgsText, otp.bootScriptText, otp.defaultSysConfig, otp.shellVar, otp.installedVersion, otp.assembleRelease};
 import {io.fs, io.process, io.clock, path, io.env} from "std";
 import {docker.generateDockerfile, docker.generateDockerignore, docker.runnerStage};
-import {testing.snapshots} from "std";
+import {assertAs} from "snap";
 
 // The run's own scratch directory — `botopink test` names it in
 // `BOTOPINK_TEST_TMPDIR`, and it is the one place a test writes.
@@ -28,7 +28,7 @@ test "release: text ---- rel, sys.config, vm.args and the boot script" {
     assert sys.contains("env") == false;
     assert bootScriptText(s).contains("exec ");
     assert bootScriptText(s).contains(" &\n") == false;
-    try snapshots.assertAs(@src(), "release", [
+    try assertAs(@src(), "release", [
         "== releases/b7f2a1/onze.rel", relFileText(s).trimEnd(),
         "== releases/b7f2a1/sys.config", sys.trimEnd(),
         "== releases/b7f2a1/vm.args", vmArgsText(s).trimEnd(),
@@ -50,7 +50,7 @@ test "release: dockerfile ---- two stages, non-root, erts bundled and not" {
     assert runner.contains("ENV PORT=3000");
     assert (runnerStage(without).at(0) ?? "").startsWith("FROM erlang:");
     assert generateDockerignore().split("\n").contains(".git");
-    try snapshots.assertAs(@src(), "dockerfile", ["== includeErts: true", with.trimEnd(), "== includeErts: false — runner line", runnerStage(without).at(0) ?? "", "== .dockerignore", generateDockerignore().trimEnd()].join("\n"));
+    try assertAs(@src(), "dockerfile", ["== includeErts: true", with.trimEnd(), "== includeErts: false — runner line", runnerStage(without).at(0) ?? "", "== .dockerignore", generateDockerignore().trimEnd()].join("\n"));
 }
 
 test "release: systools assembles a boot script from the generated .rel" {

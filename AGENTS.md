@@ -16,6 +16,11 @@ rakun is erlang-only (decision 117), so the rakun half of the boot lives in the 
 under the tag `mocking-lib-final` (decision 79); nothing of it is here, and its surface is std's
 `testing.mocks` / `testing.asserts`.
 
+The snapshot engine is the `snap` library (decision 391): the members whose tests record a `.snap`
+(`onze`, `onze-assets`, `onze-bundler`, `onze-cli`, `onze-og`, `onze-release`, `onze-test`) declare
+it in `dependencies` (`{ "snap": { "git": "https://github.com/botopink/snap.git", "branch": "feat" } }`)
+and write `import {assertAs} from "snap";`.
+
 ## Tree
 
 ```text

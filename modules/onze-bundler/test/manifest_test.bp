@@ -3,7 +3,7 @@
 // reads it back.
 
 import {manifest.ChunkRef, manifest.ClientBundleManifest, manifest.formatManifest, manifest.parseManifest, manifest.chunkFor, manifest.headScriptTags, manifest.scriptTags, manifest.sameManifest, manifest.staticUrl, manifest.emptyChunk};
-import {testing.snapshots} from "std";
+import {assertAs} from "snap";
 import {hooks.bundleRenderHooks};
 import {RenderHooks} from "jhonstart";
 
@@ -39,7 +39,7 @@ test "manifest: round trip ---- both targets, same literal, pipe escaped" {
     val withUnknown = try parseManifest(text + "Z|x|y\n");
     assert sameManifest(withUnknown, full());
     val v2 = errorOf(parseManifest("V|2|b7f2a1\n"));
-    try snapshots.assertAs(@src(), "manifest", [text.trimEnd(), "== parseManifest(formatManifest(m)) == m", "true", "== unknown kind \"Z|x|y\" appended", "ignored", "== \"V|2|b7f2a1\"", v2].join("\n"));
+    try assertAs(@src(), "manifest", [text.trimEnd(), "== parseManifest(formatManifest(m)) == m", "true", "== unknown kind \"Z|x|y\" appended", "ignored", "== \"V|2|b7f2a1\"", v2].join("\n"));
 }
 
 test "manifest: a malformed record is an error naming it" {
@@ -57,7 +57,7 @@ test "script tags: order ---- shared, route, entry after the payload" {
     assert head.contains("defer") == false;
     assert slug.contains("window.__bp") == false;
     assert (slug + head).contains("__bp0") == false;
-    try snapshots.assertAs(@src(), "script tags", ["== headScriptTags", head, "== scriptTags(\"/blog/[slug]\")", slug, "== scriptTags(\"/\")", home].join("\n"));
+    try assertAs(@src(), "script tags", ["== headScriptTags", head, "== scriptTags(\"/blog/[slug]\")", slug, "== scriptTags(\"/\")", home].join("\n"));
 }
 
 test "manifest: chunkFor a route with no chunk is empty" {

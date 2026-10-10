@@ -7,7 +7,8 @@ import {svg.FontRef, svg.toSvg, svg.gradientOf};
 import {raster.Rasterizer, raster.requireRasterizer, raster.rasterize, raster.noRasterizer, raster.detectRasterizer};
 import {response.ImageResponse, response.defaultSize, response.defaultContentType, response.imageResponse, response.withFonts, response.checkResponse, response.cardKey};
 import {Element, div, span, text} from "jhonstart";
-import {testing.snapshots, io.fs, io.process, io.env, path} from "std";
+import {io.fs, io.process, io.env, path} from "std";
+import {assertAs} from "snap";
 
 // The run's own scratch directory — `botopink test` names it in
 // `BOTOPINK_TEST_TMPDIR`, and it is the one place a test writes.
@@ -39,7 +40,7 @@ test "og: style ---- supported parse and unsupported report" {
     assert malformedDeclarations(v).join(",") == "padding:";
     assert parseStyle("gap:8;fontSize:20px").fontSize == parseStyle("fontSize:20px;gap:8").fontSize;
     assert refusedProperties().all({ p -> unsupportedProperties(p + ":1").length == 1 });
-    try snapshots.assertAs(@src(), "style", describeStyle(v));
+    try assertAs(@src(), "style", describeStyle(v));
 }
 
 test "og: metrics ---- the sidecar, .notdef, monotonic measure" {
@@ -61,7 +62,7 @@ test "og: layout ---- row space-between inside 64px padding" {
     assert first.y == second.y;
     val again = layout(card(), ImageSize(width: 1200, height: 630), [inter()]);
     assert describeLayout(again, 0) == describeLayout(box, 0);
-    try snapshots.assertAs(@src(), "layout", [
+    try assertAs(@src(), "layout", [
         describeLayout(box, 0),
         "== wrapText(\"Hydration is a contract, not a hope\", 400, Inter/700, 48, 2)",
         wrapText("Hydration is a contract, not a hope", 400, inter(), 48, 2).join("\n"),
@@ -107,7 +108,7 @@ test "og: svg ---- the card, with a hostile title escaped" {
     assert svg.split("url(#g0)").length == 2;
     assert svg.contains("font-family=\"Inter\"");
     assert toSvg(layout(tree, size, [inter()]), size, [inter()]) == svg;
-    try snapshots.assertAs(@src(), "svg", svg);
+    try assertAs(@src(), "svg", svg);
 }
 
 test "og: rasterizer ---- png with no tool fails at the route, svg needs none" {
@@ -118,7 +119,7 @@ test "og: rasterizer ---- png with no tool fails at the route, svg needs none" {
     val none = rasterize(noRasterizer(), "<svg/>", defaultSize(), path.join([testTmp(), "x.png"]));
     assert none.isError();
     val svgVerdict = if (requireRasterizer(route, "image/svg+xml", noRasterizer()).length == 0) { "ok" } else { "error" };
-    try snapshots.assertAs(@src(), "rasterizer", [
+    try assertAs(@src(), "rasterizer", [
         "image/svg+xml  kind=none   " + svgVerdict,
         "image/png      kind=none   error: " + requireRasterizer(route, "image/png", noRasterizer()).join("; "),
         "image/png      kind=nif    error: " + requireRasterizer(route, "image/png", Rasterizer(kind: "nif", command: "")).join("; "),

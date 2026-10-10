@@ -5,7 +5,8 @@ import {style_module.StyleModule, style_module.compileStyleModule};
 import {stylesheet.buildStylesheet, stylesheet.styleRecords, stylesheet.styleChunk, stylesheet.stylesheetFile, stylesheet.stylesheetLinks};
 import {assets.AssetRoot, assets.staticRoots, assets.describeRoots};
 import {ChunkRef, parseManifest, formatManifest, emptyManifest, ClientBundleManifest} from "onze-bundler";
-import {testing.snapshots, io.fs, path} from "std";
+import {io.fs, path} from "std";
+import {assertAs} from "snap";
 import {head.pageRenderHooks, head.headFragment};
 import {RenderHooks} from "jhonstart";
 
@@ -26,7 +27,7 @@ test "stylesheet: cascade ---- global before module CSS, fingerprinted" {
     val back = formatManifest(m).split("\n").filter({ l -> l.startsWith("Y|") });
     assert back.join("\n") == records.join("\n");
     assert stylesheetFile(sheet._1).contains(sheet._1);
-    try snapshots.assertAs(@src(), "stylesheet", [
+    try assertAs(@src(), "stylesheet", [
         "== /_onze/static/b7f2a1/" + stylesheetFile(sheet._1), sheet._0.trimEnd(),
         "== Y records", records.join("\n"),
         "== parseManifest reads back", back.join("\n"),
@@ -39,7 +40,7 @@ test "assets: roots ---- the two roots handed to rakun-web front 82" {
     assert roots.length == 2;
     val adversarial = staticRoots("content", "/etc", "b7f2a1/../..");
     assert adversarial.length == 2;
-    try snapshots.assertAs(@src(), "roots", "staticRoots(public, .onze, b7f2a1) = " + roots.length.toString() + "\n" + describeRoots(roots));
+    try assertAs(@src(), "roots", "staticRoots(public, .onze, b7f2a1) = " + roots.length.toString() + "\n" + describeRoots(roots));
 }
 
 test "head: the stylesheet link precedes the head scripts" {

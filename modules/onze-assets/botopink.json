@@ -23,6 +23,10 @@
     },
     "onze-bundler": {
       "workspace": true
+    },
+    "snap": {
+      "git": "https://github.com/botopink/snap.git",
+      "branch": "feat"
     }
   }
 }

@@ -1,7 +1,7 @@
 // `botopink test` suite for `src/types.bp` (front 49 steps 3 and 6).
 
 import {types.describeAppFiles, types.AliasMap, types.loadAliases, types.resolveAlias, types.describeAliases};
-import {testing.snapshots} from "std";
+import {assertAs} from "snap";
 import {conventions.fileKinds, conventions.classify} from "routing";
 
 fn aliasError(r: @Result<AliasMap, string>) -> string {
@@ -28,7 +28,7 @@ test "types: the segment is the decorator argument, brackets and groups kept" {
 }
 
 test "types: app files ---- every routing convention and the group" {
-    try snapshots.assertAs(
+    try assertAs(
         @src(),
         "app files",
         describeAppFiles(
@@ -63,7 +63,7 @@ test "alias: longest prefix ---- @/lib and @/lib/db" {
     val map = try loadAliases(
         "{ \"name\": \"x\", \"alias\": { \"@/components\": \"components\", \"@/lib\": \"lib\", \"@/lib/db\": \"lib/store\" } }",
     );
-    try snapshots.assertAs(
+    try assertAs(
         @src(),
         "aliases",
         describeAliases(
@@ -91,7 +91,7 @@ test "alias: escape ---- a target outside the root is refused at load" {
     val fine = loadAliases(
         "{ \"name\": \"x\", \"alias\": { \"@/fine\": \"lib/../components\" } }",
     );
-    try snapshots.assertAs(
+    try assertAs(
         @src(),
         "errors",
         [

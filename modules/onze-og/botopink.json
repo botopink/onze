@@ -17,6 +17,10 @@
   "dependencies": {
     "jhonstart": {
       "path": "../../../jhonstart/modules/jhonstart"
+    },
+    "snap": {
+      "git": "https://github.com/botopink/snap.git",
+      "branch": "feat"
     }
   }
 }

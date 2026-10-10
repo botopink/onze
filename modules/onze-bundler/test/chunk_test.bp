@@ -9,7 +9,7 @@ import {segment.parsePath, segment.patternOf} from "routing";
 import {manifest.ClientBundleManifest, manifest.ChunkRef, manifest.formatManifest};
 import {fixture.fixtureApp};
 import {AliasMap} from "onze";
-import {testing.snapshots} from "std";
+import {assertAs} from "snap";
 
 fn aliases() -> AliasMap {
     return AliasMap(
@@ -78,7 +78,7 @@ test "chunks: plan ---- shared, one route chunk, entry" {
         i = i + 1;
     }
     assert changed.length == 1;
-    try snapshots.assertAs(
+    try assertAs(
         @src(),
         "chunks",
         [
@@ -155,5 +155,5 @@ test "manifest: text ---- the fixture app's bundle" {
         b._2,
         [#("ONZE_PUBLIC_API_URL", "https://api.example.com")],
     );
-    try snapshots.assertAs(@src(), "manifest", formatManifest(m).trimEnd());
+    try assertAs(@src(), "manifest", formatManifest(m).trimEnd());
 }

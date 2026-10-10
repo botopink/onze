@@ -4,7 +4,8 @@
 import {scan.RouteEntry, scan.scanFiles};
 import {generate.checkTree, generate.stage, generate.stagedPath, generate.rewriteImports, generate.modFiles, generate.routesModule, generate.banner};
 import {AliasMap} from "onze";
-import {io.fs, io.process, io.clock, path, testing.snapshots, io.env} from "std";
+import {io.fs, io.process, io.clock, path, io.env} from "std";
+import {assertAs} from "snap";
 
 // The run's own scratch directory — `botopink test` names it in
 // `BOTOPINK_TEST_TMPDIR`, and it is the one place a test writes.
@@ -93,7 +94,7 @@ test "generate: staged ---- the tree, sorted, deterministic" {
     assert generated.all({ f -> f._1.contains(banner()) });
     val listing = a.map({ f -> f._0 }).join("\n");
     val shown = generated.filter({ f -> f._0 != "src/lib/mod.bp" }).map({ f -> "== " + f._0 + "\n" + f._1.trimEnd() }).join("\n");
-    try snapshots.assertAs(@src(), "tree", listing + "\n" + shown);
+    try assertAs(@src(), "tree", listing + "\n" + shown);
 }
 
 test "generate: round trip ---- stage, write, botopink check" {

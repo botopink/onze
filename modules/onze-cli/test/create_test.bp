@@ -6,7 +6,8 @@ import {main.Outcome, main.run, main.commands};
 import {info.infoText, info.versionAt};
 import {resolve.Project, resolve.resolveProject};
 import {OnzeConfig, AliasMap} from "onze";
-import {io.fs, io.process, io.clock, path, testing.snapshots, io.env} from "std";
+import {io.fs, io.process, io.clock, path, io.env} from "std";
+import {assertAs} from "snap";
 
 // The run's own scratch directory — `botopink test` names it in
 // `BOTOPINK_TEST_TMPDIR`, and it is the one place a test writes.
@@ -66,7 +67,7 @@ test "create: the defaults, --src-dir, --import-alias" {
 }
 
 test "create: usage errors ---- no token dropped" {
-    try snapshots.assertAs(@src(), "errors", [
+    try assertAs(@src(), "errors", [
         optsError([]),
         optsError(["a", "b"]),
         optsError(["a", "--frobnicate"]),
@@ -77,7 +78,7 @@ test "create: usage errors ---- no token dropped" {
 }
 
 test "create: help ---- the flag table from the one defaults record" {
-    try snapshots.assertAs(@src(), "help", createHelp());
+    try assertAs(@src(), "help", createHelp());
 }
 
 test "create: a non-empty directory is refused, --yes or not" {

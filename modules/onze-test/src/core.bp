@@ -3,7 +3,7 @@
 //// each rendered by the core's own `describe*` so `onze info`, the core's
 //// suites and these helpers print one text.
 
-import {testing.snapshots} from "std";
+import {assertAs} from "snap";
 import {loadConfig, describeConfig, describePublicEnv} from "onze";
 import {loadAliases, describeAliases, describeAppFiles} from "onze";
 
@@ -14,13 +14,13 @@ pub fn assertConfig(loc: SourceLocation, botopinkJson: string, onzeJson: string)
         Ok(cfg) -> describeConfig(cfg);
         Error(message) -> "error: " + message;
     };
-    try snapshots.assertAs(loc, "config", text);
+    try assertAs(loc, "config", text);
     return;
 }
 
 // The classification table of `paths` under the default `app/`.
 pub fn assertAppFiles(loc: SourceLocation, paths: string[]) -> @Result<void, string> {
-    try snapshots.assertAs(loc, "app files", describeAppFiles("app", paths));
+    try assertAs(loc, "app files", describeAppFiles("app", paths));
     return;
 }
 
@@ -31,12 +31,12 @@ pub fn assertAlias(loc: SourceLocation, aliasJson: string, specs: string[]) -> @
         Ok(map) -> describeAliases(map, specs);
         Error(message) -> "error: " + message;
     };
-    try snapshots.assertAs(loc, "aliases", text);
+    try assertAs(loc, "aliases", text);
     return;
 }
 
 // The filtered env table of `names` over the pairs `env`.
 pub fn assertPublicEnv(loc: SourceLocation, env: Array<#(string, string)>, names: string[]) -> @Result<void, string> {
-    try snapshots.assertAs(loc, "env", describePublicEnv(env, names));
+    try assertAs(loc, "env", describePublicEnv(env, names));
     return;
 }

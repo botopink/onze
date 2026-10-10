@@ -6,7 +6,8 @@ import {package.scanForSecrets, package.missingAssets, package.promisedFiles, pa
 import {lifecycle.DrainReport, lifecycle.Lifecycle, lifecycle.shutdown, lifecycle.shutdownOrder, lifecycle.readinessChecks, lifecycle.isReady, lifecycle.describeDrain, lifecycle.exitCodeOf};
 import {static_export.ExportRoute, static_export.staticExport};
 import {ClientBundleManifest, ChunkRef, formatManifest, staticUrl} from "onze-bundler";
-import {io.fs, io.process, io.clock, path, testing.snapshots, io.env} from "std";
+import {io.fs, io.process, io.clock, path, io.env} from "std";
+import {assertAs} from "snap";
 
 // The run's own scratch directory — `botopink test` names it in
 // `BOTOPINK_TEST_TMPDIR`, and it is the one place a test writes.
@@ -76,7 +77,7 @@ test "release: shutdown ---- the five steps and a clean drain" {
     assert stuck.timedOut;
     assert exitCodeOf(stuck) == 1;
     assert isReady(readinessChecks(["default"]), ["route-table", "client-manifest"]) == false;
-    try snapshots.assertAs(@src(), "shutdown", [
+    try assertAs(@src(), "shutdown", [
         "readinessChecks: " + readinessChecks(["default"]).join(", "),
         "shutdownOrder: " + shutdownOrder().join(" > "),
         "drain(5000): " + describeDrain(clean),
@@ -136,5 +137,5 @@ test "release: static export ---- three routes out, a dynamic route refused" {
     val ok = exportError(staticExport(routes, assets));
     val refused = exportError(staticExport(routes.append([ExportRoute(pattern: "/blog/[slug]", authoredPath: "app/blog/[slug]/page.bp", html: "", prerenderable: false)]), assets));
     assert ok.contains("bin/") == false;
-    try snapshots.assertAs(@src(), "export", ["== without app/blog/[slug]", ok, "== with app/blog/[slug]", refused].join("\n"));
+    try assertAs(@src(), "export", ["== without app/blog/[slug]", ok, "== with app/blog/[slug]", refused].join("\n"));
 }

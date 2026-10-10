@@ -4,7 +4,8 @@
 import {scan.RouteEntry, scan.scanFiles, scan.scanApp, scan.declaredArgument, scan.describeScan, scan.collisions};
 import {resolve.Project, resolve.resolveProject, resolve.findRoot};
 import {OnzeConfig, AliasMap} from "onze";
-import {io.fs, io.process, io.clock, path, testing.snapshots, io.env} from "std";
+import {io.fs, io.process, io.clock, path, io.env} from "std";
+import {assertAs} from "snap";
 
 // The run's own scratch directory — `botopink test` names it in
 // `BOTOPINK_TEST_TMPDIR`, and it is the one place a test writes.
@@ -64,7 +65,7 @@ test "scan: every folder form ---- the staging table" {
         #("app/_components/card.bp", "pub fn Card() -> Element { return p([]); }"),
     ]);
     assert entries.length == 10;
-    try snapshots.assertAs(@src(), "scan", describeScan(entries));
+    try assertAs(@src(), "scan", describeScan(entries));
 }
 
 test "scan: the group does not reach the pattern" {
@@ -76,7 +77,7 @@ test "scan: refusals ---- page and route together, a missing decorator, a stagin
     val both = errorOf(scanFiles("", "app", [#("app/api/page.bp", page("api")), #("app/api/route.bp", "#[getRoute(\"api\")] pub fn g(req: Request) -> @Task<HandlerResponse> { return ok(); }")]));
     val bare = errorOf(scanFiles("", "app", [#("app/blog/page.bp", "pub fn p(route: PageContext) -> @Component<Element> { return div([]); }")]));
     val clash = errorOf(scanFiles("", "app", [#("app/blog/[slug]/page.bp", page("blog/[slug]")), #("app/blog/d_slug/page.bp", page("blog/d_slug"))]));
-    try snapshots.assertAs(@src(), "errors", [both, bare, clash].join("\n"));
+    try assertAs(@src(), "errors", [both, bare, clash].join("\n"));
 }
 
 test "scan: declaredArgument reads the first matching decorator" {
