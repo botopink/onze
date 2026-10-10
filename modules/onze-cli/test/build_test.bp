@@ -106,7 +106,7 @@ test "build: a client emilia call is evaluated by both backends ---- the contrac
     val pg = fs.writeText(path.join([app, "src", "app", "page.bp"]), "import {page, jhPage, ctxParam, ctxRest, PageContext, Element, ElementBase, h1, text} from \"jhonstart\";\nimport {app.card.Card};\n\n#[page(\"\")]\npub fn home(route: PageContext) -> @Component<Element> {\n    return h1([text(\"x\", attrs: [])], attrs: []);\n}\n");
     val p = try resolveProject(app);
     val b = try buildProject(p, botopinkBin());
-    assert b.styles.map({ s -> s._0 + " " + s._1 }).join(",") == "app.card#1 e_39b87d03";
+    assert b.styles.map({ s -> s._0 + " " + s._1 }).join(",") == "app.card#1 e_f51c2501";
 }
 
 // The blog, copied under the run's scratch directory with its dependencies

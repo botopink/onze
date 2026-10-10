@@ -68,10 +68,10 @@ test "entry: the runtime mismatches name their ids" {
 }
 
 test "entry: the runtime class check names every class the payload's s key lacks" {
-    val html = "<div class=\"e_39b87d03 card\"><p class=\"e_00ff\">x</p><i class=\"e_39b87d03\"></i><b class=\"e_zz\"></b></div>";
-    assert classNamesIn(html).join(",") == "e_39b87d03,e_00ff";
-    assert unknownClasses(classNamesIn(html), ["e_39b87d03", "e_00ff"]).length == 0;
-    assert unknownClasses(classNamesIn(html), ["e_39b87d03"]).join("\n") == "class e_00ff is not in the payload's s key - the server's stylesheet has no rule for it";
+    val html = "<div class=\"e_f51c2501 card\"><p class=\"e_00ff\">x</p><i class=\"e_f51c2501\"></i><b class=\"e_zz\"></b></div>";
+    assert classNamesIn(html).join(",") == "e_f51c2501,e_00ff";
+    assert unknownClasses(classNamesIn(html), ["e_f51c2501", "e_00ff"]).length == 0;
+    assert unknownClasses(classNamesIn(html), ["e_f51c2501"]).join("\n") == "class e_00ff is not in the payload's s key - the server's stylesheet has no rule for it";
 }
 
 test "entry: parseIslands reads the payload's i triples" {
