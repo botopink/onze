@@ -162,8 +162,16 @@ onze/
 
 ## Local gate
 
+`scripts/gate.sh [--staged] [--no-conformance] [--jobs <N>]` is the gate's one entry (one text in every
+library repository, CI check 4; it runs `scripts/git-hooks/lib/runner-standalone.sh`): the pre-commit hook
+runs `scripts/gate.sh --staged --no-conformance` (decision 470), and CI on a push to `feat` and a front's
+Conformance step run it whole, which adds the last stage, `botopink cell check conformance/` over this
+repository's `conformance/` cells (decisions 463, 464; the stage exists when the directory does). It knows no
+job pool: `--jobs` is the total it may use, and the meta repository's `scripts/gate.sh run <repository>`
+hands it its share.
+
 `git config core.hooksPath scripts/git-hooks` once per clone. `scripts/git-hooks/pre-commit`
-sources `scripts/git-hooks/lib/runner-standalone.sh`; the gate's stages, in order — each one a
+calls `scripts/gate.sh`, which sources `scripts/git-hooks/lib/runner-standalone.sh`; the gate's stages, in order — each one a
 refusal (decision 67: fail beats warn), none with a flag, variable or list that turns it off:
 
 1. **staged files** — no `*.snap.new` / `*.snap.md.new` (both are in `.gitignore`; the hook
