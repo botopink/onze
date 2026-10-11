@@ -1,5 +1,7 @@
 # onze
 
+`decisions-taken.md` is generated — from the meta repository's `specs/<milestone>/decisions-taken.md` by `scripts/decisions-split.py`; edit it there, never here.
+
 > Path: `repository/onze/`
 > Parent (workspace): [`../AGENTS.md`](../AGENTS.md) · Sibling (core): [`../botopink-lang/AGENTS.md`](../botopink-lang/AGENTS.md)
 > Specs: `specs/1.0.10-beta/06-onze/` in the meta repository (`modules.md` is the cut)
