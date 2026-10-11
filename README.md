@@ -5,7 +5,7 @@
 
 **Status: in progress.** The core (`modules/onze/`, front 49) and the core helpers of
 `modules/onze-test/` are written; the other members land with their track-E fronts of 1.0.10-beta.
-[`docs.md`](docs.md) is the reference: the configuration, the alias map, the four seams, and what
+[`conformance/docs.md`](conformance/docs.md) is the reference: the configuration, the alias map, the four seams, and what
 onze deliberately does not build.
 
 This repository took the name `onze` from the old mocking library (decision 79 of 1.0.10-beta):

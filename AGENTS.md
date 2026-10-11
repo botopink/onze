@@ -101,7 +101,7 @@ onze/
 ├── .gitignore         ← out/, .botopinkbuild/, .onze/ (a build's output); *.snap.new and
 │                        *.snap.md.new (a snapshot mismatch's scratch file — the hook refuses
 │                        one that is staged)
-├── docs.md            ← the reference: onze.json, the alias map, the four seams, the not-built table
+├── conformance/       ← the reference and its examples (decision 463): `docs.md` (onze.json, the alias map, the four seams, the not-built table) and `modules/<example>/` cells, run by `botopink cell check conformance/` (none yet)
 ├── examples/          ← blog/ (53: src/lib/db.bp — the post store —, content/posts/*.md,
 │                        src/components/{nav,post_card}.bp, src/app/ — layout, page, blog/
 │                        layout + page, blog/[slug]/page, (marketing)/about/page —,

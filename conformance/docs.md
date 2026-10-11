@@ -100,7 +100,7 @@ rakun serves and jhonstart renders; the boot hands each what it needs from the o
   core's `responseOver`), which maps `status` / `header` / `write` / `close` onto `setStatus` /
   `setHeader` / `write` / `close` one to one:
 
-  ```bp
+  ```text
   // one PageRenderer per page pattern — rakun front 23's `page(pattern, render)`
   rakunPage(pattern, { req, out -> renderPage(render, build, table, pattern, req, out) });
   // renderPage: render(pageInput(…), requestData(req), responseFor(out))
