@@ -140,9 +140,9 @@ test "build: a client component importing the blog's lib/db fails the build ----
 test "build: a CSS module's generated accessors compile and its rules reach the stylesheet" {
     val dir = path.join([testTmp(), "styled-" + clock.nowMillis().toString()]);
     val made = process.run("mkdir", ["-p", dir]);
-    val created = run(dir, ["create", "styled", "--yes", "--src-dir", "--no-emilia", "--libs", repositoryDir()], "test");
+    val created = run(dir, ["create", "cssapp", "--yes", "--src-dir", "--no-emilia", "--libs", repositoryDir()], "test");
     assert created.code == 0;
-    val app = path.join([dir, "styled"]);
+    val app = path.join([dir, "cssapp"]);
     val css = fs.writeText(path.join([app, "src", "app", "home.module.css"]), ".card { padding: 8px; }\n");
     val globals = fs.writeText(path.join([app, "src", "app", "globals.css"]), "body { margin: 0; }\n");
     val pg = fs.writeText(path.join([app, "src", "app", "page.bp"]), "import {page, jhPage, ctxParam, ctxRest, PageContext, Element, ElementBase, h1, text} from \"jhonstart\";\nimport {styles.app_home.card};\n\n#[page(\"\")]\npub fn home(route: PageContext) -> @Component<Element> {\n    return h1([text(\"x\", attrs: [])], attrs: [#(\"class\", card)]);\n}\n");
