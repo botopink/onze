@@ -65,12 +65,12 @@ pub fn declarations(value: string) -> Array<#(string, string)> {
                 val name = if (colon < 0) t else t.slice(0, colon).trim();
                 val v = if (colon < 0) "" else t.slice(colon + 1, t.length()).trim();
                 out.push(#(name, v));
-            };
+            }
             cur = "";
         } else {
             cur = cur + c;
-        };
-    };
+        }
+    }
     return out;
 }
 
@@ -130,7 +130,7 @@ pub fn parseStyle(value: string) -> Style {
     for (declarations(value)) { d ->
         val known = supportedProperties().contains(d._0) && d._1 != "";
         if (known) s = withProp(s, d._0, d._1);
-    };
+    }
     return s;
 }
 
@@ -140,7 +140,7 @@ pub fn unsupportedProperties(value: string) -> Array<string> {
     for (declarations(value)) { d ->
         val outside = supportedProperties().contains(d._0) == false && out.contains(d._0) == false;
         if (outside) out.push(d._0);
-    };
+    }
     return out;
 }
 
@@ -156,7 +156,7 @@ pub fn describeStyle(value: string) -> string {
     var rows: string[] = [];
     for (declarations(value).filter({ d -> supportedProperties().contains(d._0) && d._1 != "" })) { d ->
         rows.push(d._0.padEnd(15, " ") + d._1);
-    };
+    }
     val unsupported = unsupportedProperties(value);
     if (unsupported.length > 0) rows.push("unsupported: " + unsupported.join(", "));
     val malformed = malformedDeclarations(value);

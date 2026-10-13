@@ -73,7 +73,7 @@ fn running() -> @Result<void, string> {
         val _k = rkSetProp("rakun.main.keep-alive", "false");
         Onze.run(config());
         val _f = rkSetProp("onze.test.running", "1");
-    };
+    }
     return;
 }
 

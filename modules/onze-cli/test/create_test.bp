@@ -44,7 +44,7 @@ fn botopinkBin() -> string {
         if (fs.exists(cand)) found = cand;
         dir = path.dirname(dir);
         guard = guard + 1;
-    };
+    }
     return found;
 }
 
@@ -157,5 +157,5 @@ test "create: examples/scaffold is what create --yes writes" {
         val committed = fs.readText(path.join(["..", "..", "examples", "scaffold", f._0])).unwrapOr("(missing)");
         if (committed != f._1) @print("differs: " + f._0);
         assert committed == f._1;
-    };
+    }
 }

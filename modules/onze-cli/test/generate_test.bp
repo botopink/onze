@@ -59,7 +59,7 @@ fn botopinkBin() -> string {
         if (fs.exists(cand)) found = cand;
         dir = path.dirname(dir);
         guard = guard + 1;
-    };
+    }
     return found;
 }
 
@@ -106,7 +106,7 @@ test "generate: round trip ---- stage, write, botopink check" {
     for (staged) { f ->
         val made = process.run("mkdir", ["-p", path.dirname(path.join([dir, f._0]))]);
         val w = fs.writeText(path.join([dir, f._0]), f._1);
-    };
+    }
     val checked = try process.run("sh", ["-c", "cd '" + dir + "' && '" + bin + "' check 2>&1"]);
     if (checked.status != 0) @print(checked.stdout);
     assert checked.status == 0;

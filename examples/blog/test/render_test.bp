@@ -108,7 +108,7 @@ test "read path: /blog lists three posts, each in a PostCard with one emilia cla
     assert doc.contains("class=\"blog-shell\"");
     for (listPosts()) { post ->
         assert doc.contains(post.title);
-    };
+    }
     assert styleCount(doc) == 1;
 }
 

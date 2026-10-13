@@ -91,8 +91,8 @@ pub fn wrapText(text: string, widthPx: i32, m: FontMetrics, fontSize: i32, maxLi
         } else {
             lines.push(cur);
             cur = word;
-        };
-    };
+        }
+    }
     if (cur != "") lines.push(cur);
     val over = maxLines > 0 && lines.length > maxLines;
     if (over == false) return lines;
@@ -100,7 +100,7 @@ pub fn wrapText(text: string, widthPx: i32, m: FontMetrics, fontSize: i32, maxLi
     var last = kept.at(maxLines - 1) ?? "";
     while (last != "" && measure(m, last + "…", fontSize) > widthPx) {
         last = last.slice(0, last.length() - 1).trimEnd();
-    };
+    }
     return kept.take(maxLines - 1).append([last + "…"]);
 }
 
@@ -152,7 +152,7 @@ pub fn intrinsic(e: Element, s: Style, availW: i32, availH: i32, faces: Array<Fo
         for (lines) { l ->
             val w = measure(face, l, s.fontSize);
             if (w > widest) widest = w;
-        };
+        }
         return #(lengthOf(s.width, availW, widest + padW), lengthOf(s.height, availH, lines.length * lineHeightOf(s) + padH));
     }
     val flow = e.children.filter({ c -> isAbsolute(styleOfElement(c)) == false });
@@ -168,7 +168,7 @@ pub fn intrinsic(e: Element, s: Style, availW: i32, availH: i32, faces: Array<Fo
         sumH = sumH + z._1;
         if (z._0 > maxW) maxW = z._0;
         if (z._1 > maxH) maxH = z._1;
-    };
+    }
     val w = if (row) sumW + gaps + padW else maxW + padW;
     val h = if (row) maxH + padH else sumH + gaps + padH;
     return #(lengthOf(s.width, availW, w), lengthOf(s.height, availH, h));
@@ -192,7 +192,7 @@ pub fn place(e: Element, s: Style, x: i32, y: i32, w: i32, h: i32, faces: Array<
     for (sizes) { z ->
         val main = if (row) { z._0 } else { z._1 };
         used = used + main;
-    };
+    }
     val n = sizes.length;
     val main = if (row) cw else ch;
     val gaps = if (n > 1) { s.gap * (n - 1) } else { 0 };
@@ -220,12 +220,12 @@ pub fn place(e: Element, s: Style, x: i32, y: i32, w: i32, h: i32, faces: Array<
         val advance = if (row) { z._0 } else { z._1 };
         offset = offset + advance + step;
         i = i + 1;
-    };
+    }
     for (e.children.filter({ c -> isAbsolute(styleOfElement(c)) })) { c ->
         val cs = styled(s, c);
         val z = intrinsic(c, cs, cw, ch, faces);
         boxes.push(place(c, cs, x + lengthOf(cs.left, w, 0), y + lengthOf(cs.top, h, 0), z._0, z._1, faces));
-    };
+    }
     return LayoutBox(tag: e.tag, x: x, y: y, width: w, height: h, style: s, text: "", lines: [], children: boxes);
 }
 

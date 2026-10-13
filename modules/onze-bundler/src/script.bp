@@ -49,8 +49,8 @@ pub fn planScripts(decls: Array<ScriptDecl>) -> ScriptPlan {
         } else {
             if (d.strategy == "worker") workers.push(ChunkRef(id: "worker:" + d.id, url: d.src, hash: "", bytes: 0));
             scheduled.push(#(d.src, d.strategy, d.onLoad));
-        };
-    };
+        }
+    }
     return ScriptPlan(head: head, workers: workers, scheduled: scheduled, refusals: refusals);
 }
 
@@ -61,10 +61,10 @@ pub fn describeScripts(decls: Array<ScriptDecl>) -> string {
         if (problem == "") {
             val extra = if (d.strategy == "beforeInteractive") "chunk script:" + d.id else if (d.strategy == "worker") "chunk worker:" + d.id else if (d.onLoad != "") "onLoad " + d.onLoad else "";
             rows.push((d.id.padEnd(12, " ") + d.strategy.padEnd(20, " ") + scriptPlacement(d.strategy).padEnd(24, " ") + extra).trimEnd());
-        };
-    };
+        }
+    }
     for (planScripts(decls).refusals) { r ->
         rows.push("refused: " + r);
-    };
+    }
     return rows.join("\n");
 }

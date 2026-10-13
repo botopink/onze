@@ -25,8 +25,8 @@ pub fn requiresOf(js: string) -> string[] {
             val spec = piece.slice(0, close);
             val relative = spec.startsWith("./") || spec.startsWith("../");
             if (relative && out.contains(spec) == false) out.push(spec);
-        };
-    };
+        }
+    }
     return out;
 }
 
@@ -39,8 +39,8 @@ pub fn resolveFrom(fromFile: string, spec: string) -> string {
             parts = parts.take(parts.length - 1);
         } else if (seg != "." && seg != "") {
             parts.push(seg);
-        };
-    };
+        }
+    }
     return parts.join("/");
 }
 
@@ -65,13 +65,13 @@ pub fn esmToFactoryBody(source: string) -> string {
                         name = name + c;
                     } else {
                         open = false;
-                    };
-                };
+                    }
+                }
                 if (name != "") names.push(name);
-            };
-        };
+            }
+        }
         lines.push(rewritten);
-    };
+    }
     return lines.join("\n") + "\n" + names.map({ n -> "exports." + n + " = " + n + ";" }).join("\n");
 }
 
@@ -91,9 +91,9 @@ pub fn jsClosure(outDir: string, roots: string[], substitutions: Array<#(string,
             for (requiresOf(text)) { spec ->
                 val next = resolveFrom(file, spec);
                 if (seen.contains(next) == false) queue.push(next);
-            };
-        };
-    };
+            }
+        }
+    }
     return seen;
 }
 
@@ -113,7 +113,7 @@ pub fn linkFiles(outDir: string, files: string[], substitutions: Array<#(string,
         val raw = try fs.readText(path.join([outDir, actual]));
         val body = if (actual.endsWith(".mjs")) esmToFactoryBody(raw) else raw;
         parts.push("(globalThis.__onze_factories = globalThis.__onze_factories || {})[\"" + f + "\"] = function (module, exports, require) {\n" + body + "\n};");
-    };
+    }
     return parts.join("\n") + "\n";
 }
 

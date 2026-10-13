@@ -25,7 +25,7 @@ pub fn detectRasterizer() -> Rasterizer {
         val probe = process.run("sh", ["-c", "command -v \"$1\" >/dev/null 2>&1", "probe", cmd]);
         val found = probe.unwrapOr(Exit(status: 1, stdout: "", stderr: "")).status == 0;
         if (found) return Rasterizer(kind: "port", command: cmd);
-    };
+    }
     return noRasterizer();
 }
 

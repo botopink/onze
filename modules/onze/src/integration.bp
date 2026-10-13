@@ -41,7 +41,7 @@ pub fn rakunEntries(config: OnzeConfig, i18nExclude: string[]) -> Array<#(string
     var exclude: string[] = [];
     for (i18nExclude) { e ->
         if (e != assetPrefix) exclude.push(e);
-    };
+    }
     exclude.push(assetPrefix);
     return [
         #("rakun.appDir", config.appDir),

@@ -95,8 +95,8 @@ pub fn startArgsProblem(args: string[]) -> string {
         } else {
             problem = "onze start: unexpected argument " + a;
             i = args.length;
-        };
-    };
+        }
+    }
     return problem;
 }
 
@@ -147,7 +147,7 @@ pub fn pidOf(text: string) -> i32 {
         val d = "0123456789".indexOf(c);
         if (d < 0) ok = false;
         n = n * 10 + d;
-    };
+    }
     return if (ok) n else 0 - 1;
 }
 

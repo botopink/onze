@@ -45,7 +45,7 @@ test "db: writePost then listPosts shows four" {
     val dir = scratch();
     for (listPosts()) { p ->
         val copied = writePostIn(dir, p);
-    };
+    }
     val before = listPostsIn(dir).unwrapOr([]);
     assert before.length == 3;
     val w = writePostIn(dir, Post(slug: "a-fourth", title: "A fourth", published: "2026-04-01", excerpt: "", body: "Fresh."));

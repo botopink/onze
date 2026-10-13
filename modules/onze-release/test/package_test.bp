@@ -70,7 +70,7 @@ test "release: shutdown ---- the five steps and a clean drain" {
     var firsts: string[] = [];
     for (order) { e ->
         if (firsts.contains(e) == false) firsts.push(e);
-    };
+    }
     assert firsts.join(",") == shutdownOrder().join(",");
     assert exitCodeOf(clean) == 0;
     val stuck = shutdown(life(2), 100);
@@ -106,7 +106,7 @@ test "release: packageAssets copies the static tree and public/ verbatim" {
     val made = process.run("mkdir", ["-p", staticDir, path.join([publicDir, "images"])]);
     for (["entry.9c1d40.js", "shared.41ab08.js", "r1.7e0055.js", "app.2b91cc.css"]) { f ->
         val w = fs.writeText(path.join([staticDir, f]), "// " + f);
-    };
+    }
     val p1 = fs.writeText(path.join([publicDir, "favicon.ico"]), "ico");
     val p2 = fs.writeText(path.join([publicDir, "images", "hero.jpg"]), "jpg");
     val release = path.join([dir, "release"]);

@@ -47,7 +47,7 @@ fn waitFor(life: Lifecycle, count: fn() -> i32, deadlineMs: i32) -> i32 {
     while (left > 0 && life.elapsedMs() < deadlineMs) {
         val slept = life.pause(10);
         left = count();
-    };
+    }
     return left;
 }
 

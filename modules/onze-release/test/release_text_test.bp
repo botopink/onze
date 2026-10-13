@@ -71,5 +71,5 @@ test "release: systools assembles a boot script from the generated .rel" {
         val failed = assembleRelease(dir, []);
         assert failed.isError();
         val gone = process.run("rm", ["-rf", dir]);
-    };
+    }
 }

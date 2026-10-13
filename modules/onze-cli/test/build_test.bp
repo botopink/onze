@@ -30,7 +30,7 @@ fn botopinkBin() -> string {
         if (fs.exists(cand)) found = cand;
         dir = path.dirname(dir);
         guard = guard + 1;
-    };
+    }
     return found;
 }
 
@@ -69,7 +69,7 @@ test "build: the scaffold ---- the staged server, its BEAM, a stable build id, n
     val first = try buildProject(p, bin);
     for (["src", "server/erl", "server/beam", "static", "client-manifest.txt", "build-id"]) { entry ->
         assert fs.exists(path.join([out, entry]));
-    };
+    }
     assert fs.exists(path.join([out, "src", "onze_main.bp"]));
     assert fs.exists(path.join([out, "server", "beam", "scaffold@onze_main.beam"]));
     assert fs.exists(path.join([dir, ".onze"])) == false;

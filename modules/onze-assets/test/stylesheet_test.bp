@@ -69,9 +69,9 @@ fn memberSources(modulesDir: string) -> @Result<string[], string> {
         if (fs.exists(path.join([root, "botopink.json"])) && fs.exists(src)) {
             for (try fs.walk(src)) { f ->
                 if (f.endsWith(".bp")) out.push(m + "/src/" + f);
-            };
-        };
-    };
+            }
+        }
+    }
     return out;
 }
 
@@ -81,7 +81,7 @@ fn flushHits(file: string, text: string) -> string[] {
         val call = line.contains("await flush()") || line.contains("= flush()") || line.trim().startsWith("flush(");
         val sink = line.contains("fn styleSink") || line.contains("type StyleSink");
         if (call || sink) hits.push(file + ": " + line.trim());
-    };
+    }
     return hits;
 }
 
@@ -93,8 +93,8 @@ test "gate: no onze module calls flush() or defines a sink" {
     for (files) { f ->
         val read = fs.readText(path.join(["..", f]));
         if (read.isError()) hits.push(f + ": unreadable");
-        for (flushHits(f, read.unwrapOr(""))) { h -> hits.push(h); };
-    };
+        for (flushHits(f, read.unwrapOr(""))) { h -> hits.push(h); }
+    }
     assert hits.length == 0;
 }
 

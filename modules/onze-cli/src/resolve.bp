@@ -22,7 +22,7 @@ pub fn findRoot(startDir: string) -> @Result<string, string> {
         val parent = path.dirname(dir);
         if (parent == dir) guard = 64 else dir = parent;
         guard = guard + 1;
-    };
+    }
     if (found == "") throw "no botopink.json in " + startDir + " or any directory above it - run onze inside a project, or `onze create`";
     return found;
 }

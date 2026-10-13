@@ -51,7 +51,7 @@ pub fn checkResponse(route: string, r: ImageResponse) -> Array<string> {
     if (textless) out.push("route " + route + " draws text and names no font");
     for (r.fonts) { f ->
         if (fs.exists(f.metricsPath) == false) out.push("route " + route + ": face " + f.family + " " + f.weight.toString() + " has no metrics sidecar at " + f.metricsPath);
-    };
+    }
     return out;
 }
 

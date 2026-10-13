@@ -35,8 +35,8 @@ pub fn parseFixture(text: string) -> Array<SourceFile> {
             open = true;
         } else if (open) {
             lines.push(line);
-        };
-    };
+        }
+    }
     if (open) files.push(SourceFile(path: path, source: lines.join("\n")));
     return files;
 }
@@ -93,10 +93,10 @@ fn stripLineComment(line: string) -> string {
             } else {
                 if (c == "\"" && prev != "\\") inString = inString == false;
                 out = out + c;
-            };
+            }
             prev = c;
-        };
-    };
+        }
+    }
     return out;
 }
 
@@ -114,8 +114,8 @@ fn topLevelItems(body: string) -> string[] {
             cur = "";
         } else {
             cur = cur + c;
-        };
-    };
+        }
+    }
     if (cur.trim() != "") items.push(cur.trim());
     return items;
 }
@@ -163,7 +163,7 @@ pub fn importsOf(file: string, source: string) -> @Result<Array<ImportRef>, stri
         } else {
             val m = modDeclName(line);
             if (m != "") refs.push(ImportRef(spec: m, names: [], isModDecl: true, line: n));
-        };
+        }
         if (pending != "" && pending.endsWith(";")) {
             val parsed = readImport(pending);
             if (parsed == null) throw [file, ":", pendingLine.toString(), ": an import the scanner cannot read: ", pending].join("");
@@ -171,8 +171,8 @@ pub fn importsOf(file: string, source: string) -> @Result<Array<ImportRef>, stri
             val ok = parsed;
             refs.push(ImportRef(spec: ok._0, names: ok._1, isModDecl: false, line: pendingLine));
             pending = "";
-        };
-    };
+        }
+    }
     if (pending != "") throw [file, ":", pendingLine.toString(), ": an import with no closing `;`"].join("");
     return refs;
 }
@@ -218,10 +218,10 @@ pub fn publicNamesOf(source: string) -> string[] {
                     name = name + c;
                 } else {
                     open = false;
-                };
-            };
+                }
+            }
             if (name != "") out.push(name);
-        };
-    };
+        }
+    }
     return out;
 }

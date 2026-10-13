@@ -80,19 +80,19 @@ pub fn formatManifest(m: ClientBundleManifest) -> string {
     lines.push(chunkLine("E", m.entry));
     for (m.shared) { c ->
         lines.push(chunkLine("S", c));
-    };
+    }
     for (m.chunks) { c ->
         lines.push(chunkLine(if (isHeadScript(c)) "H" else "C", c));
-    };
+    }
     for (m.routes) { r ->
         lines.push(["R", enc(r._0), enc(r._1)].join("|"));
-    };
+    }
     for (m.styles) { c ->
         lines.push(chunkLine("Y", c));
-    };
+    }
     for (m.publicEnv) { p ->
         lines.push(["P", enc(p._0), enc(p._1)].join("|"));
-    };
+    }
     return lines.join("\n") + "\n";
 }
 
@@ -158,9 +158,9 @@ pub fn parseManifest(text: string) -> @Result<ClientBundleManifest, string> {
                 styles.push(try chunkOf(line, fields));
             } else if (kind == "P") {
                 publicEnv.push(try pairOf(line, fields));
-            };
-        };
-    };
+            }
+        }
+    }
     if (version == "") throw "client-manifest: no V record";
     return ClientBundleManifest(version: version, buildId: buildId, entry: entry, shared: shared, chunks: chunks, routes: routes, styles: styles, publicEnv: publicEnv);
 }

@@ -57,11 +57,11 @@ pub fn validateConfig(cfg: ImageConfig) -> Array<string> {
         if (p.hostname == "*" || p.hostname == "") out.push("images: remotePatterns hostname \"" + p.hostname + "\" would allow any host — name the host");
         val proto = p.protocol == "https" || p.protocol == "http";
         if (proto == false) out.push("images: remotePatterns protocol \"" + p.protocol + "\" is not https or http");
-    };
+    }
     for (cfg.formats) { f ->
         val known = f == "image/webp" || f == "image/avif";
         if (known == false) out.push("images: format \"" + f + "\" is not image/webp or image/avif");
-    };
+    }
     return out;
 }
 
@@ -88,11 +88,11 @@ pub fn normalizeUrlPath(p: string) -> ?string {
                 escaped = true;
             } else {
                 parts = parts.take(parts.length - 1);
-            };
+            }
         } else if (seg != "." && seg != "") {
             parts.push(seg);
-        };
-    };
+        }
+    }
     if (escaped) return null;
     return "/" + parts.join("/");
 }
@@ -215,7 +215,7 @@ pub fn Image(p: ImageProps, cfg: ImageConfig, publicDir: string) -> Element {
         attrs.push(#("data-src", main));
     } else {
         attrs.push(#("src", main));
-    };
+    }
     attrs.push(#("srcset", srcsetOf(cfg, p, src)));
     if (p.sizes != "") attrs.push(#("sizes", p.sizes));
     if (p.fill) {
@@ -223,7 +223,7 @@ pub fn Image(p: ImageProps, cfg: ImageConfig, publicDir: string) -> Element {
     } else {
         attrs.push(#("width", p.width.toString()));
         attrs.push(#("height", p.height.toString()));
-    };
+    }
     val eager = p.priority || p.loading == "eager";
     attrs.push(#("loading", if (eager) "eager" else "lazy"));
     attrs.push(#("decoding", if (eager) "sync" else "async"));

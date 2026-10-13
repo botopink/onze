@@ -48,12 +48,12 @@ pub fn sortedText(xs: string[]) -> string[] {
             if (before) {
                 next.push(x);
                 placed = true;
-            };
+            }
             next.push(y);
-        };
+        }
         if (placed == false) next.push(x);
         out = next;
-    };
+    }
     return out;
 }
 

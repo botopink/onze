@@ -37,6 +37,6 @@ pub fn runnerStage(dockerfile: string) -> string[] {
     for (lines) { l ->
         if (l.startsWith("FROM ")) seen = seen + 1;
         if (seen == 2) out.push(l);
-    };
+    }
     return out;
 }

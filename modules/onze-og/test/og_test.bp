@@ -159,5 +159,5 @@ test "og: rasterize ---- a real PNG through the port, and a failure removes the 
         val bad = rasterize(r, "this is not svg", size, out);
         assert bad.isError();
         assert fs.exists(out) == false;
-    };
+    }
 }

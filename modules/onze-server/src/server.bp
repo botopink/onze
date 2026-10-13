@@ -53,7 +53,7 @@ pub fn paramPairs(wire: string) -> Array<#(string, string)> {
     for (wire.split("\n")) { line ->
         val tab = line.indexOf("\t");
         if (tab > 0) out.push(#(line.slice(0, tab), line.slice(tab + 1)));
-    };
+    }
     return out;
 }
 
@@ -131,7 +131,7 @@ pub fn uiRecords(table: string) -> Array<#(string, string, string)> {
     for (table.split("\n")) { line ->
         val fields = line.split("|");
         if (fields.length >= 2) out.push(#(fields.at(0) ?? "", fields.at(1) ?? "", line));
-    };
+    }
     return out;
 }
 
@@ -146,8 +146,8 @@ pub fn registerPages(render: SiteRender, build: string) -> i32 {
             pages = pages + 1;
         } else {
             val _e = rkAppStoreEntry(r._2);
-        };
-    };
+        }
+    }
     return pages;
 }
 
@@ -157,7 +157,7 @@ pub fn registerPages(render: SiteRender, build: string) -> i32 {
 pub fn applyEntries(entries: Array<#(string, string)>) -> i32 {
     for (entries) { e ->
         val _s = rkSetProp(e._0, e._1);
-    };
+    }
     return entries.length;
 }
 
@@ -179,7 +179,7 @@ pub fn registerRoots(roots: Array<StaticRoot>) -> i32 {
     var n = 0;
     for (roots) { r ->
         n = registerStaticRoot(r);
-    };
+    }
     return n;
 }
 

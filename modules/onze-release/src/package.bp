@@ -37,8 +37,8 @@ pub fn scanForSecrets(assetTree: Array<#(string, string)>, secrets: Array<#(stri
     for (secrets.filter({ s -> isPublicEnvName(s._0) == false && s._1.length() >= 4 })) { s ->
         for (assetTree) { a ->
             if (a._1.contains(s._1)) out.push("release refused — value of " + s._0 + " found in " + a._0);
-        };
-    };
+        }
+    }
     return out;
 }
 
@@ -61,7 +61,7 @@ pub fn packageAssets(spec: ReleaseSpec, manifestText: string, staticDir: string,
     var tree: Array<#(string, string)> = [];
     for (present) { f ->
         tree.push(#("static/" + spec.buildId + "/" + f, fs.readText(path.join([staticDir, f])).unwrapOr("")));
-    };
+    }
     val leaks = scanForSecrets(tree, secrets);
     if (leaks.length > 0) throw leaks.join("\n");
     try copyTree(staticDir, path.join([releaseDir, "static", spec.buildId]));

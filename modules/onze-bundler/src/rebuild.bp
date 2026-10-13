@@ -32,7 +32,7 @@ fn linkAll(plans: Array<ChunkPlan>, compiled: Array<#(string, string)>) -> @Resu
     var out: string[] = [];
     for (plans) { p ->
         out.push(try linkChunk(p, compiled));
-    };
+    }
     return out;
 }
 
@@ -51,7 +51,7 @@ fn importShape(refs: Array<ImportRef>) -> string {
     for (refs) { r ->
         val modMark = if (r.isModDecl) { "mod" } else { "" };
         parts.push(r.spec + "{" + r.names.join(",") + "}" + modMark);
-    };
+    }
     return parts.join(";");
 }
 
@@ -80,7 +80,7 @@ pub fn rebuild(setup: BundleSetup, state: BundleState, path: string, source: str
         val was = plansFile(state, p.id);
         if (now != was) changed.push(p.id);
         i = i + 1;
-    };
+    }
     val steps = if (changed.length == 0) [] else changed.map({ id -> "write chunk " + id }).append(["write client-manifest.txt", "push " + changed.join(", ")]);
     return RebuildResult(state: BundleState(modules: modules, graph: graph, reach: reach, plans: plans, compiled: compiled, linked: linked), rewalked: rewalk, changed: changed, steps: steps);
 }
@@ -91,6 +91,6 @@ fn plansFile(state: BundleState, id: string) -> string {
     for (state.plans) { p ->
         if (p.id == id) found = chunkFileName(p, state.linked.at(i) ?? "");
         i = i + 1;
-    };
+    }
     return found;
 }

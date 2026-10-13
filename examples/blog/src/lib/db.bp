@@ -69,12 +69,12 @@ fn newestFirst(posts: Post[]) -> Post[] {
             if (before) {
                 next.push(p);
                 placed = true;
-            };
+            }
             next.push(q);
-        };
+        }
         if (placed == false) next.push(p);
         out = next;
-    };
+    }
     return out;
 }
 
@@ -90,7 +90,7 @@ pub fn listPostsIn(dir: string) -> @Result<Post[], string> {
     var posts: Post[] = [];
     for (names.filter({ n -> n.endsWith(".md") })) { n ->
         posts.push(try readOne(dir, n));
-    };
+    }
     return newestFirst(posts);
 }
 

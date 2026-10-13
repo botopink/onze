@@ -104,10 +104,10 @@ pub fn parseCreateOpts(args: string[]) -> @Result<CreateOpts, string> {
             } else {
                 o = withField(o, "name", a);
                 named = true;
-            };
+            }
             i = i + 1;
-        };
-    };
+        }
+    }
     if (o.name == "") throw "onze create: which directory? usage: onze create <name>";
     val badName = o.name.split("").any({ c -> "abcdefghijklmnopqrstuvwxyz0123456789-_".contains(c) == false });
     if (badName) throw "onze create: a project name is [a-z0-9_-]+, not \"" + o.name + "\"";
@@ -204,7 +204,7 @@ pub fn writeScaffold(dir: string, files: Array<#(string, string)>) -> @Result<Ar
         try mkdirs(path.dirname(target));
         val w = try fs.writeText(target, f._1);
         written.push(f._0);
-    };
+    }
     return written;
 }
 

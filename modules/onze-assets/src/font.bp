@@ -100,8 +100,8 @@ pub fn googleCssUrl(family: string, opts: GoogleFontOptions) -> string {
         for (opts.weights) { w ->
             val styleFlag = if (st == "italic") { "1," } else { "0," };
             tuples.push(if (italic) styleFlag + w else w);
-        };
-    };
+        }
+    }
     val axes = if (italic) ":ital,wght@" else ":wght@";
     return "https://fonts.googleapis.com/css2?family=" + family.replaceAll(" ", "+") + axes + tuples.join(";") + "&display=" + opts.display;
 }
@@ -130,11 +130,11 @@ pub fn parseGoogleCss(css: string) -> Array<GoogleFace> {
             val urlStart = src.indexOf("url(");
             val url = if (urlStart < 0) "" else src.slice(urlStart + 4, src.indexOf(")"));
             out.push(GoogleFace(subset: subset, style: valueAfter(block, "font-style"), weight: valueAfter(block, "font-weight"), url: url, unicodeRange: valueAfter(block, "unicode-range").replaceAll(" ", "")));
-        };
+        }
         val comment = piece.lastIndexOf("/*");
         val commentEnd = piece.lastIndexOf("*/");
         subset = if (comment >= 0 && commentEnd > comment) piece.slice(comment + 2, commentEnd).trim() else "";
-    };
+    }
     return out;
 }
 
@@ -203,9 +203,9 @@ pub fn googleFontWith(family: string, opts: GoogleFontOptions, build: FontBuild)
         if (row != null) {
             val r = row;
             val side = try fs.writeText(path.join([dir, base + "." + fileHash(path.join([dir, name])) + ".metrics.txt"]), metricsSidecar(r.metrics));
-        };
+        }
         faces.push(#(f.style, f.weight, "/_onze/static/" + build.buildId + "/fonts/" + name, f.unicodeRange));
-    };
+    }
     val adjusted = if (opts.adjustFontFallback) adjustedFor(family) else "";
     return assemble(family, faces, opts.display, opts.preload, opts.variable, opts.fallback, adjusted);
 }
@@ -261,7 +261,7 @@ pub fn localFont(family: string, opts: LocalFontOptions, root: string, buildId: 
         val copied = try process.run("cp", [normalized, path.join([dir, name])]);
         if (metrics == null) metrics = probe(normalized);
         faces.push(#(s.style, s.weight, "/_onze/static/" + buildId + "/fonts/" + name, ""));
-    };
+    }
     val adjusted = if (opts.adjustFontFallback == false) "" else if (metrics == null) "" else fallbackFace(family, "Arial", metrics, (metricsOf("Arial") ?? MetricsRow(family: "", category: "", metrics: FontMetrics(unitsPerEm: 1, ascent: 0, descent: 0, lineGap: 0, avgCharWidth: 1), localFallback: "")).metrics);
     val degraded = opts.adjustFontFallback && metrics == null;
     if (degraded) logged("font " + family + ": no metrics probe available - the fallback is unadjusted and layout shift mitigation is off for this family");
@@ -277,11 +277,11 @@ pub fn fontHead(fonts: Array<Font>) -> string {
     for (fonts) { f ->
         for (f.preload.split("\n").filter({ t -> t != "" })) { t ->
             if (tags.contains(t) == false) tags.push(t);
-        };
+        }
         for (f.css.split("\n").filter({ r -> r != "" })) { r ->
             if (rules.contains(r) == false) rules.push(r);
-        };
-    };
+        }
+    }
     val style = if (rules.length == 0) "" else "<style>" + rules.join("") + "</style>";
     return tags.append([style]).filter({ s -> s != "" }).join("\n");
 }

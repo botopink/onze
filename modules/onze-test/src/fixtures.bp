@@ -32,8 +32,8 @@ pub fn fixtureTree(text: string) -> Fixture {
             open = true;
         } else if (open) {
             lines.push(line);
-        };
-    };
+        }
+    }
     if (open) files.push(FixtureFile(path: path, content: lines.join("\n")));
     return Fixture(files: files);
 }

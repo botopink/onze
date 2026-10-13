@@ -60,10 +60,10 @@ fn classesOfSelector(sel: string) -> string[] {
                 if (cur != "") out.push(cur);
                 cur = "";
                 open = false;
-            };
-        };
+            }
+        }
         if (c == ".") open = true;
-    };
+    }
     return out;
 }
 
@@ -81,8 +81,8 @@ fn selectorsOf(css: string) -> string[] {
             depth = depth - 1;
         } else if (depth == 0) {
             cur = cur + c;
-        };
-    };
+        }
+    }
     return out;
 }
 
@@ -94,9 +94,9 @@ fn definedClasses(css: string) -> string[] {
             if (t.startsWith(".")) {
                 val first = classesOfSelector(t).at(0) ?? "";
                 if (first != "" && out.contains(first) == false) out.push(first);
-            };
-        };
-    };
+            }
+        }
+    }
     return out;
 }
 
@@ -119,16 +119,16 @@ fn rewriteSelector(sel: string, names: Array<#(string, string)>) -> string {
                 out = out + "." + scopedOr(names, cur);
                 cur = "";
                 open = false;
-            };
-        };
+            }
+        }
         if (open == false) {
             if (c == ".") {
                 open = true;
             } else {
                 out = out + c;
-            };
-        };
-    };
+            }
+        }
+    }
     return out;
 }
 
@@ -143,14 +143,14 @@ fn rewriteCss(css: string, names: Array<#(string, string)>) -> string {
             if (depth == 0) {
                 out = out + rewriteSelector(cur, names);
                 cur = "";
-            };
+            }
             out = out + c;
             depth = depth + 1;
         } else {
             if (c == "}") depth = depth - 1;
             out = out + c;
-        };
-    };
+        }
+    }
     return out + cur;
 }
 
@@ -164,12 +164,12 @@ fn sortedNames(names: string[]) -> string[] {
             if (before) {
                 next.push(n);
                 placed = true;
-            };
+            }
             next.push(m);
-        };
+        }
         if (placed == false) next.push(n);
         out = next;
-    };
+    }
     return out;
 }
 
@@ -183,8 +183,8 @@ pub fn compileStyleModule(sourcePath: string, source: string) -> @Result<StyleMo
         for (classesOfSelector(sel)) { c ->
             val fresh = defined.contains(c) == false && used.contains(c) == false;
             if (fresh) used.push(c);
-        };
-    };
+        }
+    }
     return StyleModule(sourcePath: sourcePath, hash: h, names: names, css: rewriteCss(source, names), undefinedUses: used);
 }
 
@@ -194,7 +194,7 @@ pub fn generateStyleModuleSource(m: StyleModule) -> string {
     for (m.names) { n ->
         lines.push("");
         lines.push("pub val " + n._0.replaceAll("-", "_") + ": string = \"" + n._1 + "\";");
-    };
+    }
     return lines.join("\n") + "\n";
 }
 

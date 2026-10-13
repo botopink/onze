@@ -177,5 +177,5 @@ test "image: no NIF anywhere in onze-assets" {
         val text = fs.readText(path.join(["src", f])).unwrapOr("");
         assert text.contains("erlang:load_nif") == false;
         assert text.contains("load_nif(") == false;
-    };
+    }
 }
