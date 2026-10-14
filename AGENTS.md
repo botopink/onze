@@ -176,6 +176,9 @@ hands it its share.
 calls `scripts/gate.sh`, which sources `scripts/git-hooks/lib/runner-standalone.sh`; the gate's stages, in order — each one a
 refusal (decision 67: fail beats warn), none with a flag, variable or list that turns it off:
 
+The hook applies `botopink format` to the commit's staged source files before its gate (decision 524 — the
+staged version, into the index; formatting never fails it) and runs the gate with `--jobs 2`.
+
 1. **staged files** — no `*.snap.new` / `*.snap.md.new` (both are in `.gitignore`; the hook
    catches a `git add -f`) and no conflict marker;
 2. **the compiler** — `$BOTOPINK_BIN` when it is set (a value that is not an executable is a
