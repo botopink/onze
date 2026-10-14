@@ -23,7 +23,8 @@ pub fn noRasterizer() -> Rasterizer {
 pub fn detectRasterizer() -> Rasterizer {
     for (["resvg", "rsvg-convert"]) { cmd ->
         val probe = process.run("sh", ["-c", "command -v \"$1\" >/dev/null 2>&1", "probe", cmd]);
-        val found = probe.unwrapOr(Exit(status: 1, stdout: "", stderr: "")).status == 0;
+        val found = probe.unwrapOr(Exit(status: 1, stdout: "", stderr: "")).status
+            == 0;
         if (found) return Rasterizer(kind: "port", command: cmd);
     }
     return noRasterizer();
@@ -32,29 +33,46 @@ pub fn detectRasterizer() -> Rasterizer {
 // What stops `route` (declaring `contentType`) from rendering with `r`.
 pub fn requireRasterizer(route: string, contentType: string, r: Rasterizer) -> Array<string> {
     if (contentType == "image/svg+xml") return [];
-    if (contentType != "image/png") return ["route " + route + " declares " + contentType + "; an image route answers image/png or image/svg+xml"];
-    if (r.kind == "nif") return ["rasterizer kind \"nif\" configured and no NIF is loaded"];
-    if (r.kind == "none" || r.command == "") return ["route " + route + " declares image/png and no rasterizer is available; install resvg or rsvg-convert, or set contentType to image/svg+xml"];
+    if (contentType != "image/png")
+        return ["route "
+            + route
+            + " declares "
+            + contentType
+            + "; an image route answers image/png or image/svg+xml"];
+    if (r.kind == "nif")
+        return ["rasterizer kind \"nif\" configured and no NIF is loaded"];
+    if (r.kind == "none" || r.command == "")
+        return ["route "
+            + route
+            + " declares image/png and no rasterizer is available; install resvg or rsvg-convert, or set contentType to image/svg+xml"];
     return [];
 }
 
 fn argsFor(r: Rasterizer, input: string, size: ImageSize, output: string) -> Array<string> {
-    if (r.command.endsWith("rsvg-convert")) return ["-w", size.width.toString(), "-h", size.height.toString(), "-o", output, input];
+    if (r.command.endsWith("rsvg-convert"))
+        return ["-w", size.width.toString(), "-h", size.height.toString(), "-o", output, input];
     return ["--width", size.width.toString(), "--height", size.height.toString(), input, output];
 }
 
 // Rasterizes `svg` to `outPath` through the port; answers `outPath`.
 pub fn rasterize(r: Rasterizer, svg: string, size: ImageSize, outPath: string) -> @Result<string, string> {
-    if (r.kind == "nif") throw "rasterizer kind \"nif\" configured and no NIF is loaded";
-    if (r.kind != "port") throw "no rasterizer is available; install resvg or rsvg-convert";
+    if (r.kind == "nif")
+        throw "rasterizer kind \"nif\" configured and no NIF is loaded";
+    if (r.kind != "port")
+        throw "no rasterizer is available; install resvg or rsvg-convert";
     val input = outPath + ".svg";
     val written = try fs.writeText(input, svg);
     val ran = process.run(r.command, argsFor(r, input, size, outPath));
     val removedInput = fs.rm(input);
-    val exit = ran.unwrapOr(Exit(status: 0 - 1, stdout: "", stderr: "could not start " + r.command));
+    val exit = ran.unwrapOr(Exit(status: 0
+        - 1, stdout: "", stderr: "could not start " + r.command));
     if (exit.status != 0) {
         val removed = fs.rm(outPath);
-        throw r.command + " exited " + exit.status.toString() + ": " + (exit.stderr + exit.stdout).trim().slice(0, 300);
+        throw r.command
+            + " exited "
+            + exit.status.toString()
+            + ": "
+            + (exit.stderr + exit.stdout).trim().slice(0, 300);
     }
     return outPath;
 }

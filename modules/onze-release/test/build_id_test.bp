@@ -21,9 +21,27 @@ test "release: build id ---- derived once, sort-independent, sensitive" {
         "generateBuildId([4f21ab, 7e0055, 9c1d41], 41ab08) = " + c,
         "validateBuildId(\"\")          " + shown(validateBuildId("")),
         "validateBuildId(\"has/slash\") " + shown(validateBuildId("has/slash")),
-        "validateBuildId(65 chars)    " + shown(validateBuildId("a".repeat(65))),
-        "verifyBuildId(" + a + ", " + a + ", " + a + ") " + shown(verifyBuildId(spec, a, a)),
-        "verifyBuildId(" + a + ", " + a + ", stale)  " + shown(verifyBuildId(spec, a, "stale")),
-        "verifyBuildId(" + a + ", other, " + a + ")  " + shown(verifyBuildId(spec, "other", a)),
+        "validateBuildId(65 chars)    "
+            + shown(validateBuildId("a".repeat(65))),
+        "verifyBuildId("
+            + a
+            + ", "
+            + a
+            + ", "
+            + a
+            + ") "
+            + shown(verifyBuildId(spec, a, a)),
+        "verifyBuildId("
+            + a
+            + ", "
+            + a
+            + ", stale)  "
+            + shown(verifyBuildId(spec, a, "stale")),
+        "verifyBuildId("
+            + a
+            + ", other, "
+            + a
+            + ")  "
+            + shown(verifyBuildId(spec, "other", a)),
     ].join("\n"));
 }

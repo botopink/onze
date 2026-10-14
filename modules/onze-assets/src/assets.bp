@@ -20,14 +20,23 @@ pub val staticPrefix: string = "/_onze/static/";
 
 pub fn staticRoots(publicDir: string, outDir: string, buildId: string) -> Array<AssetRoot> {
     return [
-        AssetRoot(pattern: staticPrefix + buildId + "/**", directory: outDir + "/static/" + buildId + "/", immutable: true, cacheSeconds: 31536000),
+        AssetRoot(pattern: staticPrefix + buildId + "/**", directory: outDir
+            + "/static/"
+            + buildId
+            + "/", immutable: true, cacheSeconds: 31536000),
         AssetRoot(pattern: "/**", directory: publicDir, immutable: false, cacheSeconds: 0),
     ];
 }
 
 fn describeRoot(r: AssetRoot) -> string {
-    val immutable = if (r.immutable) { "1" } else { "0" };
-    return r.pattern.padEnd(26, " ") + "-> " + r.directory.padEnd(23, " ") + "immutable=" + immutable + "  cacheSeconds=" + r.cacheSeconds.toString();
+    val immutable = if (r.immutable) "1" else "0";
+    return r.pattern.padEnd(26, " ")
+        + "-> "
+        + r.directory.padEnd(23, " ")
+        + "immutable="
+        + immutable
+        + "  cacheSeconds="
+        + r.cacheSeconds.toString();
 }
 
 pub fn describeRoots(roots: Array<AssetRoot>) -> string {

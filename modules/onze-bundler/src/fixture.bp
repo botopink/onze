@@ -33,4 +33,3 @@ pub fn fixtureApp() -> string {
         "pub fn listPosts() -> Post[] { return []; }",
     ].join("\n");
 }
-

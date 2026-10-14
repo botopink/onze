@@ -29,13 +29,12 @@ pub fn parseFixture(text: string) -> Array<SourceFile> {
     for (text.split("\n")) { raw ->
         val line = if (raw.startsWith(" ")) raw.slice(1) else raw;
         if (line.startsWith("== ")) {
-            if (open) files.push(SourceFile(path: path, source: lines.join("\n")));
+            if (open)
+                files.push(SourceFile(path: path, source: lines.join("\n")));
             path = line.slice(3).trim();
             lines = [];
             open = true;
-        } else if (open) {
-            lines.push(line);
-        }
+        } else if (open) lines.push(line);
     }
     if (open) files.push(SourceFile(path: path, source: lines.join("\n")));
     return files;
@@ -45,10 +44,14 @@ pub fn parseFixture(text: string) -> Array<SourceFile> {
 
 // The staged, identifier-safe spelling of one directory name.
 pub fn stagedSegment(seg: string) -> string {
-    if (seg.startsWith("[[...") && seg.endsWith("]]")) return "o_" + seg.slice(5, seg.length() - 2);
-    if (seg.startsWith("[...") && seg.endsWith("]")) return "c_" + seg.slice(4, seg.length() - 1);
-    if (seg.startsWith("[") && seg.endsWith("]")) return "d_" + seg.slice(1, seg.length() - 1);
-    if (seg.startsWith("(") && seg.endsWith(")")) return "g_" + seg.slice(1, seg.length() - 1);
+    if (seg.startsWith("[[...") && seg.endsWith("]]"))
+        return "o_" + seg.slice(5, seg.length() - 2);
+    if (seg.startsWith("[...") && seg.endsWith("]"))
+        return "c_" + seg.slice(4, seg.length() - 1);
+    if (seg.startsWith("[") && seg.endsWith("]"))
+        return "d_" + seg.slice(1, seg.length() - 1);
+    if (seg.startsWith("(") && seg.endsWith(")"))
+        return "g_" + seg.slice(1, seg.length() - 1);
     if (seg.startsWith("@")) return "s_" + seg.slice(1);
     return seg;
 }
@@ -66,12 +69,27 @@ pub fn stagedStem(stem: string) -> string {
 pub fn moduleIdOf(packageRoot: string, filePath: string) -> string {
     val root = packageRoot.replaceAll("\\", "/");
     val file = filePath.replaceAll("\\", "/");
-    val prefix = if (root == "" || root == ".") "" else if (root.endsWith("/")) root else root + "/";
-    val rel0 = if (prefix != "" && file.startsWith(prefix)) file.slice(prefix.length()) else file;
+    val prefix = if (root == "" || root == ".")
+        ""
+    else if (root.endsWith("/"))
+        root
+    else
+        root + "/";
+    val rel0 = if (prefix != "" && file.startsWith(prefix))
+        file.slice(prefix.length())
+    else
+        file;
     val rel = if (rel0.startsWith("./")) rel0.slice(2) else rel0;
-    val noExt = if (rel.endsWith(".bp")) rel.slice(0, rel.length() - 3) else rel;
+    val noExt = if (rel.endsWith(".bp"))
+        rel.slice(0, rel.length() - 3)
+    else
+        rel;
     val parts = noExt.split("/").filter({ p -> p != "" });
-    val trimmed = if (parts.length > 1 && (parts.at(parts.length - 1) ?? "") == "mod") parts.take(parts.length - 1) else parts;
+    val trimmed = if (parts.length > 1
+        && (parts.at(parts.length - 1) ?? "") == "mod")
+        parts.take(parts.length - 1)
+    else
+        parts;
     val dirs = trimmed.take(trimmed.length - 1).map({ p -> stagedSegment(p) });
     val last = stagedStem(trimmed.at(trimmed.length - 1) ?? "");
     return dirs.append([last]).join(".");
@@ -112,9 +130,7 @@ fn topLevelItems(body: string) -> string[] {
         if (c == "," && depth == 0) {
             items.push(cur.trim());
             cur = "";
-        } else {
-            cur = cur + c;
-        }
+        } else cur = cur + c;
     }
     if (cur.trim() != "") items.push(cur.trim());
     return items;
@@ -140,7 +156,14 @@ fn readImport(text: string) -> ?#(string, string[]) {
 }
 
 fn modDeclName(line: string) -> string {
-    val t = if (line.startsWith("pub default mod ")) line.slice(16) else if (line.startsWith("pub mod ")) line.slice(8) else if (line.startsWith("mod ")) line.slice(4) else "";
+    val t = if (line.startsWith("pub default mod "))
+        line.slice(16)
+    else if (line.startsWith("pub mod "))
+        line.slice(8)
+    else if (line.startsWith("mod "))
+        line.slice(4)
+    else
+        "";
     if (t.endsWith(";") == false) return "";
     return t.slice(0, t.length() - 1).trim();
 }
@@ -155,25 +178,29 @@ pub fn importsOf(file: string, source: string) -> @Result<Array<ImportRef>, stri
     for (source.split("\n")) { raw ->
         n = n + 1;
         val line = stripLineComment(raw).trim();
-        if (pending != "") {
-            pending = pending + " " + line;
-        } else if (line == "import" || line.startsWith("import ") || line.startsWith("import{")) {
+        if (pending != "") pending = pending + " " + line else if (line
+            == "import"
+            || line.startsWith("import ")
+            || line.startsWith("import{")) {
             pending = line;
             pendingLine = n;
         } else {
             val m = modDeclName(line);
-            if (m != "") refs.push(ImportRef(spec: m, names: [], isModDecl: true, line: n));
+            if (m != "")
+                refs.push(ImportRef(spec: m, names: [], isModDecl: true, line: n));
         }
         if (pending != "" && pending.endsWith(";")) {
             val parsed = readImport(pending);
-            if (parsed == null) throw [file, ":", pendingLine.toString(), ": an import the scanner cannot read: ", pending].join("");
+            if (parsed == null)
+                throw [file, ":", pendingLine.toString(), ": an import the scanner cannot read: ", pending].join("");
             val none: #(string, string[]) = #("", []);
             val ok = parsed;
             refs.push(ImportRef(spec: ok._0, names: ok._1, isModDecl: false, line: pendingLine));
             pending = "";
         }
     }
-    if (pending != "") throw [file, ":", pendingLine.toString(), ": an import with no closing `;`"].join("");
+    if (pending != "")
+        throw [file, ":", pendingLine.toString(), ": an import with no closing `;`"].join("");
     return refs;
 }
 
@@ -208,17 +235,22 @@ pub fn requestScopeImports(refs: Array<ImportRef>) -> string[] {
 pub fn publicNamesOf(source: string) -> string[] {
     var out: string[] = [];
     for (codeLines(source)) { l ->
-        val rest = if (l.startsWith("pub declare fn ")) l.slice(15) else if (l.startsWith("pub fn ")) l.slice(7) else if (l.startsWith("pub type ")) l.slice(9) else if (l.startsWith("pub val ")) l.slice(8) else "";
+        val rest = if (l.startsWith("pub declare fn "))
+            l.slice(15)
+        else if (l.startsWith("pub fn "))
+            l.slice(7)
+        else if (l.startsWith("pub type "))
+            l.slice(9)
+        else if (l.startsWith("pub val "))
+            l.slice(8)
+        else
+            "";
         if (rest != "") {
             var name = "";
             var open = true;
             for (rest.split("")) { c ->
                 val word = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_".contains(c);
-                if (open && word) {
-                    name = name + c;
-                } else {
-                    open = false;
-                }
+                if (open && word) name = name + c else open = false;
             }
             if (name != "") out.push(name);
         }

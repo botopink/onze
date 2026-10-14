@@ -55,7 +55,8 @@ fn moduleOf(modules: Array<AppModule>, id: string) -> AppModule {
 pub fn checkServerOnly(graph: ClientGraph, modules: Array<AppModule>) -> Array<BuildRefusal> {
     var out: Array<BuildRefusal> = [];
     for (graphModules(graph, modules)) { m ->
-        if (importsServerOnly(m.refs)) out.push(BuildRefusal(kind: "server-only", subject: "serverOnly", moduleId: m.id, chain: chainOf(graph, m.id)));
+        if (importsServerOnly(m.refs))
+            out.push(BuildRefusal(kind: "server-only", subject: "serverOnly", moduleId: m.id, chain: chainOf(graph, m.id)));
         for (requestScopeImports(m.refs)) { name ->
             out.push(BuildRefusal(kind: "request-scope", subject: name, moduleId: m.id, chain: chainOf(graph, m.id)));
         }
@@ -73,18 +74,16 @@ fn argAfter(text: string, open: i32) -> string {
         if (done == false) {
             if (c == "(") depth = depth + 1;
             if (c == ")") depth = depth - 1;
-            if (depth == 0) {
-                done = true;
-            } else {
-                out = out + c;
-            }
+            if (depth == 0) done = true else out = out + c;
         }
     }
     return out.slice(1).trim();
 }
 
 fn isStringLiteral(arg: string) -> bool {
-    val quoted = arg.length() >= 2 && arg.startsWith("\"") && arg.endsWith("\"");
+    val quoted = arg.length() >= 2
+        && arg.startsWith("\"")
+        && arg.endsWith("\"");
     return quoted && arg.slice(1, arg.length() - 1).contains("\"") == false;
 }
 
@@ -113,14 +112,11 @@ pub fn checkEnvIn(m: AppModule, chain: Array<string>, envOf: fn(name: string) ->
             val arg = argAfter(line, at + 8);
             if (isStringLiteral(arg)) {
                 val name = arg.slice(1, arg.length() - 1);
-                if (isPublicEnvName(name)) {
-                    inlined.push(#(name, envOf(name)));
-                } else {
+                if (isPublicEnvName(name))
+                    inlined.push(#(name, envOf(name)))
+                else
                     refused.push(BuildRefusal(kind: "env-non-public", subject: name, moduleId: m.id, chain: chain));
-                }
-            } else {
-                refused.push(BuildRefusal(kind: "env-dynamic", subject: "(expression)", moduleId: m.id, chain: chain));
-            }
+            } else refused.push(BuildRefusal(kind: "env-dynamic", subject: "(expression)", moduleId: m.id, chain: chain));
         }
         for (positionsOf(line, "env.vars(")) { at ->
             refused.push(BuildRefusal(kind: "env-vars", subject: "env.vars()", moduleId: m.id, chain: chain));
@@ -162,11 +158,20 @@ fn literalVals(source: string) -> Array<#(string, string)> {
     var out: Array<#(string, string)> = [];
     for (source.split("\n")) { raw ->
         val l = raw.trim();
-        val decl = l.startsWith("val ") && l.contains("= [") && l.contains("emilia(") == false;
+        val decl = l.startsWith("val ")
+            && l.contains("= [")
+            && l.contains("emilia(") == false;
         if (decl) {
-            val name = (l.slice(4, l.indexOf("=")).trim().split(":").at(0) ?? "").trim();
+            val name = (l
+                .slice(4, l.indexOf("="))
+                .trim()
+                .split(":")
+                .at(0) ?? "").trim();
             val rhs = l.slice(l.indexOf("=") + 1).trim();
-            out.push(#(name, if (rhs.endsWith(";")) rhs.slice(0, rhs.length() - 1).trim() else rhs));
+            out.push(#(name, if (rhs.endsWith(";"))
+                rhs.slice(0, rhs.length() - 1).trim()
+            else
+                rhs));
         }
     }
     return out;
@@ -186,9 +191,15 @@ pub fn emiliaCallsOf(moduleId: string, source: string) -> Array<EmiliaCall> {
             if (standalone) {
                 val arg = argAfter(line, at + 6);
                 val named = vals.filter({ v -> v._0 == arg });
-                val literal = (arg.startsWith("[") && arg.endsWith("]")) || named.length > 0;
-                val tokens = if (named.length > 0) (named.at(0) ?? #("", ""))._1 else arg;
-                out.push(EmiliaCall(moduleId: moduleId, line: n, text: "emilia(" + arg + ")", literal: literal, tokens: tokens));
+                val literal = (arg.startsWith("[") && arg.endsWith("]"))
+                    || named.length > 0;
+                val tokens = if (named.length > 0)
+                    (named.at(0) ?? #("", ""))._1
+                else
+                    arg;
+                out.push(EmiliaCall(moduleId: moduleId, line: n, text: "emilia("
+                    + arg
+                    + ")", literal: literal, tokens: tokens));
             }
         }
     }
@@ -214,16 +225,17 @@ pub fn checkEmiliaCalls(graph: ClientGraph, modules: Array<AppModule>) -> #(Arra
         for (emiliaCallsOf(m.id, m.source)) { c ->
             k = k + 1;
             val site = m.id + ":" + c.line.toString();
-            if (c.literal == false) {
-                refused.push(BuildRefusal(kind: "emilia-non-literal", subject: c.text, moduleId: site, chain: chainOf(graph, m.id)));
-            } else if (isAscii(c.tokens) == false) {
-                refused.push(BuildRefusal(kind: "emilia-hash-split", subject: c.text, moduleId: site, chain: chainOf(graph, m.id)));
-            } else {
+            if (c.literal == false)
+                refused.push(BuildRefusal(kind: "emilia-non-literal", subject: c.text, moduleId: site, chain: chainOf(graph, m.id)))
+            else if (isAscii(c.tokens) == false)
+                refused.push(BuildRefusal(kind: "emilia-hash-split", subject: c.text, moduleId: site, chain: chainOf(graph, m.id)))
+            else
                 styleMap.push(#(m.id + "#" + k.toString(), c.tokens));
-            }
         }
         for (flushLines(m.source)) { line ->
-            refused.push(BuildRefusal(kind: "emilia-flush", subject: "flush() in a client module", moduleId: m.id + ":" + line.toString(), chain: chainOf(graph, m.id)));
+            refused.push(BuildRefusal(kind: "emilia-flush", subject: "flush() in a client module", moduleId: m.id
+                + ":"
+                + line.toString(), chain: chainOf(graph, m.id)));
         }
     }
     return #(styleMap, refused);
@@ -279,13 +291,16 @@ pub fn parseStyleProbe(text: string) -> Array<StyleProbe> {
     var out: Array<StyleProbe> = [];
     for (text.split("\n")) { line ->
         val f = line.trim().split("|");
-        if (f.length == 3) out.push(StyleProbe(site: f.at(0) ?? "", className: f.at(1) ?? "", bodyHash: f.at(2) ?? ""));
+        if (f.length == 3)
+            out.push(StyleProbe(site: f.at(0) ?? "", className: f.at(1) ?? "", bodyHash: f.at(2) ?? ""));
     }
     return out;
 }
 
 fn probeAt(rows: Array<StyleProbe>, site: string) -> StyleProbe {
-    return rows.filter({ r -> r.site == site }).at(0) ?? StyleProbe(site: "", className: "", bodyHash: "");
+    return rows
+        .filter({ r -> r.site == site })
+        .at(0) ?? StyleProbe(site: "", className: "", bodyHash: "");
 }
 
 // The two backends' evaluations against each other: `#(site, class)` for
@@ -298,13 +313,19 @@ pub fn styleParity(styleMap: Array<#(string, string)>, js: Array<StyleProbe>, be
         val b = probeAt(beam, e._0);
         val missing = a.site == "" || b.site == "";
         val split = a.className != b.className || a.bodyHash != b.bodyHash;
-        if (missing) {
-            refused.push(BuildRefusal(kind: "emilia-unevaluated", subject: "emilia(" + e._1 + ")", moduleId: e._0, chain: []));
-        } else if (split) {
-            refused.push(BuildRefusal(kind: "emilia-hash-split", subject: "emilia(" + e._1 + ")", moduleId: e._0, chain: ["commonJS " + a.className + "/" + a.bodyHash, "erlang " + b.className + "/" + b.bodyHash]));
-        } else {
+        if (missing)
+            refused.push(BuildRefusal(kind: "emilia-unevaluated", subject: "emilia("
+                + e._1
+                + ")", moduleId: e._0, chain: []))
+        else if (split)
+            refused.push(BuildRefusal(kind: "emilia-hash-split", subject: "emilia("
+                + e._1
+                + ")", moduleId: e._0, chain: ["commonJS "
+                + a.className
+                + "/"
+                + a.bodyHash, "erlang " + b.className + "/" + b.bodyHash]))
+        else
             classes.push(#(e._0, a.className));
-        }
     }
     return #(classes, refused);
 }
@@ -317,13 +338,29 @@ pub fn checkBuild(graph: ClientGraph, modules: Array<AppModule>, config: OnzeCon
     val server = checkServerOnly(graph, modules);
     val env = checkEnvReads(graph, modules, envOf);
     val emilia = checkEmiliaCalls(graph, modules);
-    return BuildReport(inlined: env._0, styleMap: emilia._0, refusals: server.append(env._1).append(emilia._1));
+    return BuildReport(inlined: env._0, styleMap: emilia._0, refusals: server
+        .append(env._1)
+        .append(emilia._1));
 }
 
 pub fn refusalMessage(r: BuildRefusal) -> string {
     val chain = chainText(r.chain);
-    if (r.kind == "server-only") return "server-only module " + r.moduleId + " reached from client root " + r.chain.at(0) ?? r.moduleId + "\n  " + chain;
-    if (r.kind == "request-scope") return "request scope (" + r.subject + ") read in " + r.moduleId + ", reached from client root " + r.chain.at(0) ?? r.moduleId + "\n  " + chain;
+    if (r.kind == "server-only")
+        return "server-only module "
+            + r.moduleId
+            + " reached from client root "
+            + r.chain.at(0) ?? r.moduleId
+            + "\n  "
+            + chain;
+    if (r.kind == "request-scope")
+        return "request scope ("
+            + r.subject
+            + ") read in "
+            + r.moduleId
+            + ", reached from client root "
+            + r.chain.at(0) ?? r.moduleId
+            + "\n  "
+            + chain;
     return [r.kind.padEnd(18, " "), r.subject.padEnd(26, " "), r.moduleId.padEnd(22, " "), chain].join("  ");
 }
 
@@ -339,6 +376,11 @@ pub fn describeReport(report: BuildReport) -> string {
         rows.push("refused: " + refusalMessage(r).trimEnd());
     }
     val n = report.refusals.length;
-    rows.push(if (n == 0) "build ok: no refusals" else if (n == 1) "build failed: 1 refusal" else "build failed: " + n.toString() + " refusals");
+    rows.push(if (n == 0)
+        "build ok: no refusals"
+    else if (n == 1)
+        "build failed: 1 refusal"
+    else
+        "build failed: " + n.toString() + " refusals");
     return rows.join("\n");
 }

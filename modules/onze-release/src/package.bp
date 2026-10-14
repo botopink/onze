@@ -21,13 +21,18 @@ pub fn fileOfUrl(url: string) -> string {
 // The static files the manifest promises: every chunk, the entry and every
 // stylesheet, by file name.
 pub fn promisedFiles(m: ClientBundleManifest) -> string[] {
-    val refs = [m.entry].append(m.shared).append(m.chunks.filter({ c -> c.url.startsWith("/_onze/static/") })).append(m.styles);
+    val refs = [m.entry]
+        .append(m.shared)
+        .append(m.chunks.filter({ c -> c.url.startsWith("/_onze/static/") }))
+        .append(m.styles);
     return refs.filter({ c -> c.url != "" }).map({ c -> fileOfUrl(c.url) });
 }
 
 // The promised files absent from `present`, as messages.
 pub fn missingAssets(m: ClientBundleManifest, present: string[]) -> Array<string> {
-    return promisedFiles(m).filter({ f -> present.contains(f) == false }).map({ f -> "release refused — the manifest names static/" + m.buildId + "/" + f + ", which the build did not produce" });
+    return promisedFiles(m)
+        .filter({ f -> present.contains(f) == false })
+        .map({ f -> "release refused — the manifest names static/" + m.buildId + "/" + f + ", which the build did not produce" });
 }
 
 // Every `#(name, value)` among `secrets` whose name is not public and whose
@@ -36,7 +41,11 @@ pub fn scanForSecrets(assetTree: Array<#(string, string)>, secrets: Array<#(stri
     var out: string[] = [];
     for (secrets.filter({ s -> isPublicEnvName(s._0) == false && s._1.length() >= 4 })) { s ->
         for (assetTree) { a ->
-            if (a._1.contains(s._1)) out.push("release refused — value of " + s._0 + " found in " + a._0);
+            if (a._1.contains(s._1))
+                out.push("release refused — value of "
+                    + s._0
+                    + " found in "
+                    + a._0);
         }
     }
     return out;
@@ -46,7 +55,13 @@ fn copyTree(source: string, target: string) -> @Result<void, string> {
     val made = try process.run("mkdir", ["-p", target]);
     if (fs.exists(source) == false) return;
     val copied = try process.run("cp", ["-R", source + "/.", target]);
-    if (copied.status != 0) throw "copy " + source + " -> " + target + " failed: " + (copied.stdout + copied.stderr).trim();
+    if (copied.status != 0)
+        throw "copy "
+            + source
+            + " -> "
+            + target
+            + " failed: "
+            + (copied.stdout + copied.stderr).trim();
     return;
 }
 
@@ -60,12 +75,15 @@ pub fn packageAssets(spec: ReleaseSpec, manifestText: string, staticDir: string,
     if (missing.length > 0) throw missing.join("\n");
     var tree: Array<#(string, string)> = [];
     for (present) { f ->
-        tree.push(#("static/" + spec.buildId + "/" + f, fs.readText(path.join([staticDir, f])).unwrapOr("")));
+        tree.push(#("static/" + spec.buildId + "/" + f, fs
+            .readText(path.join([staticDir, f]))
+            .unwrapOr("")));
     }
     val leaks = scanForSecrets(tree, secrets);
     if (leaks.length > 0) throw leaks.join("\n");
     try copyTree(staticDir, path.join([releaseDir, "static", spec.buildId]));
     try copyTree(publicDir, path.join([releaseDir, "public"]));
-    val w = try fs.writeText(path.join([releaseDir, "BUILD_ID"]), spec.buildId + "\n");
+    val w = try fs.writeText(path.join([releaseDir, "BUILD_ID"]), spec.buildId
+        + "\n");
     return present;
 }

@@ -23,7 +23,10 @@ pub fn findRoot(startDir: string) -> @Result<string, string> {
         if (parent == dir) guard = 64 else dir = parent;
         guard = guard + 1;
     }
-    if (found == "") throw "no botopink.json in " + startDir + " or any directory above it - run onze inside a project, or `onze create`";
+    if (found == "")
+        throw "no botopink.json in "
+            + startDir
+            + " or any directory above it - run onze inside a project, or `onze create`";
     return found;
 }
 
@@ -46,15 +49,19 @@ pub fn resolveProject(startDir: string) -> @Result<Project, string> {
     val manifestPath = path.join([root, "botopink.json"]);
     val manifest = try fs.readText(manifestPath);
     val onzePath = path.join([root, "onze.json"]);
-    val onzeText = if (fs.exists(onzePath)) fs.readText(onzePath).unwrapOr("{}") else "{}";
+    val onzeText = if (fs.exists(onzePath))
+        fs.readText(onzePath).unwrapOr("{}")
+    else
+        "{}";
     val configResult = loadConfig(manifest, onzeText);
     if (configResult.isError()) {
         val e = configError(configResult);
-        val at = if (e.startsWith("botopink.json")) { manifestPath } else { onzePath };
+        val at = if (e.startsWith("botopink.json")) manifestPath else onzePath;
         throw e + " (" + at + ")";
     }
     val aliasResult = loadAliases(manifest);
-    if (aliasResult.isError()) throw aliasError(aliasResult) + " (" + manifestPath + ")";
+    if (aliasResult.isError())
+        throw aliasError(aliasResult) + " (" + manifestPath + ")";
     val config = try configResult;
     val aliases = try aliasResult;
     return Project(root: root, config: config, aliases: aliases);

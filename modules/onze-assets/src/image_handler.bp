@@ -26,8 +26,12 @@ pub type ImageOutcome(status: i32, headers: Array<#(string, string)>, file: stri
 
 // The argument vector for `encoder`.
 pub fn encoderArgs(encoder: string, req: EncodeRequest) -> Array<string> {
-    if (encoder == "magick") return [req.inputPath, "-resize", req.width.toString(), "-quality", req.quality.toString(), req.outputPath];
-    return ["thumbnail", req.inputPath, req.outputPath + "[Q=" + req.quality.toString() + "]", req.width.toString()];
+    if (encoder == "magick")
+        return [req.inputPath, "-resize", req.width.toString(), "-quality", req.quality.toString(), req.outputPath];
+    return ["thumbnail", req.inputPath, req.outputPath
+        + "[Q="
+        + req.quality.toString()
+        + "]", req.width.toString()];
 }
 
 #[@External.Node("""(((globalThis.__onzeEncoderState || {})[$0]) || '')""")]
@@ -72,15 +76,30 @@ declare fn runWithin(cmd: string, args: Array<string>, ms: i32) -> @Result<Exit,
 // Runs the encoder under a `cfg.encoderTimeoutMs` deadline. `Ok(0)` when it
 // wrote the output.
 pub fn encode(cfg: ImageConfig, req: EncodeRequest) -> @Result<i32, string> {
-    if (encoderAvailable(cfg.encoder) == false) throw "images: encoder \"" + cfg.encoder + "\" is not installed - optimization is off, originals are served";
+    if (encoderAvailable(cfg.encoder) == false)
+        throw "images: encoder \""
+            + cfg.encoder
+            + "\" is not installed - optimization is off, originals are served";
     val ran = runWithin(cfg.encoder, encoderArgs(cfg.encoder, req), cfg.encoderTimeoutMs);
     val exit = case ran {
         Ok(e) -> e;
         Error(message) -> Exit(status: 0 - 1, stdout: "", stderr: message);
     };
-    if (exit.status == 0 - 1) throw "images: " + cfg.encoder + " could not run: " + exit.stderr;
-    if (exit.status == 137) throw "images: " + cfg.encoder + " exceeded " + cfg.encoderTimeoutMs.toString() + " ms and was killed";
-    if (exit.status != 0) throw "images: " + cfg.encoder + " exited " + exit.status.toString() + ": " + (exit.stderr + exit.stdout).trim().slice(0, 300);
+    if (exit.status == 0 - 1)
+        throw "images: " + cfg.encoder + " could not run: " + exit.stderr;
+    if (exit.status == 137)
+        throw "images: "
+            + cfg.encoder
+            + " exceeded "
+            + cfg.encoderTimeoutMs.toString()
+            + " ms and was killed";
+    if (exit.status != 0)
+        throw "images: "
+            + cfg.encoder
+            + " exited "
+            + exit.status.toString()
+            + ": "
+            + (exit.stderr + exit.stdout).trim().slice(0, 300);
     return 0;
 }
 
@@ -111,7 +130,9 @@ pub fn negotiate(cfg: ImageConfig, requested: string, accept: string) -> string 
 }
 
 pub fn cacheKey(src: string, w: i32, q: i32, format: string, encoderVersion: string) -> string {
-    return hash.contentHash([src, w.toString(), q.toString(), format, encoderVersion].join("|")).padStart(8, "0");
+    return hash
+        .contentHash([src, w.toString(), q.toString(), format, encoderVersion].join("|"))
+        .padStart(8, "0");
 }
 
 fn contentTypeOfOriginal(file: string) -> string {
@@ -134,25 +155,42 @@ pub fn imageResponse(cfg: ImageConfig, query: Array<#(string, string)>, accept: 
     val w = digits(pairValue(query, "w"));
     val q = digits(pairValue(query, "q"));
     val checked = validateSource(cfg, publicDir, src);
-    if (checked.isError()) return ImageOutcome(status: 403, headers: [], file: "", message: "refused: " + src);
-    if (cfg.deviceWidths.contains(w) == false) return bad("w=" + pairValue(query, "w") + " is not a configured device width");
-    if (q < 1 || q > 100) return bad("q=" + pairValue(query, "q") + " is outside 1..100");
+    if (checked.isError())
+        return ImageOutcome(status: 403, headers: [], file: "", message: "refused: "
+            + src);
+    if (cfg.deviceWidths.contains(w) == false)
+        return bad("w="
+            + pairValue(query, "w")
+            + " is not a configured device width");
+    if (q < 1 || q > 100)
+        return bad("q=" + pairValue(query, "q") + " is outside 1..100");
     val clean = checked.unwrapOr(src);
-    if (clean.startsWith("/") == false) return ImageOutcome(status: 501, headers: [], file: "", message: "remote sources are fetched by the build's download seam, not in this handler yet");
+    if (clean.startsWith("/") == false)
+        return ImageOutcome(status: 501, headers: [], file: "", message: "remote sources are fetched by the build's download seam, not in this handler yet");
     val input = path.join([root, publicDir, clean.slice(1)]);
-    if (fs.exists(input) == false) return ImageOutcome(status: 404, headers: [], file: "", message: "no such image " + clean);
+    if (fs.exists(input) == false)
+        return ImageOutcome(status: 404, headers: [], file: "", message: "no such image "
+            + clean);
     val format = negotiate(cfg, pairValue(query, "f"), accept);
     val immutable = #("cache-control", "public, max-age=31536000, immutable");
     val available = encoderAvailable(cfg.encoder);
     val passThrough = format == "" || available == false;
-    if (passThrough) return ImageOutcome(status: 200, headers: [#("content-type", contentTypeOfOriginal(input)), immutable], file: input, message: if (available) "" else "optimization is off: " + cfg.encoder + " is not installed");
+    if (passThrough)
+        return ImageOutcome(status: 200, headers: [#("content-type", contentTypeOfOriginal(input)), immutable], file: input, message: if (available)
+            ""
+        else
+            "optimization is off: " + cfg.encoder + " is not installed");
     val key = cacheKey(clean, w, q, format, encoderVersion);
     val output = path.join([outDir, "images", key + "." + extensionOf(format)]);
-    val headers = [#("content-type", format), immutable, #("etag", "\"" + key + "\"")];
-    if (fs.exists(output)) return ImageOutcome(status: 200, headers: headers, file: output, message: "hit");
+    val headers = [#("content-type", format), immutable, #("etag", "\""
+        + key
+        + "\"")];
+    if (fs.exists(output))
+        return ImageOutcome(status: 200, headers: headers, file: output, message: "hit");
     val made = process.run("mkdir", ["-p", path.dirname(output)]);
     val encoded = encode(cfg, EncodeRequest(inputPath: input, outputPath: output, width: w, quality: q, format: format));
-    if (encoded.isError()) return ImageOutcome(status: 502, headers: [], file: "", message: encodeError(encoded));
+    if (encoded.isError())
+        return ImageOutcome(status: 502, headers: [], file: "", message: encodeError(encoded));
     return ImageOutcome(status: 200, headers: headers, file: output, message: "miss");
 }
 

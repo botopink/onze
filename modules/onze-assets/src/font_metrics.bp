@@ -41,5 +41,9 @@ pub fn metricsOf(family: string) -> ?MetricsRow {
 
 // The sidecar front 70 reads beside a face: one `key value` line each.
 pub fn metricsSidecar(m: FontMetrics) -> string {
-    return ["unitsPerEm " + m.unitsPerEm.toString(), "ascent " + m.ascent.toString(), "descent " + m.descent.toString(), "lineGap " + m.lineGap.toString(), "avgCharWidth " + m.avgCharWidth.toString()].join("\n") + "\n";
+    return ["unitsPerEm " + m.unitsPerEm.toString(), "ascent "
+        + m.ascent.toString(), "descent " + m.descent.toString(), "lineGap "
+        + m.lineGap.toString(), "avgCharWidth "
+        + m.avgCharWidth.toString()].join("\n")
+        + "\n";
 }

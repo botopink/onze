@@ -13,7 +13,8 @@ import {assertAs} from "snap";
 // `BOTOPINK_TEST_TMPDIR`, and it is the one place a test writes.
 fn testTmp() -> string {
     val root = env.read("BOTOPINK_TEST_TMPDIR") ?? "";
-    assert root != "", "BOTOPINK_TEST_TMPDIR is not set: run this suite under `botopink test`";
+    assert root
+        != "", "BOTOPINK_TEST_TMPDIR is not set: run this suite under `botopink test`";
     return root;
 }
 
@@ -80,9 +81,12 @@ test "image: props ---- quality, blur, fill and priority refusals" {
     val base = defaultImageProps("/images/hero.jpg", "hero", 1200, 630);
     assert validateProps(base).length == 0;
     assert (validateProps(ImageProps(src: base.src, alt: "", width: 1200, height: 630, fill: false, sizes: "", priority: false, quality: 101, placeholder: "empty", blurDataURL: "", loading: "")).at(0) ?? "").contains("quality 101");
-    assert validateProps(ImageProps(src: base.src, alt: "x", width: 1200, height: 630, fill: false, sizes: "", priority: false, quality: 75, placeholder: "blur", blurDataURL: "", loading: "")).length == 1;
-    assert validateProps(ImageProps(src: base.src, alt: "x", width: 1200, height: 630, fill: true, sizes: "", priority: false, quality: 75, placeholder: "empty", blurDataURL: "", loading: "")).length == 1;
-    assert validateProps(ImageProps(src: base.src, alt: "x", width: 1200, height: 630, fill: false, sizes: "", priority: true, quality: 75, placeholder: "empty", blurDataURL: "", loading: "lazy")).length == 1;
+    assert validateProps(ImageProps(src: base.src, alt: "x", width: 1200, height: 630, fill: false, sizes: "", priority: false, quality: 75, placeholder: "blur", blurDataURL: "", loading: "")).length
+        == 1;
+    assert validateProps(ImageProps(src: base.src, alt: "x", width: 1200, height: 630, fill: true, sizes: "", priority: false, quality: 75, placeholder: "empty", blurDataURL: "", loading: "")).length
+        == 1;
+    assert validateProps(ImageProps(src: base.src, alt: "x", width: 1200, height: 630, fill: false, sizes: "", priority: true, quality: 75, placeholder: "empty", blurDataURL: "", loading: "lazy")).length
+        == 1;
 }
 
 test "image: markup ---- lazy with sizes, priority, fill, blur" {
@@ -135,13 +139,24 @@ test "image: encoder ---- an argument vector, pass-through, a timeout, a failure
     assert pass.status == 200;
     assert pass.file.endsWith("hero.jpg");
     try assertAs(@src(), "handler", [
-        "#1 " + miss.status.toString() + "  " + miss.headers.map({ h -> h._0 + ": " + h._1 }).join("  ").replace(cacheKey("/images/hero.jpg", 640, 75, "image/webp", "1"), "<key>"),
+        "#1 "
+            + miss.status.toString()
+            + "  "
+            + miss.headers
+                .map({ h -> h._0 + ": " + h._1 })
+                .join("  ")
+                .replace(cacheKey("/images/hero.jpg", 640, 75, "image/webp", "1"), "<key>"),
         "#2 " + hit.status.toString() + "  " + hit.message,
-        "#3 " + imageResponse(cfg, [#("src", "/images/hero.jpg"), #("w", "999"), #("q", "75")], "image/webp", dir, "public", dir, "1").message,
-        "#4 " + imageResponse(cfg, [#("src", "/images/hero.jpg"), #("w", "640"), #("q", "101")], "image/webp", dir, "public", dir, "1").message,
-        "#5 " + imageResponse(cfg, [#("src", "https://cdn.example.com/a.jpg"), #("w", "640"), #("q", "75")], "image/webp", dir, "public", dir, "1").status.toString(),
+        "#3 "
+            + imageResponse(cfg, [#("src", "/images/hero.jpg"), #("w", "999"), #("q", "75")], "image/webp", dir, "public", dir, "1").message,
+        "#4 "
+            + imageResponse(cfg, [#("src", "/images/hero.jpg"), #("w", "640"), #("q", "101")], "image/webp", dir, "public", dir, "1").message,
+        "#5 "
+            + imageResponse(cfg, [#("src", "https://cdn.example.com/a.jpg"), #("w", "640"), #("q", "75")], "image/webp", dir, "public", dir, "1").status.toString(),
         "#6 " + pass.message,
-        "#7 " + negotiate(cfg, "image/avif", "image/webp") + " (avif not configured)",
+        "#7 "
+            + negotiate(cfg, "image/avif", "image/webp")
+            + " (avif not configured)",
     ].join("\n"));
     val gone = process.run("rm", ["-rf", dir]);
 }
@@ -153,7 +168,9 @@ test "image: encoder ---- an argument vector, pass-through, a timeout, a failure
 test "image: encoder ---- a timeout kills what the encoder started" {
     val dir = scratch();
     val pidFile = path.join([dir, "child.pid"]);
-    val spawning = script(dir, "spawning-enc", "sleep 30 &\necho $! > \"" + pidFile + "\"\nsleep 30");
+    val spawning = script(dir, "spawning-enc", "sleep 30 &\necho $! > \""
+        + pidFile
+        + "\"\nsleep 30");
     val t0 = clock.nowMillis();
     val r = encode(withEncoder(defaultImageConfig(), spawning, 1000), EncodeRequest(inputPath: "x", outputPath: "y", width: 640, quality: 75, format: "image/webp"));
     assert encodeErrorOf(r).contains("exceeded 1000 ms and was killed");

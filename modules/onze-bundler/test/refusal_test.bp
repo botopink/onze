@@ -26,7 +26,9 @@ fn report(tree: string) -> @Result<BuildReport, string> {
 }
 
 fn page(component: string) -> string {
-    return ["== app/page.bp", "import { " + component + " } from \"@/components.w\";", "#[page(\"\")] pub fn home(route: PageContext) -> @Component<Element> { return p([]); }", "== components/w.bp", "#[client]"].join("\n");
+    return ["== app/page.bp", "import { "
+        + component
+        + " } from \"@/components.w\";", "#[page(\"\")] pub fn home(route: PageContext) -> @Component<Element> { return p([]); }", "== components/w.bp", "#[client]"].join("\n");
 }
 
 test "refusal: server-only ---- the chain from the root" {
@@ -37,22 +39,25 @@ test "refusal: server-only ---- the chain from the root" {
 }
 
 test "refusal: request scope ---- cookies from a client module" {
-    val r = try report(page("W") + "\nimport { cookies } from \"jhonstart\";\npub fn W(props: P) -> Element { return p([]); }");
+    val r = try report(page("W")
+        + "\nimport { cookies } from \"jhonstart\";\npub fn W(props: P) -> Element { return p([]); }");
     try assertAs(@src(), "refusals", describeReport(r));
 }
 
 test "refusal: env ---- every row of the environment table" {
-    val r = try report(page("Widget") + "\n" + [
-        "import { io.env } from \"std\";",
-        "val a = env.read(\"ONZE_PUBLIC_API_URL\");",
-        "val b = env.read(\"DATABASE_URL\");",
-        "val c = env.read(\"onze_public_x\");",
-        "val d = env.read(someName());",
-        "val e = env.vars();",
-        "val f = env.write(\"X\", \"1\");",
-        "val g = env.clear(\"X\");",
-        "pub fn Widget(props: P) -> Element { return p([]); }",
-    ].join("\n"));
+    val r = try report(page("Widget")
+        + "\n"
+        + [
+            "import { io.env } from \"std\";",
+            "val a = env.read(\"ONZE_PUBLIC_API_URL\");",
+            "val b = env.read(\"DATABASE_URL\");",
+            "val c = env.read(\"onze_public_x\");",
+            "val d = env.read(someName());",
+            "val e = env.vars();",
+            "val f = env.write(\"X\", \"1\");",
+            "val g = env.clear(\"X\");",
+            "pub fn Widget(props: P) -> Element { return p([]); }",
+        ].join("\n"));
     assert r.refusals.length == 6;
     assert r.inlined.length == 1;
     val text = describeReport(r);
@@ -62,13 +67,16 @@ test "refusal: env ---- every row of the environment table" {
 }
 
 test "refusal: adversarial config ---- no setting relaxes anything" {
-    val tree = page("Widget") + "\nimport { io.env } from \"std\";\nval b = env.read(\"DATABASE_URL\");\npub fn Widget(props: P) -> Element { return p([]); }";
+    val tree = page("Widget")
+        + "\nimport { io.env } from \"std\";\nval b = env.read(\"DATABASE_URL\");\npub fn Widget(props: P) -> Element { return p([]); }";
     val plain = try report(tree);
     val loose = try loadConfig("{ \"name\": \"x\" }", "{ \"dev\": true, \"port\": 1, \"basePath\": \"/x\", \"appDir\": \"app\", \"publicDir\": \"\", \"outDir\": \"\", \"actionsBodyLimit\": 2147483647, \"allowedRedirects\": [\"*\"] }");
     val adversarial = try reportWith(tree, loose);
     assert describeReport(adversarial) == describeReport(plain);
     val keys = ["allowEnv", "publicEnvPrefix", "strict", "bundler"].map({ k -> k + ": " + loadError(k) });
-    try assertAs(@src(), "refusals", keys.join("\n") + "\n" + describeReport(adversarial));
+    try assertAs(@src(), "refusals", keys.join("\n")
+        + "\n"
+        + describeReport(adversarial));
 }
 
 fn loadError(key: string) -> string {
@@ -79,18 +87,20 @@ fn loadError(key: string) -> string {
 }
 
 test "refusal: emilia ---- non-literal tokens, a client flush, a hash split" {
-    val r = try report(page("Badge") + "\n" + [
-        "import { emilia, flush, Token } from \"emilia\";",
-        "val ok = emilia([.Text.Size.Sm, .Color.Gray.700]);",
-        "val named = [.Gap.All.4];",
-        "val viaVal = emilia(named);",
-        "val astral = emilia([.Content.Text(\"\u{1F600}\")]);",
-        "pub fn Badge(props: P) -> Element {",
-        "    val cls = emilia(props.tokens);",
-        "    val sheet = await flush();",
-        "    return span([text(\"x\", attrs: [])], attrs: [#(\"class\", cls)]);",
-        "}",
-    ].join("\n"));
+    val r = try report(page("Badge")
+        + "\n"
+        + [
+            "import { emilia, flush, Token } from \"emilia\";",
+            "val ok = emilia([.Text.Size.Sm, .Color.Gray.700]);",
+            "val named = [.Gap.All.4];",
+            "val viaVal = emilia(named);",
+            "val astral = emilia([.Content.Text(\"\u{1F600}\")]);",
+            "pub fn Badge(props: P) -> Element {",
+            "    val cls = emilia(props.tokens);",
+            "    val sheet = await flush();",
+            "    return span([text(\"x\", attrs: [])], attrs: [#(\"class\", cls)]);",
+            "}",
+        ].join("\n"));
     try assertAs(@src(), "refusals", describeReport(r));
 }
 
@@ -105,8 +115,10 @@ test "refusal: the styleMap probe ---- its source, and the two backends compared
     val beam = parseStyleProbe("components.card#1|e_f51c2501|9f00aa11\ncomponents.w#2|e_0000abcd|87654321");
     assert js.length == 2;
     val parity = styleParity(map, js, beam);
-    assert parity._0.map({ c -> c._0 + " " + c._1 }).join(",") == "components.card#1 e_f51c2501";
-    assert parity._1.map({ r -> r.kind + " " + r.moduleId }).join(",") == "emilia-hash-split components.w#2,emilia-unevaluated components.x#1";
+    assert parity._0.map({ c -> c._0 + " " + c._1 }).join(",")
+        == "components.card#1 e_f51c2501";
+    assert parity._1.map({ r -> r.kind + " " + r.moduleId }).join(",")
+        == "emilia-hash-split components.w#2,emilia-unevaluated components.x#1";
     assert refusalMessage(parity._1.at(0) ?? BuildRefusal(kind: "", subject: "", moduleId: "", chain: [])).contains("emilia([.Gap.All.4])");
 }
 

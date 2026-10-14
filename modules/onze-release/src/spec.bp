@@ -60,15 +60,22 @@ pub fn sortedText(xs: string[]) -> string[] {
 // Six hex digits of std's `contentHash` over the sorted module hashes and the
 // manifest's hash: the same inputs in any order give the same id.
 pub fn generateBuildId(moduleHashes: Array<string>, manifestHash: string) -> string {
-    val material = sortedText(moduleHashes).join("\n") + "\n--\n" + manifestHash;
+    val material = sortedText(moduleHashes).join("\n")
+        + "\n--\n"
+        + manifestHash;
     return hash.contentHash(material).padStart(8, "0").slice(0, 6);
 }
 
 // The problems of a build id, `[]` when it is usable.
 pub fn validateBuildId(id: string) -> Array<string> {
     if (id == "") return ["build id is empty"];
-    if (id.length() > 64) return ["build id is " + id.length().toString() + " characters; the limit is 64"];
-    val bad = id.split("").any({ c -> "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-".contains(c) == false });
+    if (id.length() > 64)
+        return ["build id is "
+            + id.length().toString()
+            + " characters; the limit is 64"];
+    val bad = id
+        .split("")
+        .any({ c -> "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-".contains(c) == false });
     if (bad) return ["build id \"" + id + "\" is not [A-Za-z0-9_-]{1,64}"];
     return [];
 }
@@ -77,9 +84,26 @@ pub fn validateBuildId(id: string) -> Array<string> {
 // the payload carry, each naming the two sides.
 pub fn verifyBuildId(spec: ReleaseSpec, manifestBuildId: string, payloadBuildId: string) -> Array<string> {
     var out: string[] = [];
-    if (spec.buildId != manifestBuildId) out.push("release and manifest build ids disagree (" + spec.buildId + " vs " + manifestBuildId + ")");
-    if (spec.buildId != payloadBuildId) out.push("release and payload build ids disagree (" + spec.buildId + " vs " + payloadBuildId + ")");
-    val third = manifestBuildId != payloadBuildId && spec.buildId == manifestBuildId && spec.buildId == payloadBuildId;
-    if (third) out.push("manifest and payload build ids disagree (" + manifestBuildId + " vs " + payloadBuildId + ")");
+    if (spec.buildId != manifestBuildId)
+        out.push("release and manifest build ids disagree ("
+            + spec.buildId
+            + " vs "
+            + manifestBuildId
+            + ")");
+    if (spec.buildId != payloadBuildId)
+        out.push("release and payload build ids disagree ("
+            + spec.buildId
+            + " vs "
+            + payloadBuildId
+            + ")");
+    val third = manifestBuildId != payloadBuildId
+        && spec.buildId == manifestBuildId
+        && spec.buildId == payloadBuildId;
+    if (third)
+        out.push("manifest and payload build ids disagree ("
+            + manifestBuildId
+            + " vs "
+            + payloadBuildId
+            + ")");
     return out;
 }

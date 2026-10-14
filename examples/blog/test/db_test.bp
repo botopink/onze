@@ -7,7 +7,8 @@ import {io.fs, io.process, io.clock, path, io.env} from "std";
 // `BOTOPINK_TEST_TMPDIR`, and it is the one place a test writes.
 fn testTmp() -> string {
     val root = env.read("BOTOPINK_TEST_TMPDIR") ?? "";
-    assert root != "", "BOTOPINK_TEST_TMPDIR is not set: run this suite under `botopink test`";
+    assert root
+        != "", "BOTOPINK_TEST_TMPDIR is not set: run this suite under `botopink test`";
     return root;
 }
 
@@ -32,7 +33,8 @@ fn errorOf(r: @Result<Post, string>) -> string {
 test "db: listPosts returns the three seeded posts, newest first" {
     val posts = listPosts();
     assert posts.length == 3;
-    assert posts.map({ p -> p.slug }).join(",") == "styles-that-stay-put,streaming-explained,hello-world";
+    assert posts.map({ p -> p.slug }).join(",")
+        == "styles-that-stay-put,streaming-explained,hello-world";
     assert (posts.at(2) ?? parsePost("", "")).title == "Hello, world";
 }
 

@@ -41,7 +41,8 @@ test "rebuild: a body change relinks only the chunks containing the module" {
     val r = try rebuild(setup(), s, "components/like_button.bp", "import { plural } from \"@/lib.format\";\nimport { io.env } from \"std\";\n#[client]\npub fn LikeButton(props: LikeProps) -> Element { return button([text(\"like\")]); }", "// like v2", { n -> noEnv(n) });
     assert r.rewalked == false;
     assert r.changed.join(",") == "route:/blog/[slug]";
-    assert r.steps.join(" | ") == "write chunk route:/blog/[slug] | write client-manifest.txt | push route:/blog/[slug]";
+    assert r.steps.join(" | ")
+        == "write chunk route:/blog/[slug] | write client-manifest.txt | push route:/blog/[slug]";
 }
 
 test "rebuild: an import change re-walks the graph" {
@@ -67,7 +68,9 @@ test "rebuild: a non-public env read fails dev with the build's message" {
 
 test "rebuild: an unchanged save changes nothing and pushes nothing" {
     val s = try start();
-    val same = s.modules.filter({ m -> m.path == "lib/format.bp" }).at(0) ?? AppModule(id: "", path: "", source: "", refs: [], client: false);
+    val same = s.modules
+        .filter({ m -> m.path == "lib/format.bp" })
+        .at(0) ?? AppModule(id: "", path: "", source: "", refs: [], client: false);
     val r = try rebuild(setup(), s, "lib/format.bp", same.source, "// lib.format", { n -> noEnv(n) });
     assert r.changed.length == 0;
     assert r.steps.length == 0;

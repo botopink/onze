@@ -7,7 +7,8 @@ import {io.fs, io.process, io.clock, path, io.env} from "std";
 // `BOTOPINK_TEST_TMPDIR`, and it is the one place a test writes.
 fn testTmp() -> string {
     val root = env.read("BOTOPINK_TEST_TMPDIR") ?? "";
-    assert root != "", "BOTOPINK_TEST_TMPDIR is not set: run this suite under `botopink test`";
+    assert root
+        != "", "BOTOPINK_TEST_TMPDIR is not set: run this suite under `botopink test`";
     return root;
 }
 
@@ -51,6 +52,10 @@ test "preprocess: a non-zero exit fails with the command's output attached" {
     val w = fs.writeText(failing, "#!/bin/sh\necho \"Error: expected one selector in $1\" >&2\nexit 65\n");
     val x = process.run("chmod", ["+x", failing]);
     val msg = errorOf(preprocess(failing, f));
-    assert msg.startsWith("preprocessor \"" + failing + "\" exited 65 on " + f + ": ");
+    assert msg.startsWith("preprocessor \""
+        + failing
+        + "\" exited 65 on "
+        + f
+        + ": ");
     assert msg.endsWith(": Error: expected one selector in " + f);
 }

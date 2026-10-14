@@ -8,7 +8,9 @@ import {ClientBundleManifest, ChunkRef, headScriptTags, scriptTags} from "onze-b
 import {stylesheet.stylesheetLinks};
 
 pub fn headFragment(m: ClientBundleManifest) -> string {
-    return [stylesheetLinks(m.styles), headScriptTags(m)].filter({ s -> s != "" }).join("\n");
+    return [stylesheetLinks(m.styles), headScriptTags(m)]
+        .filter({ s -> s != "" })
+        .join("\n");
 }
 
 pub fn pageRenderHooks(m: ClientBundleManifest) -> RenderHooks {

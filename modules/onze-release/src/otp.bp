@@ -22,14 +22,28 @@ pub fn otpApps() -> Array<#(string, string)> {
 }
 
 pub fn relFileText(spec: ReleaseSpec) -> string {
-    val apps = otpApps().append(spec.apps).map({ a -> "{" + a._0 + ", " + quote(a._1) + "}" });
-    return "{release, {" + quote(spec.name) + ", " + quote(spec.version) + "}, {erts, " + quote(spec.ertsVersion) + "},\n [" + apps.join(", ") + "]}.\n";
+    val apps = otpApps()
+        .append(spec.apps)
+        .map({ a -> "{" + a._0 + ", " + quote(a._1) + "}" });
+    return "{release, {"
+        + quote(spec.name)
+        + ", "
+        + quote(spec.version)
+        + "}, {erts, "
+        + quote(spec.ertsVersion)
+        + "},\n ["
+        + apps.join(", ")
+        + "]}.\n";
 }
 
 // `sys.config`: the app's static defaults as `{Key, Value}` terms, each
 // value written as the Erlang literal the pair carries.
 pub fn sysConfigText(spec: ReleaseSpec, defaults: Array<#(string, string)>) -> string {
-    return "[{" + spec.name + ", [" + defaults.map({ d -> "{" + d._0 + ", " + d._1 + "}" }).join(", ") + "]}].\n";
+    return "[{"
+        + spec.name
+        + ", ["
+        + defaults.map({ d -> "{" + d._0 + ", " + d._1 + "}" }).join(", ")
+        + "]}].\n";
 }
 
 pub fn defaultSysConfig() -> Array<#(string, string)> {
@@ -43,7 +57,11 @@ pub fn shellVar(name: string) -> string {
 }
 
 pub fn vmArgsText(spec: ReleaseSpec) -> string {
-    return "-name " + spec.name + "@127.0.0.1\n-setcookie " + shellVar("RELEASE_COOKIE") + "\n+K true\n";
+    return "-name "
+        + spec.name
+        + "@127.0.0.1\n-setcookie "
+        + shellVar("RELEASE_COOKIE")
+        + "\n+K true\n";
 }
 
 fn here(rest: string) -> string {
@@ -51,16 +69,32 @@ fn here(rest: string) -> string {
 }
 
 pub fn bootScriptText(spec: ReleaseSpec) -> string {
-    val erl = if (spec.includeErts) here("erts-" + spec.ertsVersion + "/bin/erl") else "erl";
+    val erl = if (spec.includeErts)
+        here("erts-" + spec.ertsVersion + "/bin/erl")
+    else
+        "erl";
     return [
         "#!/bin/sh",
         "set -e",
         "BUILD_ID=\"$(cat " + here("BUILD_ID") + ")\"",
-        "[ \"$BUILD_ID\" = \"" + spec.buildId + "\" ] || { echo \"build id mismatch: $BUILD_ID != " + spec.buildId + "\" >&2; exit 1; }",
+        "[ \"$BUILD_ID\" = \""
+            + spec.buildId
+            + "\" ] || { echo \"build id mismatch: $BUILD_ID != "
+            + spec.buildId
+            + "\" >&2; exit 1; }",
         "[ -n \"$RELEASE_COOKIE\" ] || { echo \"RELEASE_COOKIE is not set\" >&2; exit 1; }",
         "export PORT=\"" + shellVar("PORT:-3000") + "\"",
-        "exec " + erl + " -boot " + here("releases/" + spec.buildId + "/start") + " -config " + here("releases/" + spec.buildId + "/sys") + " -args_file " + here("releases/" + spec.buildId + "/vm.args") + " -noshell",
-    ].join("\n") + "\n";
+        "exec "
+            + erl
+            + " -boot "
+            + here("releases/" + spec.buildId + "/start")
+            + " -config "
+            + here("releases/" + spec.buildId + "/sys")
+            + " -args_file "
+            + here("releases/" + spec.buildId + "/vm.args")
+            + " -noshell",
+    ].join("\n")
+        + "\n";
 }
 
 // Runs `systools:make_script/2` over `<relDir>/onze` (the `.rel` written
@@ -68,19 +102,32 @@ pub fn bootScriptText(spec: ReleaseSpec) -> string {
 // Answers the boot script's path, or an error carrying `erl`'s output.
 pub fn assembleRelease(relDir: string, libDirs: string[]) -> @Result<string, string> {
     val paths = libDirs.map({ d -> "\"" + d + "\"" }).join(",");
-    val expr = "case systools:make_script(\"" + relDir + "/onze\", [{path, [" + paths + "]}, silent, no_warn_sasl]) of ok -> halt(0); {ok, _, _} -> halt(0); E -> io:format(\"~p~n\", [E]), halt(1) end.";
+    val expr = "case systools:make_script(\""
+        + relDir
+        + "/onze\", [{path, ["
+        + paths
+        + "]}, silent, no_warn_sasl]) of ok -> halt(0); {ok, _, _} -> halt(0); E -> io:format(\"~p~n\", [E]), halt(1) end.";
     val ran = process.run("erl", ["-noshell", "-eval", expr]);
     val failed = ran.isError();
     if (failed) throw "assembleRelease: erl could not run";
     val exit = ran.unwrapOr(Exit(status: 1, stdout: "", stderr: ""));
-    if (exit.status != 0) throw "assembleRelease: systools failed: " + (exit.stdout + exit.stderr).trim();
+    if (exit.status != 0)
+        throw "assembleRelease: systools failed: "
+            + (exit.stdout + exit.stderr).trim();
     return relDir + "/onze.boot";
 }
 
 // The version of an installed OTP application, and of ERTS, as the local
 // `erl` reports them — what a `.rel` must name for `systools` to accept it.
 pub fn installedVersion(app: string) -> @Result<string, string> {
-    val expr = if (app == "erts") "io:format(\"~s\", [erlang:system_info(version)]), halt()." else "application:load(" + app + "), {ok, V} = application:get_key(" + app + ", vsn), io:format(\"~s\", [V]), halt().";
+    val expr = if (app == "erts")
+        "io:format(\"~s\", [erlang:system_info(version)]), halt()."
+    else
+        "application:load("
+            + app
+            + "), {ok, V} = application:get_key("
+            + app
+            + ", vsn), io:format(\"~s\", [V]), halt().";
     val ran = process.run("erl", ["-noshell", "-eval", expr]);
     if (ran.isError()) throw "erl is not on PATH";
     val exit = ran.unwrapOr(Exit(status: 1, stdout: "", stderr: ""));

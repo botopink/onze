@@ -44,7 +44,10 @@ fn writer() -> Response {
 }
 
 fn document() -> string {
-    return recEvents().filter({ e -> e.startsWith("write ") }).map({ e -> e.slice(6) }).join("");
+    return recEvents()
+        .filter({ e -> e.startsWith("write ") })
+        .map({ e -> e.slice(6) })
+        .join("");
 }
 
 fn req() -> RequestData {
@@ -80,7 +83,8 @@ fn LoginRedirect() -> @Component<Element> {
 
 test "boot: the rakun keys carry the config, the wire names and the asset prefix" {
     val entries = rakunEntries(defaultConfig(), ["/api"]);
-    assert entries.map({ e -> e._0 + "=" + e._1 }).join("\n") == "rakun.appDir=app\nrakun.actions.field=__bp_action\nrakun.actions.header=X-Bp-Action\nrakun.actions.bodyLimit=1048576\nrakun.i18n.exclude=/api,/_onze";
+    assert entries.map({ e -> e._0 + "=" + e._1 }).join("\n")
+        == "rakun.appDir=app\nrakun.actions.field=__bp_action\nrakun.actions.header=X-Bp-Action\nrakun.actions.bodyLimit=1048576\nrakun.i18n.exclude=/api,/_onze";
 }
 
 test "boot: /_onze is appended once, never twice" {
@@ -100,7 +104,8 @@ test "boot: the Response maps status, header, write and close one to one" {
     await w("x");
     val c = res.close;
     await c();
-    assert recEvents().join("|") == "setStatus 307|setHeader location /login|write x|close";
+    assert recEvents().join("|")
+        == "setStatus 307|setHeader location /login|write x|close";
 }
 
 // ── the render through the boot ─────────────────────────────────────────────

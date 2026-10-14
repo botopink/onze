@@ -130,7 +130,8 @@ pub fn uiRecords(table: string) -> Array<#(string, string, string)> {
     var out: Array<#(string, string, string)> = [];
     for (table.split("\n")) { line ->
         val fields = line.split("|");
-        if (fields.length >= 2) out.push(#(fields.at(0) ?? "", fields.at(1) ?? "", line));
+        if (fields.length >= 2)
+            out.push(#(fields.at(0) ?? "", fields.at(1) ?? "", line));
     }
     return out;
 }
@@ -144,9 +145,7 @@ pub fn registerPages(render: SiteRender, build: string) -> i32 {
         if (r._0 == "P") {
             val _p = rakunPage(r._1, rendererFor(render, build, table, r._1));
             pages = pages + 1;
-        } else {
-            val _e = rkAppStoreEntry(r._2);
-        }
+        } else val _e = rkAppStoreEntry(r._2);
     }
     return pages;
 }
@@ -172,7 +171,9 @@ pub fn staticRootOf(r: AssetRoot) -> StaticRoot {
 // (`/**`) would answer every GET a page answers — front 82 stops the chain on
 // a matching pattern and a miss is 404 — so it waits on 69-b.
 pub fn servedRoots(config: OnzeConfig, buildId: string) -> Array<StaticRoot> {
-    return staticRoots(config.publicDir, config.outDir, buildId).filter({ r -> r.immutable }).map({ r -> staticRootOf(r) });
+    return staticRoots(config.publicDir, config.outDir, buildId)
+        .filter({ r -> r.immutable })
+        .map({ r -> staticRootOf(r) });
 }
 
 pub fn registerRoots(roots: Array<StaticRoot>) -> i32 {
@@ -191,8 +192,12 @@ pub type BuildOutput(buildId: string, manifest: ClientBundleManifest)
 pub fn readBuild(outDir: string) -> @Result<BuildOutput, string> {
     val idFile = path.join([outDir, "build-id"]);
     val manifestFile = path.join([outDir, "client-manifest.txt"]);
-    if (fs.exists(idFile) == false) throw "onze: " + idFile + " does not exist - run `onze build` first";
-    if (fs.exists(manifestFile) == false) throw "onze: " + manifestFile + " does not exist - run `onze build` first";
+    if (fs.exists(idFile) == false)
+        throw "onze: " + idFile + " does not exist - run `onze build` first";
+    if (fs.exists(manifestFile) == false)
+        throw "onze: "
+            + manifestFile
+            + " does not exist - run `onze build` first";
     val id = try fs.readText(idFile);
     val text = try fs.readText(manifestFile);
     val m = try parseManifest(text);
@@ -219,7 +224,6 @@ pub fn bootServer(config: OnzeConfig, build: BuildOutput) -> i32 {
     val _p = servePages();
     return pages;
 }
-
 
 // rakun's `App` for the project: the port, and `basePath` exactly as
 // configured — prefixing is rakun's, onze does not reimplement it.

@@ -24,14 +24,20 @@ test "stylesheet: cascade ---- global before module CSS, fingerprinted" {
     assert sheet._0.indexOf("body") < sheet._0.indexOf(".blog_container");
     val records = styleRecords("b7f2a1", sheet._1, sheet._0.length());
     val m = try parseManifest("V|1|b7f2a1\n" + records.join("\n") + "\n");
-    val back = formatManifest(m).split("\n").filter({ l -> l.startsWith("Y|") });
+    val back = formatManifest(m)
+        .split("\n")
+        .filter({ l -> l.startsWith("Y|") });
     assert back.join("\n") == records.join("\n");
     assert stylesheetFile(sheet._1).contains(sheet._1);
     try assertAs(@src(), "stylesheet", [
-        "== /_onze/static/b7f2a1/" + stylesheetFile(sheet._1), sheet._0.trimEnd(),
-        "== Y records", records.join("\n"),
-        "== parseManifest reads back", back.join("\n"),
-        "== head", stylesheetLinks(m.styles),
+        "== /_onze/static/b7f2a1/" + stylesheetFile(sheet._1),
+        sheet._0.trimEnd(),
+        "== Y records",
+        records.join("\n"),
+        "== parseManifest reads back",
+        back.join("\n"),
+        "== head",
+        stylesheetLinks(m.styles),
     ].join("\n"));
 }
 
@@ -40,7 +46,10 @@ test "assets: roots ---- the two roots handed to rakun-web front 82" {
     assert roots.length == 2;
     val adversarial = staticRoots("content", "/etc", "b7f2a1/../..");
     assert adversarial.length == 2;
-    try assertAs(@src(), "roots", "staticRoots(public, .onze, b7f2a1) = " + roots.length.toString() + "\n" + describeRoots(roots));
+    try assertAs(@src(), "roots", "staticRoots(public, .onze, b7f2a1) = "
+        + roots.length.toString()
+        + "\n"
+        + describeRoots(roots));
 }
 
 test "head: the stylesheet link precedes the head scripts" {
@@ -48,7 +57,8 @@ test "head: the stylesheet link precedes the head scripts" {
     val h = pageRenderHooks(m);
     val head = h.headExtra;
     val text = head("/");
-    assert text == "<link rel=\"stylesheet\" href=\"/_onze/static/b1/app.abc123.css\">\n<script src=\"/a.js\"></script>";
+    assert text
+        == "<link rel=\"stylesheet\" href=\"/_onze/static/b1/app.abc123.css\">\n<script src=\"/a.js\"></script>";
     val body = h.bodyExtra;
     assert body("/") == "<script src=\"/e.js\" defer></script>";
 }
@@ -66,11 +76,10 @@ fn memberSources(modulesDir: string) -> @Result<string[], string> {
     for (try fs.list(modulesDir)) { m ->
         val root = path.join([modulesDir, m]);
         val src = path.join([root, "src"]);
-        if (fs.exists(path.join([root, "botopink.json"])) && fs.exists(src)) {
+        if (fs.exists(path.join([root, "botopink.json"])) && fs.exists(src))
             for (try fs.walk(src)) { f ->
                 if (f.endsWith(".bp")) out.push(m + "/src/" + f);
             }
-        }
     }
     return out;
 }
@@ -78,8 +87,11 @@ fn memberSources(modulesDir: string) -> @Result<string[], string> {
 fn flushHits(file: string, text: string) -> string[] {
     var hits: string[] = [];
     for (text.split("\n")) { line ->
-        val call = line.contains("await flush()") || line.contains("= flush()") || line.trim().startsWith("flush(");
-        val sink = line.contains("fn styleSink") || line.contains("type StyleSink");
+        val call = line.contains("await flush()")
+            || line.contains("= flush()")
+            || line.trim().startsWith("flush(");
+        val sink = line.contains("fn styleSink")
+            || line.contains("type StyleSink");
         if (call || sink) hits.push(file + ": " + line.trim());
     }
     return hits;
@@ -88,12 +100,15 @@ fn flushHits(file: string, text: string) -> string[] {
 test "gate: no onze module calls flush() or defines a sink" {
     val files = try memberSources("..");
     assert files.length > 10;
-    assert files.filter({ f -> f.contains(".botopinkbuild") || f.contains("node_modules") || f.contains("/out/") }).length == 0;
+    assert files.filter({ f -> f.contains(".botopinkbuild") || f.contains("node_modules") || f.contains("/out/") }).length
+        == 0;
     var hits: string[] = [];
     for (files) { f ->
         val read = fs.readText(path.join(["..", f]));
         if (read.isError()) hits.push(f + ": unreadable");
-        for (flushHits(f, read.unwrapOr(""))) { h -> hits.push(h); }
+        for (flushHits(f, read.unwrapOr(""))) { h ->
+            hits.push(h);
+        }
     }
     assert hits.length == 0;
 }
@@ -104,5 +119,6 @@ test "gate: the flush scan catches a call and a sink" {
     assert flushHits("x/src/a.bp", "  flush(sheet);").length == 1;
     assert flushHits("x/src/a.bp", "pub fn styleSink() {}").length == 1;
     assert flushHits("x/src/a.bp", "type StyleSink = string;").length == 1;
-    assert flushHits("x/src/a.bp", "val flushed = flushAll();\n// no call here").length == 0;
+    assert flushHits("x/src/a.bp", "val flushed = flushAll();\n// no call here").length
+        == 0;
 }

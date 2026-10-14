@@ -62,7 +62,9 @@ pub fn shutdown(life: Lifecycle, drainTimeoutMs: i32) -> DrainReport {
     val leftover = waitFor(life, life.pendingAfterTasks, drainTimeoutMs);
     val stopTree = life.stopTree;
     val c = stopTree();
-    return DrainReport(renders: renders, afterTasks: leftover, timedOut: renders > 0 || leftover > 0);
+    return DrainReport(renders: renders, afterTasks: leftover, timedOut: renders
+        > 0
+        || leftover > 0);
 }
 
 pub fn exitCodeOf(r: DrainReport) -> i32 {
@@ -70,6 +72,13 @@ pub fn exitCodeOf(r: DrainReport) -> i32 {
 }
 
 pub fn describeDrain(r: DrainReport) -> string {
-    val timedOut = if (r.timedOut) { "true" } else { "false" };
-    return "renders=" + r.renders.toString() + " afterTasks=" + r.afterTasks.toString() + " timedOut=" + timedOut + " exit=" + exitCodeOf(r).toString();
+    val timedOut = if (r.timedOut) "true" else "false";
+    return "renders="
+        + r.renders.toString()
+        + " afterTasks="
+        + r.afterTasks.toString()
+        + " timedOut="
+        + timedOut
+        + " exit="
+        + exitCodeOf(r).toString();
 }

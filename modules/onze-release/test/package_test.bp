@@ -13,7 +13,8 @@ import {assertAs} from "snap";
 // `BOTOPINK_TEST_TMPDIR`, and it is the one place a test writes.
 fn testTmp() -> string {
     val root = env.read("BOTOPINK_TEST_TMPDIR") ?? "";
-    assert root != "", "BOTOPINK_TEST_TMPDIR is not set: run this suite under `botopink test`";
+    assert root
+        != "", "BOTOPINK_TEST_TMPDIR is not set: run this suite under `botopink test`";
     return root;
 }
 
@@ -76,7 +77,8 @@ test "release: shutdown ---- the five steps and a clean drain" {
     val stuck = shutdown(life(2), 100);
     assert stuck.timedOut;
     assert exitCodeOf(stuck) == 1;
-    assert isReady(readinessChecks(["default"]), ["route-table", "client-manifest"]) == false;
+    assert isReady(readinessChecks(["default"]), ["route-table", "client-manifest"])
+        == false;
     try assertAs(@src(), "shutdown", [
         "readinessChecks: " + readinessChecks(["default"]).join(", "),
         "shutdownOrder: " + shutdownOrder().join(" > "),
@@ -90,13 +92,16 @@ test "release: secrets ---- a non-public value in a chunk refuses the release" {
     val secrets = [#("DATABASE_URL", "postgres://secret@db"), #("ONZE_PUBLIC_API_URL", "https://api.example.com")];
     assert scanForSecrets(tree, secrets).length == 0;
     val planted = [#("static/b7f2a1/shared.41ab08.js", "var db = \"postgres://secret@db\";")];
-    assert scanForSecrets(planted, secrets).join("") == "release refused — value of DATABASE_URL found in static/b7f2a1/shared.41ab08.js";
+    assert scanForSecrets(planted, secrets).join("")
+        == "release refused — value of DATABASE_URL found in static/b7f2a1/shared.41ab08.js";
 }
 
 test "release: every chunk and stylesheet the manifest names must exist" {
     assert promisedFiles(manifest()).length == 4;
-    assert missingAssets(manifest(), ["entry.9c1d40.js", "shared.41ab08.js", "r1.7e0055.js", "app.2b91cc.css"]).length == 0;
-    assert missingAssets(manifest(), ["entry.9c1d40.js", "shared.41ab08.js", "app.2b91cc.css"]).join("") == "release refused — the manifest names static/b7f2a1/r1.7e0055.js, which the build did not produce";
+    assert missingAssets(manifest(), ["entry.9c1d40.js", "shared.41ab08.js", "r1.7e0055.js", "app.2b91cc.css"]).length
+        == 0;
+    assert missingAssets(manifest(), ["entry.9c1d40.js", "shared.41ab08.js", "app.2b91cc.css"]).join("")
+        == "release refused — the manifest names static/b7f2a1/r1.7e0055.js, which the build did not produce";
 }
 
 test "release: packageAssets copies the static tree and public/ verbatim" {
@@ -112,9 +117,16 @@ test "release: packageAssets copies the static tree and public/ verbatim" {
     val release = path.join([dir, "release"]);
     val out = errorOf(packageAssets(releaseSpec("blog", "0.1.0", "b7f2a1"), formatManifest(manifest()), staticDir, publicDir, release, []));
     assert out.startsWith("ok ");
-    assert fs.readText(path.join([release, "public", "images", "hero.jpg"])).unwrapOr("") == "jpg";
-    assert fs.readText(path.join([release, "static", "b7f2a1", "r1.7e0055.js"])).unwrapOr("") == "// r1.7e0055.js";
-    assert fs.readText(path.join([release, "BUILD_ID"])).unwrapOr("") == "b7f2a1\n";
+    assert fs
+        .readText(path.join([release, "public", "images", "hero.jpg"]))
+        .unwrapOr("")
+        == "jpg";
+    assert fs
+        .readText(path.join([release, "static", "b7f2a1", "r1.7e0055.js"]))
+        .unwrapOr("")
+        == "// r1.7e0055.js";
+    assert fs.readText(path.join([release, "BUILD_ID"])).unwrapOr("")
+        == "b7f2a1\n";
     val gone = fs.rm(path.join([staticDir, "r1.7e0055.js"]));
     assert errorOf(packageAssets(releaseSpec("blog", "0.1.0", "b7f2a1"), formatManifest(manifest()), staticDir, publicDir, release, [])).contains("r1.7e0055.js");
     val cleaned = process.run("rm", ["-rf", dir]);

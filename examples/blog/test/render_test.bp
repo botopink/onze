@@ -58,7 +58,10 @@ fn writer() -> Response {
 }
 
 fn document() -> string {
-    return recEvents().filter({ e -> e.startsWith("write ") }).map({ e -> e.slice(6) }).join("");
+    return recEvents()
+        .filter({ e -> e.startsWith("write ") })
+        .map({ e -> e.slice(6) })
+        .join("");
 }
 
 fn req(path: string) -> RequestData {
@@ -115,8 +118,12 @@ test "read path: /blog lists three posts, each in a PostCard with one emilia cla
 test "read path: two consecutive requests both carry a non-empty <style>" {
     val first = await renderBlog();
     val second = await renderBlog();
-    val sheet1 = (first.split("<style>").at(1) ?? "").split("</style>").at(0) ?? "";
-    val sheet2 = (second.split("<style>").at(1) ?? "").split("</style>").at(0) ?? "";
+    val sheet1 = (first.split("<style>").at(1) ?? "")
+        .split("</style>")
+        .at(0) ?? "";
+    val sheet2 = (second.split("<style>").at(1) ?? "")
+        .split("</style>")
+        .at(0) ?? "";
     assert sheet1.contains(".e_");
     assert sheet2.contains(".e_");
 }

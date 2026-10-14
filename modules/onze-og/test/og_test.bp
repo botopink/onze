@@ -14,7 +14,8 @@ import {assertAs} from "snap";
 // `BOTOPINK_TEST_TMPDIR`, and it is the one place a test writes.
 fn testTmp() -> string {
     val root = env.read("BOTOPINK_TEST_TMPDIR") ?? "";
-    assert root != "", "BOTOPINK_TEST_TMPDIR is not set: run this suite under `botopink test`";
+    assert root
+        != "", "BOTOPINK_TEST_TMPDIR is not set: run this suite under `botopink test`";
     return root;
 }
 
@@ -38,7 +39,8 @@ test "og: style ---- supported parse and unsupported report" {
     assert s.padding == "48px";
     assert unsupportedProperties(v).join(",") == "boxShadow,transform";
     assert malformedDeclarations(v).join(",") == "padding:";
-    assert parseStyle("gap:8;fontSize:20px").fontSize == parseStyle("fontSize:20px;gap:8").fontSize;
+    assert parseStyle("gap:8;fontSize:20px").fontSize
+        == parseStyle("fontSize:20px;gap:8").fontSize;
     assert refusedProperties().all({ p -> unsupportedProperties(p + ":1").length == 1 });
     try assertAs(@src(), "style", describeStyle(v));
 }
@@ -93,7 +95,8 @@ test "og: wrap ---- spaces only, an overflowing word, the ellipsis fits" {
     assert lines.length == 2;
     assert (lines.at(1) ?? "").endsWith("…");
     assert measure(inter(), lines.at(1) ?? "", 48) <= 400;
-    assert wrapText("Supercalifragilistic", 100, inter(), 48, 0).join("|") == "Supercalifragilistic";
+    assert wrapText("Supercalifragilistic", 100, inter(), 48, 0).join("|")
+        == "Supercalifragilistic";
 }
 
 test "og: svg ---- the card, with a hostile title escaped" {
@@ -113,16 +116,23 @@ test "og: svg ---- the card, with a hostile title escaped" {
 
 test "og: rasterizer ---- png with no tool fails at the route, svg needs none" {
     val route = "app/blog/[slug]/opengraph-image.bp";
-    assert requireRasterizer(route, "image/svg+xml", noRasterizer()).length == 0;
+    assert requireRasterizer(route, "image/svg+xml", noRasterizer()).length
+        == 0;
     val nif = rasterize(Rasterizer(kind: "nif", command: ""), "<svg/>", defaultSize(), path.join([testTmp(), "x.png"]));
     assert nif.isError();
     val none = rasterize(noRasterizer(), "<svg/>", defaultSize(), path.join([testTmp(), "x.png"]));
     assert none.isError();
-    val svgVerdict = if (requireRasterizer(route, "image/svg+xml", noRasterizer()).length == 0) { "ok" } else { "error" };
+    val svgVerdict = if (requireRasterizer(route, "image/svg+xml", noRasterizer()).length
+        == 0)
+        "ok"
+    else
+        "error";
     try assertAs(@src(), "rasterizer", [
         "image/svg+xml  kind=none   " + svgVerdict,
-        "image/png      kind=none   error: " + requireRasterizer(route, "image/png", noRasterizer()).join("; "),
-        "image/png      kind=nif    error: " + requireRasterizer(route, "image/png", Rasterizer(kind: "nif", command: "")).join("; "),
+        "image/png      kind=none   error: "
+            + requireRasterizer(route, "image/png", noRasterizer()).join("; "),
+        "image/png      kind=nif    error: "
+            + requireRasterizer(route, "image/png", Rasterizer(kind: "nif", command: "")).join("; "),
     ].join("\n"));
 }
 
@@ -139,17 +149,21 @@ test "og: cache key ---- template, fonts and params each change it" {
     val size = defaultSize();
     val f = [FontRef(family: "Inter", weight: 700, path: "a.woff2", metricsPath: "a.txt")];
     val base = cardKey("/blog/[slug]", [#("slug", "a")], "<svg>1</svg>", f, size);
-    assert base == cardKey("/blog/[slug]", [#("slug", "a")], "<svg>1</svg>", f, size);
-    assert base != cardKey("/blog/[slug]", [#("slug", "a")], "<svg>2</svg>", f, size);
-    assert base != cardKey("/blog/[slug]", [#("slug", "a")], "<svg>1</svg>", [], size);
-    assert base != cardKey("/blog/[slug]", [#("slug", "b")], "<svg>1</svg>", f, size);
+    assert base
+        == cardKey("/blog/[slug]", [#("slug", "a")], "<svg>1</svg>", f, size);
+    assert base
+        != cardKey("/blog/[slug]", [#("slug", "a")], "<svg>2</svg>", f, size);
+    assert base
+        != cardKey("/blog/[slug]", [#("slug", "a")], "<svg>1</svg>", [], size);
+    assert base
+        != cardKey("/blog/[slug]", [#("slug", "b")], "<svg>1</svg>", f, size);
 }
 
 test "og: rasterize ---- a real PNG through the port, and a failure removes the partial file" {
     val r = detectRasterizer();
-    if (r.kind == "none") {
-        @print("skipped: no resvg or rsvg-convert on PATH");
-    } else {
+    if (r.kind == "none")
+        @print("skipped: no resvg or rsvg-convert on PATH")
+    else {
         val out = path.join([testTmp(), "og.png"]);
         val size = ImageSize(width: 120, height: 63);
         val ok = try rasterize(r, "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"120\" height=\"63\"><rect width=\"120\" height=\"63\" fill=\"#111827\"/></svg>", size, out);

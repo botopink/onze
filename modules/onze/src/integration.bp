@@ -84,8 +84,8 @@ pub fn siteRender(site: App) -> SiteRender {
 // `write` / `close` onto `setStatus` / `setHeader` / `write` / `close`, one to
 // one. jhonstart never sees the writer; the writer never sees the `Response`.
 pub fn responseOver(
-    setStatus: fn(code: i32) -> void,
-    setHeader: fn(name: string, value: string) -> void,
+    setStatus: fn(code: i32),
+    setHeader: fn(name: string, value: string),
     write: fn(chunk: string) -> @Task<void>,
     close: fn() -> @Task<void>,
 ) -> Response {

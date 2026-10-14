@@ -29,9 +29,18 @@ pub fn scriptPlacement(strategy: string) -> string {
 }
 
 fn refusalOf(d: ScriptDecl) -> string {
-    if (strategies().contains(d.strategy) == false) return "script \"" + d.id + "\" — unknown strategy \"" + d.strategy + "\"; expected " + strategies().join(", ");
+    if (strategies().contains(d.strategy) == false)
+        return "script \""
+            + d.id
+            + "\" — unknown strategy \""
+            + d.strategy
+            + "\"; expected "
+            + strategies().join(", ");
     val workerWithLoad = d.strategy == "worker" && d.onLoad != "";
-    if (workerWithLoad) return "script \"" + d.id + "\" — a worker script cannot declare onLoad";
+    if (workerWithLoad)
+        return "script \""
+            + d.id
+            + "\" — a worker script cannot declare onLoad";
     return "";
 }
 
@@ -42,12 +51,15 @@ pub fn planScripts(decls: Array<ScriptDecl>) -> ScriptPlan {
     var refusals: string[] = [];
     for (decls) { d ->
         val problem = refusalOf(d);
-        if (problem != "") {
-            refusals.push(problem);
-        } else if (d.strategy == "beforeInteractive") {
-            head.push(ChunkRef(id: "script:" + d.id, url: d.src, hash: "", bytes: 0));
-        } else {
-            if (d.strategy == "worker") workers.push(ChunkRef(id: "worker:" + d.id, url: d.src, hash: "", bytes: 0));
+        if (problem != "")
+            refusals.push(problem)
+        else if (d.strategy == "beforeInteractive")
+            head.push(ChunkRef(id: "script:"
+                + d.id, url: d.src, hash: "", bytes: 0))
+        else {
+            if (d.strategy == "worker")
+                workers.push(ChunkRef(id: "worker:"
+                    + d.id, url: d.src, hash: "", bytes: 0));
             scheduled.push(#(d.src, d.strategy, d.onLoad));
         }
     }
@@ -59,8 +71,18 @@ pub fn describeScripts(decls: Array<ScriptDecl>) -> string {
     for (decls) { d ->
         val problem = refusalOf(d);
         if (problem == "") {
-            val extra = if (d.strategy == "beforeInteractive") "chunk script:" + d.id else if (d.strategy == "worker") "chunk worker:" + d.id else if (d.onLoad != "") "onLoad " + d.onLoad else "";
-            rows.push((d.id.padEnd(12, " ") + d.strategy.padEnd(20, " ") + scriptPlacement(d.strategy).padEnd(24, " ") + extra).trimEnd());
+            val extra = if (d.strategy == "beforeInteractive")
+                "chunk script:" + d.id
+            else if (d.strategy == "worker")
+                "chunk worker:" + d.id
+            else if (d.onLoad != "")
+                "onLoad " + d.onLoad
+            else
+                "";
+            rows.push((d.id.padEnd(12, " ")
+                + d.strategy.padEnd(20, " ")
+                + scriptPlacement(d.strategy).padEnd(24, " ")
+                + extra).trimEnd());
         }
     }
     for (planScripts(decls).refusals) { r ->

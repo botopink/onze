@@ -45,15 +45,39 @@ pub fn styleOfElement(e: Element) -> Style {
 // set taken from `parent`.
 pub fn inherit(parent: Style, own: Style, declared: string) -> Style {
     return Style(
-        display: own.display, flexDirection: own.flexDirection, justifyContent: own.justifyContent, alignItems: own.alignItems, gap: own.gap,
-        width: own.width, height: own.height, padding: own.padding, margin: own.margin, background: own.background,
+        display: own.display,
+        flexDirection: own.flexDirection,
+        justifyContent: own.justifyContent,
+        alignItems: own.alignItems,
+        gap: own.gap,
+        width: own.width,
+        height: own.height,
+        padding: own.padding,
+        margin: own.margin,
+        background: own.background,
         color: if (own.color == "") parent.color else own.color,
         fontSize: if (own.fontSize == 0) parent.fontSize else own.fontSize,
-        fontWeight: if (own.fontWeight == 0) parent.fontWeight else own.fontWeight,
-        fontFamily: if (own.fontFamily == "") parent.fontFamily else own.fontFamily,
-        lineHeight: if (own.lineHeight == 0) parent.lineHeight else own.lineHeight,
-        textAlign: own.textAlign, borderRadius: own.borderRadius, border: own.border, opacity: own.opacity,
-        position: own.position, top: own.top, left: own.left, right: own.right, bottom: own.bottom,
+        fontWeight: if (own.fontWeight == 0)
+            parent.fontWeight
+        else
+            own.fontWeight,
+        fontFamily: if (own.fontFamily == "")
+            parent.fontFamily
+        else
+            own.fontFamily,
+        lineHeight: if (own.lineHeight == 0)
+            parent.lineHeight
+        else
+            own.lineHeight,
+        textAlign: own.textAlign,
+        borderRadius: own.borderRadius,
+        border: own.border,
+        opacity: own.opacity,
+        position: own.position,
+        top: own.top,
+        left: own.left,
+        right: own.right,
+        bottom: own.bottom,
         maxLines: if (own.maxLines == 0) parent.maxLines else own.maxLines,
     );
 }
@@ -86,9 +110,7 @@ pub fn wrapText(text: string, widthPx: i32, m: FontMetrics, fontSize: i32, maxLi
     for (text.split(" ").filter({ w -> w != "" })) { word ->
         val candidate = if (cur == "") word else cur + " " + word;
         val fits = measure(m, candidate, fontSize) <= widthPx;
-        if (fits || cur == "") {
-            cur = candidate;
-        } else {
+        if (fits || cur == "") cur = candidate else {
             lines.push(cur);
             cur = word;
         }
@@ -115,14 +137,19 @@ fn textOfElement(e: Element) -> string {
 // `value` against `whole`: `50%` of it, a px length, or `fallback`.
 fn lengthOf(value: string, whole: i32, fallback: i32) -> i32 {
     if (value == "") return fallback;
-    if (value.endsWith("%")) return ((whole * pxOf(value.slice(0, value.length() - 1))) / 100);
+    if (value.endsWith("%"))
+        return ((whole * pxOf(value.slice(0, value.length() - 1))) / 100);
     val n = pxOf(value);
     return if (n == -2147483648) fallback else n;
 }
 
 // Padding as top, right, bottom, left.
 pub fn paddingOf(s: Style) -> #(i32, i32, i32, i32) {
-    val parts = s.padding.split(" ").filter({ p -> p != "" }).map({ p -> pxOf(p) }).map({ n -> if (n == -2147483648) 0 else n });
+    val parts = s.padding
+        .split(" ")
+        .filter({ p -> p != "" })
+        .map({ p -> pxOf(p) })
+        .map({ n -> if (n == -2147483648) 0 else n });
     if (parts.length == 0) return #(0, 0, 0, 0);
     val a = parts.at(0) ?? 0;
     val b = parts.at(1) ?? a;
@@ -153,7 +180,9 @@ pub fn intrinsic(e: Element, s: Style, availW: i32, availH: i32, faces: Array<Fo
             val w = measure(face, l, s.fontSize);
             if (w > widest) widest = w;
         }
-        return #(lengthOf(s.width, availW, widest + padW), lengthOf(s.height, availH, lines.length * lineHeightOf(s) + padH));
+        return #(lengthOf(s.width, availW, widest
+            + padW), lengthOf(s.height, availH, lines.length * lineHeightOf(s)
+            + padH));
     }
     val flow = e.children.filter({ c -> isAbsolute(styleOfElement(c)) == false });
     val sizes: Array<#(i32, i32)> = flow.map({ c -> intrinsic(c, styled(s, c), availW - padW, availH - padH, faces) });
@@ -190,16 +219,21 @@ pub fn place(e: Element, s: Style, x: i32, y: i32, w: i32, h: i32, faces: Array<
     val sizes: Array<#(i32, i32)> = flow.map({ c -> intrinsic(c, styled(s, c), cw, ch, faces) });
     var used = 0;
     for (sizes) { z ->
-        val main = if (row) { z._0 } else { z._1 };
+        val main = if (row) z._0 else z._1;
         used = used + main;
     }
     val n = sizes.length;
     val main = if (row) cw else ch;
-    val gaps = if (n > 1) { s.gap * (n - 1) } else { 0 };
+    val gaps = if (n > 1) s.gap * (n - 1) else 0;
     val free = main - used - gaps;
     val between = s.justifyContent == "space-between" && n > 1;
     val step = if (between) s.gap + (free / (n - 1)) else s.gap;
-    val start = if (s.justifyContent == "center") (free / 2) else if (s.justifyContent == "flex-end") free else 0;
+    val start = if (s.justifyContent == "center")
+        (free / 2)
+    else if (s.justifyContent == "flex-end")
+        free
+    else
+        0;
     var offset = start;
     var boxes: Array<LayoutBox> = [];
     var i = 0;
@@ -208,23 +242,31 @@ pub fn place(e: Element, s: Style, x: i32, y: i32, w: i32, h: i32, faces: Array<
         val cs = styled(s, c);
         val cross = if (row) ch else cw;
         val own = if (row) z._1 else z._0;
-        val crossSize = if (row) { cs.height } else { cs.width };
-        val stretch = s.alignItems == "stretch" && allText(c) == false && crossSize == "";
+        val crossSize = if (row) cs.height else cs.width;
+        val stretch = s.alignItems == "stretch"
+            && allText(c) == false
+            && crossSize == "";
         val size = if (stretch) cross else own;
-        val crossAt = if (s.alignItems == "center") ((cross - size) / 2) else if (s.alignItems == "flex-end") cross - size else 0;
+        val crossAt = if (s.alignItems == "center")
+            ((cross - size) / 2)
+        else if (s.alignItems == "flex-end")
+            cross - size
+        else
+            0;
         val bx = if (row) cx + offset else cx + crossAt;
         val by = if (row) cy + crossAt else cy + offset;
         val bw = if (row) z._0 else size;
         val bh = if (row) size else z._1;
         boxes.push(place(c, cs, bx, by, bw, bh, faces));
-        val advance = if (row) { z._0 } else { z._1 };
+        val advance = if (row) z._0 else z._1;
         offset = offset + advance + step;
         i = i + 1;
     }
     for (e.children.filter({ c -> isAbsolute(styleOfElement(c)) })) { c ->
         val cs = styled(s, c);
         val z = intrinsic(c, cs, cw, ch, faces);
-        boxes.push(place(c, cs, x + lengthOf(cs.left, w, 0), y + lengthOf(cs.top, h, 0), z._0, z._1, faces));
+        boxes.push(place(c, cs, x + lengthOf(cs.left, w, 0), y
+            + lengthOf(cs.top, h, 0), z._0, z._1, faces));
     }
     return LayoutBox(tag: e.tag, x: x, y: y, width: w, height: h, style: s, text: "", lines: [], children: boxes);
 }
@@ -237,7 +279,22 @@ pub fn layout(tree: Element, size: ImageSize, faces: Array<FontMetrics>) -> Layo
 
 pub fn describeLayout(b: LayoutBox, depth: i32) -> string {
     val lead = "  ".repeat(depth);
-    val lines = if (b.lines.length > 0) { "   lines: " + b.lines.join(" / ") } else { "" };
-    val head = lead + b.tag.padEnd(5, " ") + "x=" + b.x.toString().padEnd(5, " ") + "y=" + b.y.toString().padEnd(5, " ") + "w=" + b.width.toString().padEnd(6, " ") + "h=" + b.height.toString() + lines;
-    return [head].append(b.children.map({ c -> describeLayout(c, depth + 1) })).join("\n");
+    val lines = if (b.lines.length > 0)
+        "   lines: " + b.lines.join(" / ")
+    else
+        "";
+    val head = lead
+        + b.tag.padEnd(5, " ")
+        + "x="
+        + b.x.toString().padEnd(5, " ")
+        + "y="
+        + b.y.toString().padEnd(5, " ")
+        + "w="
+        + b.width.toString().padEnd(6, " ")
+        + "h="
+        + b.height.toString()
+        + lines;
+    return [head]
+        .append(b.children.map({ c -> describeLayout(c, depth + 1) }))
+        .join("\n");
 }

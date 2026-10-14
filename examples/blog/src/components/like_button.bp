@@ -11,5 +11,6 @@ pub type LikeProps(postId: string, likes: i32)
 
 #[client]
 pub fn LikeButton(props: LikeProps) -> Element {
-    return button([text("♥ " + props.likes.toString(), attrs: [])], attrs: [#("class", "like"), #("data-post", props.postId)]);
+    return button([text("♥ "
+        + props.likes.toString(), attrs: [])], attrs: [#("class", "like"), #("data-post", props.postId)]);
 }

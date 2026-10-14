@@ -15,7 +15,8 @@ pub fn cardTokens() -> Token[] {
 pub fn PostCard(post: Post) -> Element {
     val cls = emilia(cardTokens());
     return article([
-        h2([Link(linkProps("/blog/" + post.slug), [text(post.title, attrs: [])])], attrs: []),
+        h2([Link(linkProps("/blog/"
+            + post.slug), [text(post.title, attrs: [])])], attrs: []),
         timeTag([text(post.published, attrs: [])], attrs: [#("datetime", post.published)]),
         p([text(post.excerpt, attrs: [])], attrs: []),
     ], attrs: [#("class", cls)]);

@@ -11,12 +11,15 @@ import {assertAs} from "snap";
 // `BOTOPINK_TEST_TMPDIR`, and it is the one place a test writes.
 fn testTmp() -> string {
     val root = env.read("BOTOPINK_TEST_TMPDIR") ?? "";
-    assert root != "", "BOTOPINK_TEST_TMPDIR is not set: run this suite under `botopink test`";
+    assert root
+        != "", "BOTOPINK_TEST_TMPDIR is not set: run this suite under `botopink test`";
     return root;
 }
 
 fn page(seg: string) -> string {
-    return "#[page(\"" + seg + "\")] pub fn p(route: PageContext) -> @Component<Element> { return div([]); }";
+    return "#[page(\""
+        + seg
+        + "\")] pub fn p(route: PageContext) -> @Component<Element> { return div([]); }";
 }
 
 fn errorOf(r: @Result<Array<RouteEntry>, string>) -> string {
@@ -70,7 +73,8 @@ test "scan: every folder form ---- the staging table" {
 
 test "scan: the group does not reach the pattern" {
     val entries = try scanFiles("", "app", [#("app/(marketing)/about/page.bp", page("(marketing)/about"))]);
-    assert (entries.at(0) ?? RouteEntry(pattern: "", kind: "", authoredPath: "", modulePath: "", declared: "")).pattern == "/about";
+    assert (entries.at(0) ?? RouteEntry(pattern: "", kind: "", authoredPath: "", modulePath: "", declared: "")).pattern
+        == "/about";
 }
 
 test "scan: refusals ---- page and route together, a missing decorator, a staging clash" {
@@ -81,7 +85,8 @@ test "scan: refusals ---- page and route together, a missing decorator, a stagin
 }
 
 test "scan: declaredArgument reads the first matching decorator" {
-    assert (declaredArgument("#[page(\"blog/[slug]\")] pub fn p", "page") ?? "") == "blog/[slug]";
+    assert (declaredArgument("#[page(\"blog/[slug]\")] pub fn p", "page") ?? "")
+        == "blog/[slug]";
     assert declaredArgument("pub fn p", "page") == null;
 }
 
@@ -98,7 +103,9 @@ test "resolve: from a nested directory, with and without onze.json" {
     val q = try resolveProject(dir);
     assert q.config.port == 4000;
     put(dir, "onze.json", "{ \"prot\": 4000 }");
-    assert projectError(resolveProject(dir)).endsWith("(" + path.join([dir, "onze.json"]) + ")");
+    assert projectError(resolveProject(dir)).endsWith("("
+        + path.join([dir, "onze.json"])
+        + ")");
     put(dir, "onze.json", "{}");
     put(dir, "botopink.json", "{ \"name\": \"demo\", \"alias\": { \"@/up\": \"..\" } }");
     assert projectError(resolveProject(dir)).startsWith("alias \"@/up\" -> \"..\" escapes the package root");

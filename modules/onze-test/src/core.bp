@@ -27,7 +27,9 @@ pub fn assertAppFiles(loc: SourceLocation, paths: string[]) -> @Result<void, str
 // Each spec resolved through the `alias` object `aliasJson`, or the error
 // the load names.
 pub fn assertAlias(loc: SourceLocation, aliasJson: string, specs: string[]) -> @Result<void, string> {
-    val text = case loadAliases("{ \"name\": \"fixture\", \"alias\": " + aliasJson + " }") {
+    val text = case loadAliases("{ \"name\": \"fixture\", \"alias\": "
+        + aliasJson
+        + " }") {
         Ok(map) -> describeAliases(map, specs);
         Error(message) -> "error: " + message;
     };

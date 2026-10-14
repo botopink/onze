@@ -101,7 +101,8 @@ pub fn listPosts() -> Post[] {
 // The post `slug` under `dir`; an `Error` naming the slug when there is none.
 pub fn readPostIn(dir: string, slug: string) -> @Result<Post, string> {
     val file = slug + ".md";
-    if (fs.exists(path.join([dir, file])) == false) throw "no post \"" + slug + "\" under " + dir;
+    if (fs.exists(path.join([dir, file])) == false)
+        throw "no post \"" + slug + "\" under " + dir;
     return try readOne(dir, file);
 }
 
@@ -117,9 +118,13 @@ pub fn postText(p: Post) -> string {
 // Write `p` under `dir` as `<slug>.md`; a slug that is not `[a-z0-9-]+` is
 // refused, so a write never leaves the directory.
 pub fn writePostIn(dir: string, p: Post) -> @Result<void, string> {
-    val bad = p.slug == "" || p.slug.split("").any({ c -> "abcdefghijklmnopqrstuvwxyz0123456789-".contains(c) == false });
+    val bad = p.slug == ""
+        || p.slug
+            .split("")
+            .any({ c -> "abcdefghijklmnopqrstuvwxyz0123456789-".contains(c) == false });
     if (bad) throw "a post slug is [a-z0-9-]+, not \"" + p.slug + "\"";
-    val written = try fs.writeText(path.join([dir, p.slug + ".md"]), postText(p));
+    val written = try fs.writeText(path.join([dir, p.slug
+        + ".md"]), postText(p));
     return;
 }
 

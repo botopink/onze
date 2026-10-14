@@ -18,7 +18,6 @@ pub type Fixture(files: Array<FixtureFile>) {
     }
 }
 
-
 pub fn fixtureTree(text: string) -> Fixture {
     var files: Array<FixtureFile> = [];
     var path = "";
@@ -26,13 +25,12 @@ pub fn fixtureTree(text: string) -> Fixture {
     var open = false;
     for (text.split("\n")) { line ->
         if (line.startsWith("== ")) {
-            if (open) files.push(FixtureFile(path: path, content: lines.join("\n")));
+            if (open)
+                files.push(FixtureFile(path: path, content: lines.join("\n")));
             path = line.slice(3).trim();
             lines = [];
             open = true;
-        } else if (open) {
-            lines.push(line);
-        }
+        } else if (open) lines.push(line);
     }
     if (open) files.push(FixtureFile(path: path, content: lines.join("\n")));
     return Fixture(files: files);

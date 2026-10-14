@@ -16,7 +16,16 @@ pub fn preprocess(command: string, inputPath: string) -> @Result<string, string>
         Ok(e) -> e;
         Error(message) -> Exit(status: 0 - 1, stdout: "", stderr: message);
     };
-    if (exit.status == 0 - 1) throw "preprocessor \"" + command + "\" could not run: " + exit.stderr;
-    if (exit.status != 0) throw "preprocessor \"" + command + "\" exited " + exit.status.toString() + " on " + inputPath + ": " + (exit.stderr + exit.stdout).trim().slice(0, 400);
+    if (exit.status == 0 - 1)
+        throw "preprocessor \"" + command + "\" could not run: " + exit.stderr;
+    if (exit.status != 0)
+        throw "preprocessor \""
+            + command
+            + "\" exited "
+            + exit.status.toString()
+            + " on "
+            + inputPath
+            + ": "
+            + (exit.stderr + exit.stdout).trim().slice(0, 400);
     return exit.stdout;
 }

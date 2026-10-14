@@ -59,7 +59,11 @@ pub fn staticUrl(buildId: string, fileName: string) -> string {
 // The four characters a field may not carry raw, escaped: `%` first, then
 // `|`, line feed and carriage return. Decoding is std's `percentDecode`.
 pub fn escapeField(s: string) -> string {
-    return s.replaceAll("%", "%25").replaceAll("|", "%7C").replaceAll("\n", "%0A").replaceAll("\r", "%0D");
+    return s
+        .replaceAll("%", "%25")
+        .replaceAll("|", "%7C")
+        .replaceAll("\n", "%0A")
+        .replaceAll("\r", "%0D");
 }
 
 fn enc(s: string) -> string {
@@ -109,7 +113,11 @@ fn fieldAt(fields: string[], i: i32) -> string {
 }
 
 fn chunkOf(line: string, fields: string[]) -> @Result<ChunkRef, string> {
-    if (fields.length != 5) throw "client-manifest: a chunk record has 5 fields, not " + fields.length.toString() + ": " + line;
+    if (fields.length != 5)
+        throw "client-manifest: a chunk record has 5 fields, not "
+            + fields.length.toString()
+            + ": "
+            + line;
     val bytes = digitsToI32(fieldAt(fields, 4));
     if (bytes < 0) throw "client-manifest: bytes is not a count: " + line;
     val id = try dec(fieldAt(fields, 1));
@@ -119,7 +127,11 @@ fn chunkOf(line: string, fields: string[]) -> @Result<ChunkRef, string> {
 }
 
 fn pairOf(line: string, fields: string[]) -> @Result<#(string, string), string> {
-    if (fields.length != 3) throw "client-manifest: a pair record has 3 fields, not " + fields.length.toString() + ": " + line;
+    if (fields.length != 3)
+        throw "client-manifest: a pair record has 3 fields, not "
+            + fields.length.toString()
+            + ": "
+            + line;
     val a = try dec(fieldAt(fields, 1));
     val b = try dec(fieldAt(fields, 2));
     return #(a, b);
@@ -140,25 +152,31 @@ pub fn parseManifest(text: string) -> @Result<ClientBundleManifest, string> {
         if (line != "") {
             val fields = line.split("|");
             val kind = fieldAt(fields, 0);
-            if (version == "" && kind != "V") throw "client-manifest: the first record must be V, not " + kind;
+            if (version == "" && kind != "V")
+                throw "client-manifest: the first record must be V, not "
+                    + kind;
             if (kind == "V") {
                 val v = try pairOf(line, fields);
-                if (v._0 != manifestVersion) throw "client-manifest version " + v._0 + " is not supported (this reader understands " + manifestVersion + ")";
+                if (v._0 != manifestVersion)
+                    throw "client-manifest version "
+                        + v._0
+                        + " is not supported (this reader understands "
+                        + manifestVersion
+                        + ")";
                 version = v._0;
                 buildId = v._1;
-            } else if (kind == "E") {
-                entry = try chunkOf(line, fields);
-            } else if (kind == "S") {
-                shared.push(try chunkOf(line, fields));
-            } else if (kind == "C" || kind == "H") {
-                chunks.push(try chunkOf(line, fields));
-            } else if (kind == "R") {
-                routes.push(try pairOf(line, fields));
-            } else if (kind == "Y") {
-                styles.push(try chunkOf(line, fields));
-            } else if (kind == "P") {
+            } else if (kind == "E")
+                entry = try chunkOf(line, fields)
+            else if (kind == "S")
+                shared.push(try chunkOf(line, fields))
+            else if (kind == "C" || kind == "H")
+                chunks.push(try chunkOf(line, fields))
+            else if (kind == "R")
+                routes.push(try pairOf(line, fields))
+            else if (kind == "Y")
+                styles.push(try chunkOf(line, fields))
+            else if (kind == "P")
                 publicEnv.push(try pairOf(line, fields));
-            }
         }
     }
     if (version == "") throw "client-manifest: no V record";
@@ -181,7 +199,10 @@ fn deferTag(url: string) -> string {
 // Group 1 of the emission order: the `beforeInteractive` script chunks,
 // blocking, in `<head>` — never `defer`.
 pub fn headScriptTags(m: ClientBundleManifest) -> string {
-    return m.chunks.filter({ c -> isHeadScript(c) }).map({ c -> "<script src=\"" + c.url + "\"></script>" }).join("\n");
+    return m.chunks
+        .filter({ c -> isHeadScript(c) })
+        .map({ c -> "<script src=\"" + c.url + "\"></script>" })
+        .join("\n");
 }
 
 // Groups 4–6: `shared`, the route chunk for `route`, then the entry — each

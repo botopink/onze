@@ -20,7 +20,9 @@ test "tags: the nine tags render from jhonstart's element surface" {
         input([], attrs: [#("name", "title")]),
         button(t, attrs: []),
         timeTag(t, attrs: [#("datetime", "2026-01-10")]),
-    ].map({ e -> renderNode(e) }).join("");
+    ]
+        .map({ e -> renderNode(e) })
+        .join("");
     assert html.contains("<nav>x</nav>");
     assert html.contains("<article>x</article>");
     assert html.contains("<h2>x</h2>");
@@ -41,5 +43,6 @@ fn resolvedFromManifest(spec: string) -> @Result<string, string> {
 
 test "alias: the app's map sends @/lib.db and @/components.post_card to their modules" {
     assert resolvedFromManifest("@/lib.db").unwrapOr("") == "lib.db";
-    assert resolvedFromManifest("@/components.post_card").unwrapOr("") == "components.post_card";
+    assert resolvedFromManifest("@/components.post_card").unwrapOr("")
+        == "components.post_card";
 }

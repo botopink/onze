@@ -36,7 +36,11 @@ fn createCommand(cwd: string, args: string[]) -> Outcome {
     val dir = cwd + "/" + o.name;
     val written = writeScaffold(dir, scaffoldFilesIn(o, insideOnzeWorkspace(cwd)));
     return case written {
-        Ok(files) -> Outcome(code: 0, text: describeCreate(o) + "\n\ncreated " + dir + "\n" + files.map({ f -> "  " + f }).join("\n"));
+        Ok(files) -> Outcome(code: 0, text: describeCreate(o)
+            + "\n\ncreated "
+            + dir
+            + "\n"
+            + files.map({ f -> "  " + f }).join("\n"));
         Error(e) -> Outcome(code: 1, text: e);
     };
 }
@@ -63,20 +67,31 @@ fn botopinkBin() -> string {
 }
 
 fn buildCommand(cwd: string, args: string[]) -> Outcome {
-    if (args.length > 0) return Outcome(code: 1, text: "onze build: unexpected argument " + args.at(0) ?? "");
+    if (args.length > 0)
+        return Outcome(code: 1, text: "onze build: unexpected argument "
+            + args.at(0) ?? "");
     val resolved = resolveProject(cwd);
-    if (resolved.isError()) return Outcome(code: 1, text: projectError(resolved));
+    if (resolved.isError())
+        return Outcome(code: 1, text: projectError(resolved));
     val p = resolved.unwrapOr(Project(root: "", config: defaultConfig(), aliases: AliasMap(entries: [])));
     return case buildProject(p, botopinkBin()) {
-        Ok(b) -> Outcome(code: 0, text: "built " + p.config.name + " — build id " + b.buildId + "
-" + b.chunks.map({ c -> "  static/" + b.buildId + "/" + c }).join("\n"));
+        Ok(b) -> Outcome(code: 0, text: "built "
+            + p.config.name
+            + " — build id "
+            + b.buildId
+            + """
+"""
+            + b.chunks
+                .map({ c -> "  static/" + b.buildId + "/" + c })
+                .join("\n"));
         Error(e) -> Outcome(code: 1, text: "onze build failed:\n" + e);
     };
 }
 
 fn startCommand(cwd: string, args: string[]) -> Outcome {
     val resolved = resolveProject(cwd);
-    if (resolved.isError()) return Outcome(code: 1, text: projectError(resolved));
+    if (resolved.isError())
+        return Outcome(code: 1, text: projectError(resolved));
     val p = resolved.unwrapOr(Project(root: "", config: defaultConfig(), aliases: AliasMap(entries: [])));
     return case startProject(p, args) {
         Ok(text) -> Outcome(code: 0, text: text);
@@ -98,10 +113,14 @@ pub fn run(cwd: string, args: string[], botopinkVersion: string) -> Outcome {
     val rest = args.drop(1);
     if (cmd == "create") return createCommand(cwd, rest);
     if (cmd == "info") return infoCommand(cwd, botopinkVersion);
-    if (cmd == "dev") return Outcome(code: 2, text: "onze dev: not available yet - it serves the build `onze start` serves and reloads the changed modules into the running node, and the reload is not written (front 50 step 6)");
+    if (cmd == "dev")
+        return Outcome(code: 2, text: "onze dev: not available yet - it serves the build `onze start` serves and reloads the changed modules into the running node, and the reload is not written (front 50 step 6)");
     if (cmd == "start") return startCommand(cwd, rest);
     if (cmd == "build") return buildCommand(cwd, rest);
-    return Outcome(code: 1, text: "onze: unknown command \"" + cmd + "\"\n\n" + commands());
+    return Outcome(code: 1, text: "onze: unknown command \""
+        + cmd
+        + "\"\n\n"
+        + commands());
 }
 
 pub fn main() {

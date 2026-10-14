@@ -63,13 +63,14 @@ pub fn declarations(value: string) -> Array<#(string, string)> {
             if (t != "") {
                 val colon = t.indexOf(":");
                 val name = if (colon < 0) t else t.slice(0, colon).trim();
-                val v = if (colon < 0) "" else t.slice(colon + 1, t.length()).trim();
+                val v = if (colon < 0)
+                    ""
+                else
+                    t.slice(colon + 1, t.length()).trim();
                 out.push(#(name, v));
             }
             cur = "";
-        } else {
-            cur = cur + c;
-        }
+        } else cur = cur + c;
     }
     return out;
 }
@@ -81,7 +82,10 @@ declare fn numberOf(s: string) -> i32;
 // A length in px (or a bare number) as an integer; `-2147483648` when the
 // value is not one.
 pub fn pxOf(value: string) -> i32 {
-    val bare = if (value.endsWith("px")) value.slice(0, value.length() - 2) else value;
+    val bare = if (value.endsWith("px"))
+        value.slice(0, value.length() - 2)
+    else
+        value;
     return numberOf(bare.trim());
 }
 
@@ -109,11 +113,20 @@ fn withProp(s: Style, name: string, v: string) -> Style {
         background: if (name == "background") v else s.background,
         color: if (name == "color") v else s.color,
         fontSize: if (name == "fontSize") intOr(v, s.fontSize) else s.fontSize,
-        fontWeight: if (name == "fontWeight") intOr(v, s.fontWeight) else s.fontWeight,
+        fontWeight: if (name == "fontWeight")
+            intOr(v, s.fontWeight)
+        else
+            s.fontWeight,
         fontFamily: if (name == "fontFamily") v else s.fontFamily,
-        lineHeight: if (name == "lineHeight") intOr(v, s.lineHeight) else s.lineHeight,
+        lineHeight: if (name == "lineHeight")
+            intOr(v, s.lineHeight)
+        else
+            s.lineHeight,
         textAlign: if (name == "textAlign") v else s.textAlign,
-        borderRadius: if (name == "borderRadius") intOr(v, s.borderRadius) else s.borderRadius,
+        borderRadius: if (name == "borderRadius")
+            intOr(v, s.borderRadius)
+        else
+            s.borderRadius,
         border: if (name == "border") v else s.border,
         opacity: if (name == "opacity") hundredths(v) else s.opacity,
         position: if (name == "position") v else s.position,
@@ -138,7 +151,8 @@ pub fn parseStyle(value: string) -> Style {
 pub fn unsupportedProperties(value: string) -> Array<string> {
     var out: string[] = [];
     for (declarations(value)) { d ->
-        val outside = supportedProperties().contains(d._0) == false && out.contains(d._0) == false;
+        val outside = supportedProperties().contains(d._0) == false
+            && out.contains(d._0) == false;
         if (outside) out.push(d._0);
     }
     return out;
@@ -146,7 +160,9 @@ pub fn unsupportedProperties(value: string) -> Array<string> {
 
 // The declarations with no value (`padding:`), as they were written.
 pub fn malformedDeclarations(value: string) -> Array<string> {
-    return declarations(value).filter({ d -> d._1 == "" }).map({ d -> d._0 + ":" });
+    return declarations(value)
+        .filter({ d -> d._1 == "" })
+        .map({ d -> d._0 + ":" });
 }
 
 // The report `og` snapshots record: each supported declaration and its
@@ -158,8 +174,11 @@ pub fn describeStyle(value: string) -> string {
         rows.push(d._0.padEnd(15, " ") + d._1);
     }
     val unsupported = unsupportedProperties(value);
-    if (unsupported.length > 0) rows.push("unsupported: " + unsupported.join(", "));
+    if (unsupported.length > 0)
+        rows.push("unsupported: " + unsupported.join(", "));
     val malformed = malformedDeclarations(value);
-    if (malformed.length > 0) rows.push("malformed: " + malformed.map({ m -> "\"" + m + "\" (empty value)" }).join(", "));
+    if (malformed.length > 0)
+        rows.push("malformed: "
+            + malformed.map({ m -> "\"" + m + "\" (empty value)" }).join(", "));
     return rows.join("\n");
 }

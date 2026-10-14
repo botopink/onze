@@ -21,7 +21,8 @@ fn componentsOf(tree: string) -> @Result<Array<ClientComponent>, string> {
 }
 
 fn withProps() -> string {
-    return fixtureApp() + "\n== components/props.bp\n#[clientProps]\npub type NavProps(title: string, count: i32)\n#[clientProps]\npub type LikeProps(\n    likes: i32,\n    ratio: f64,\n    open: bool,\n)";
+    return fixtureApp()
+        + "\n== components/props.bp\n#[clientProps]\npub type NavProps(title: string, count: i32)\n#[clientProps]\npub type LikeProps(\n    likes: i32,\n    ratio: f64,\n    open: bool,\n)";
 }
 
 fn config() -> EntryConfig {
@@ -40,14 +41,19 @@ test "entry: islandAttr is jhonstart's, and the globals are the registry's" {
 
 test "entry: generated ---- islands, holes, mounts" {
     val cs = try componentsOf(withProps());
-    assert cs.map({ c -> c.name + ":" + c.propsType }).join(",") == "Nav:NavProps,LikeButton:LikeProps";
+    assert cs.map({ c -> c.name + ":" + c.propsType }).join(",")
+        == "Nav:NavProps,LikeButton:LikeProps";
     val src = generateEntry(cs, config());
     val fill = src.indexOf("registerFill(");
     val signal = src.indexOf("registerSignal(");
     val hydrate = src.indexOf("    hydrate();");
     val link = src.indexOf("    linkMount();");
     val form = src.indexOf("    formMount(\"X-Bp-Action\");");
-    assert fill > 0 && signal > fill && hydrate > signal && link > hydrate && form > link;
+    assert fill > 0
+        && signal > fill
+        && hydrate > signal
+        && link > hydrate
+        && form > link;
     assert src.contains("from \"routing\"") == false;
     assert src.contains("rakun") == false;
     assert src.contains("__") == false;
@@ -63,15 +69,18 @@ test "entry: generated ---- islands, holes, mounts" {
 
 test "entry: the runtime mismatches name their ids" {
     val problems = islandMismatches(["i0", "i2"], ["i0", "i1"], [], ["h1"]);
-    assert problems.join("\n") == "island i1 is in the payload and not in the document\nisland i2 is in the document and not in the payload\nhole h1 is in the payload and not in the document";
+    assert problems.join("\n")
+        == "island i1 is in the payload and not in the document\nisland i2 is in the document and not in the payload\nhole h1 is in the payload and not in the document";
     assert islandMismatches(["i0"], ["i0"], ["h1"], ["h1"]).length == 0;
 }
 
 test "entry: the runtime class check names every class the payload's s key lacks" {
     val html = "<div class=\"e_f51c2501 card\"><p class=\"e_00ff\">x</p><i class=\"e_f51c2501\"></i><b class=\"e_zz\"></b></div>";
     assert classNamesIn(html).join(",") == "e_f51c2501,e_00ff";
-    assert unknownClasses(classNamesIn(html), ["e_f51c2501", "e_00ff"]).length == 0;
-    assert unknownClasses(classNamesIn(html), ["e_f51c2501"]).join("\n") == "class e_00ff is not in the payload's s key - the server's stylesheet has no rule for it";
+    assert unknownClasses(classNamesIn(html), ["e_f51c2501", "e_00ff"]).length
+        == 0;
+    assert unknownClasses(classNamesIn(html), ["e_f51c2501"]).join("\n")
+        == "class e_00ff is not in the payload's s key - the server's stylesheet has no rule for it";
 }
 
 test "entry: parseIslands reads the payload's i triples" {
@@ -79,12 +88,16 @@ test "entry: parseIslands reads the payload's i triples" {
     assert rows.length == 2;
     val first = rows.at(0) ?? Island(id: "", component: "", props: []);
     assert first.component == "Nav";
-    assert first.props.map({ kv -> kv._0 + "=" + kv._1 }).join(",") == "title=Hi,count=2";
+    assert first.props.map({ kv -> kv._0 + "=" + kv._1 }).join(",")
+        == "title=Hi,count=2";
     assert parseIslands("[[\"i0\",\"Nav\"]]").isError();
 }
 
 test "entry: a props record may span lines" {
-    assert recordFieldsOf("pub type P(\n    a: string,\n    b: i32,\n)", "P").map({ f -> f._0 + "=" + f._1 }).join(",") == "a=string,b=i32";
+    assert recordFieldsOf("pub type P(\n    a: string,\n    b: i32,\n)", "P")
+        .map({ f -> f._0 + "=" + f._1 })
+        .join(",")
+        == "a=string,b=i32";
 }
 
 test "script: strategies ---- the four placements and two refusals" {

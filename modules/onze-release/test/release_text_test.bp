@@ -11,7 +11,8 @@ import {assertAs} from "snap";
 // `BOTOPINK_TEST_TMPDIR`, and it is the one place a test writes.
 fn testTmp() -> string {
     val root = env.read("BOTOPINK_TEST_TMPDIR") ?? "";
-    assert root != "", "BOTOPINK_TEST_TMPDIR is not set: run this suite under `botopink test`";
+    assert root
+        != "", "BOTOPINK_TEST_TMPDIR is not set: run this suite under `botopink test`";
     return root;
 }
 
@@ -29,11 +30,19 @@ test "release: text ---- rel, sys.config, vm.args and the boot script" {
     assert bootScriptText(s).contains("exec ");
     assert bootScriptText(s).contains(" &\n") == false;
     try assertAs(@src(), "release", [
-        "== releases/b7f2a1/onze.rel", relFileText(s).trimEnd(),
-        "== releases/b7f2a1/sys.config", sys.trimEnd(),
-        "== releases/b7f2a1/vm.args", vmArgsText(s).trimEnd(),
-        "== bin/onze", bootScriptText(s).trimEnd(),
-        "== bin/onze without erts", bootScriptText(withErts(s, false)).split("\n").filter({ l -> l.startsWith("exec") }).join("\n"),
+        "== releases/b7f2a1/onze.rel",
+        relFileText(s).trimEnd(),
+        "== releases/b7f2a1/sys.config",
+        sys.trimEnd(),
+        "== releases/b7f2a1/vm.args",
+        vmArgsText(s).trimEnd(),
+        "== bin/onze",
+        bootScriptText(s).trimEnd(),
+        "== bin/onze without erts",
+        bootScriptText(withErts(s, false))
+            .split("\n")
+            .filter({ l -> l.startsWith("exec") })
+            .join("\n"),
     ].join("\n"));
 }
 
@@ -55,14 +64,19 @@ test "release: dockerfile ---- two stages, non-root, erts bundled and not" {
 
 test "release: systools assembles a boot script from the generated .rel" {
     val erts = installedVersion("erts");
-    if (erts.isError()) {
-        @print("skipped: erl is not on PATH");
-    } else {
+    if (erts.isError()) @print("skipped: erl is not on PATH") else {
         val kernel = try installedVersion("kernel");
         val stdlib = try installedVersion("stdlib");
         val s = ReleaseSpec(name: "probe", version: "0.1.0", buildId: "b1", apps: [], includeErts: false, ertsVersion: erts.unwrapOr(""), otpRelease: "", outDir: "");
-        val rel = "{release, {\"probe\", \"0.1.0\"}, {erts, \"" + s.ertsVersion + "\"}, [{kernel, \"" + kernel + "\"}, {stdlib, \"" + stdlib + "\"}]}.\n";
-        val dir = path.join([testTmp(), "systools-" + clock.nowMillis().toString()]);
+        val rel = "{release, {\"probe\", \"0.1.0\"}, {erts, \""
+            + s.ertsVersion
+            + "\"}, [{kernel, \""
+            + kernel
+            + "\"}, {stdlib, \""
+            + stdlib
+            + "\"}]}.\n";
+        val dir = path.join([testTmp(), "systools-"
+            + clock.nowMillis().toString()]);
         val made = process.run("mkdir", ["-p", dir]);
         val w = fs.writeText(path.join([dir, "onze.rel"]), rel);
         val boot = try assembleRelease(dir, []);

@@ -99,9 +99,12 @@ test "env: public prefix ---- case-sensitive filter" {
 test "config: a port given as text ---- digits in 1..65535, the source named" {
     assert parsePort("8080", "PORT").unwrapOr(0) == 8080;
     assert parsePort(" 4000 ", "-p").unwrapOr(0) == 4000;
-    val refusals = ["", "80a", "-1", "0", "65536", "080"].map({ t -> case parsePort(t, "PORT") {
-        Ok(n) -> "ok " + n.toString();
-        Error(e) -> e;
-    } });
-    assert refusals.join("\n") == "PORT: \"\" is not a port number\nPORT: \"80a\" is not a port number\nPORT: \"-1\" is not a port number\nPORT: 0 is outside 1..65535\nPORT: 65536 is outside 1..65535\nPORT: \"080\" is not a port number";
+    val refusals = ["", "80a", "-1", "0", "65536", "080"].map({ t ->
+        case parsePort(t, "PORT") {
+            Ok(n) -> "ok " + n.toString();
+            Error(e) -> e;
+        }
+    });
+    assert refusals.join("\n")
+        == "PORT: \"\" is not a port number\nPORT: \"80a\" is not a port number\nPORT: \"-1\" is not a port number\nPORT: 0 is outside 1..65535\nPORT: 65536 is outside 1..65535\nPORT: \"080\" is not a port number";
 }

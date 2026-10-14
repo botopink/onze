@@ -84,8 +84,21 @@ declare fn ratioPercent(a: f64, upmA: f64, b: f64, upmB: f64) -> string;
 
 // The adjusted fallback face for `family` over the local face `localFamily`.
 pub fn fallbackFace(family: string, localFamily: string, real: FontMetrics, fallback: FontMetrics) -> string {
-    val size = ratioPercent(toF64(real.avgCharWidth), toF64(real.unitsPerEm), toF64(fallback.avgCharWidth), toF64(fallback.unitsPerEm)) + "%";
-    return "@font-face{font-family:\"" + family + " Fallback\";src:local(\"" + localFamily + "\");size-adjust:" + size + ";ascent-override:" + pct(real.ascent, real.unitsPerEm) + ";descent-override:" + pct(real.descent, real.unitsPerEm) + ";line-gap-override:" + pct(real.lineGap, real.unitsPerEm) + "}";
+    val size = ratioPercent(toF64(real.avgCharWidth), toF64(real.unitsPerEm), toF64(fallback.avgCharWidth), toF64(fallback.unitsPerEm))
+        + "%";
+    return "@font-face{font-family:\""
+        + family
+        + " Fallback\";src:local(\""
+        + localFamily
+        + "\");size-adjust:"
+        + size
+        + ";ascent-override:"
+        + pct(real.ascent, real.unitsPerEm)
+        + ";descent-override:"
+        + pct(real.descent, real.unitsPerEm)
+        + ";line-gap-override:"
+        + pct(real.lineGap, real.unitsPerEm)
+        + "}";
 }
 
 pub fn slugOfFamily(family: string) -> string {
@@ -98,12 +111,17 @@ pub fn googleCssUrl(family: string, opts: GoogleFontOptions) -> string {
     var tuples: string[] = [];
     for (opts.styles) { st ->
         for (opts.weights) { w ->
-            val styleFlag = if (st == "italic") { "1," } else { "0," };
+            val styleFlag = if (st == "italic") "1," else "0,";
             tuples.push(if (italic) styleFlag + w else w);
         }
     }
     val axes = if (italic) ":ital,wght@" else ":wght@";
-    return "https://fonts.googleapis.com/css2?family=" + family.replaceAll(" ", "+") + axes + tuples.join(";") + "&display=" + opts.display;
+    return "https://fonts.googleapis.com/css2?family="
+        + family.replaceAll(" ", "+")
+        + axes
+        + tuples.join(";")
+        + "&display="
+        + opts.display;
 }
 
 fn valueAfter(block: string, key: string) -> string {
@@ -128,43 +146,80 @@ pub fn parseGoogleCss(css: string) -> Array<GoogleFace> {
             val block = piece.slice(open + 1, close);
             val src = valueAfter(block, "src");
             val urlStart = src.indexOf("url(");
-            val url = if (urlStart < 0) "" else src.slice(urlStart + 4, src.indexOf(")"));
+            val url = if (urlStart < 0)
+                ""
+            else
+                src.slice(urlStart + 4, src.indexOf(")"));
             out.push(GoogleFace(subset: subset, style: valueAfter(block, "font-style"), weight: valueAfter(block, "font-weight"), url: url, unicodeRange: valueAfter(block, "unicode-range").replaceAll(" ", "")));
         }
         val comment = piece.lastIndexOf("/*");
         val commentEnd = piece.lastIndexOf("*/");
-        subset = if (comment >= 0 && commentEnd > comment) piece.slice(comment + 2, commentEnd).trim() else "";
+        subset = if (comment >= 0 && commentEnd > comment)
+            piece.slice(comment + 2, commentEnd).trim()
+        else
+            "";
     }
     return out;
 }
 
 fn refusal(family: string, opts: GoogleFontOptions) -> string {
-    if (opts.subsets.length == 0) return "subsets is empty — an unsubsetted font is a 300 kB font";
-    if (displays().contains(opts.display) == false) return "display \"" + opts.display + "\" is not one of " + displays().join(", ");
+    if (opts.subsets.length == 0)
+        return "subsets is empty — an unsubsetted font is a 300 kB font";
+    if (displays().contains(opts.display) == false)
+        return "display \""
+            + opts.display
+            + "\" is not one of "
+            + displays().join(", ");
     val notInTable = opts.adjustFontFallback && metricsOf(family) == null;
-    if (notInTable) return "family \"" + family + "\" is not in the metrics table and adjustFontFallback is true";
+    if (notInTable)
+        return "family \""
+            + family
+            + "\" is not in the metrics table and adjustFontFallback is true";
     return "";
 }
 
 fn familyList(family: string, adjusted: bool, fallback: string[]) -> string {
     val base = ["\"" + family + "\""];
-    val withFallback = if (adjusted) base.append(["\"" + family + " Fallback\""]) else base;
+    val withFallback = if (adjusted)
+        base.append(["\"" + family + " Fallback\""])
+    else
+        base;
     return withFallback.append(fallback).join(",");
 }
 
 fn faceCss(family: string, style: string, weight: string, display: string, url: string, unicodeRange: string) -> string {
-    val range = if (unicodeRange == "") "" else ";unicode-range:" + unicodeRange;
-    return "@font-face{font-family:\"" + family + "\";font-style:" + style + ";font-weight:" + weight + ";font-display:" + display + ";src:url(" + url + ") format(\"woff2\")" + range + "}";
+    val range = if (unicodeRange == "")
+        ""
+    else
+        ";unicode-range:" + unicodeRange;
+    return "@font-face{font-family:\""
+        + family
+        + "\";font-style:"
+        + style
+        + ";font-weight:"
+        + weight
+        + ";font-display:"
+        + display
+        + ";src:url("
+        + url
+        + ") format(\"woff2\")"
+        + range
+        + "}";
 }
 
 fn preloadTag(url: string) -> string {
-    return "<link rel=\"preload\" as=\"font\" type=\"font/woff2\" href=\"" + url + "\" crossorigin>";
+    return "<link rel=\"preload\" as=\"font\" type=\"font/woff2\" href=\""
+        + url
+        + "\" crossorigin>";
 }
 
 // The file's short content hash (its text as read — deterministic for the
 // same bytes).
 fn fileHash(file: string) -> string {
-    return hash.contentHash(fs.readText(file).unwrapOr(file)).padStart(8, "0").slice(0, 6);
+    return hash
+        .contentHash(fs.readText(file).unwrapOr(file))
+        .padStart(8, "0")
+        .slice(0, 6);
 }
 
 fn assemble(family: string, faces: Array<#(string, string, string, string)>, display: string, preload: bool, variable: string, fallback: string[], adjusted: string) -> Font {
@@ -174,8 +229,12 @@ fn assemble(family: string, faces: Array<#(string, string, string, string)>, dis
     if (adjusted != "") css.push(adjusted);
     if (variable != "") css.push(":root{" + variable + ":" + list + "}");
     css.push("." + cls + "{font-family:" + list + "}");
-    val tags = if (preload) faces.map({ f -> preloadTag(f._2) }).join("\n") else "";
-    return Font(family: family, className: cls, variable: variable, css: css.join("\n"), preload: tags, style: "font-family:" + list);
+    val tags = if (preload)
+        faces.map({ f -> preloadTag(f._2) }).join("\n")
+    else
+        "";
+    return Font(family: family, className: cls, variable: variable, css: css.join("\n"), preload: tags, style: "font-family:"
+        + list);
 }
 
 // `googleFont` over explicit build seams: fetch the CSS, keep the requested
@@ -187,13 +246,21 @@ pub fn googleFontWith(family: string, opts: GoogleFontOptions, build: FontBuild)
     val fetch = build.fetchCss;
     val css = try fetch(googleCssUrl(family, opts));
     val wanted = parseGoogleCss(css).filter({ f -> opts.subsets.contains(f.subset) && opts.weights.contains(f.weight) && opts.styles.contains(f.style) });
-    if (wanted.length == 0) throw "family \"" + family + "\": the Google CSS has no face for " + opts.weights.join("/") + " " + opts.styles.join("/") + " in " + opts.subsets.join("/");
+    if (wanted.length == 0)
+        throw "family \""
+            + family
+            + "\": the Google CSS has no face for "
+            + opts.weights.join("/")
+            + " "
+            + opts.styles.join("/")
+            + " in "
+            + opts.subsets.join("/");
     val row = metricsOf(family);
     val dir = path.join([build.outDir, "static", build.buildId, "fonts"]);
     val made = process.run("mkdir", ["-p", dir]);
     var faces: Array<#(string, string, string, string)> = [];
     for (wanted) { f ->
-        val italicSuffix = if (f.style == "italic") { "-italic" } else { "" };
+        val italicSuffix = if (f.style == "italic") "-italic" else "";
         val base = slugOfFamily(family) + "-" + f.weight + italicSuffix;
         val tmp = path.join([dir, base + ".download"]);
         val download = build.download;
@@ -202,9 +269,15 @@ pub fn googleFontWith(family: string, opts: GoogleFontOptions, build: FontBuild)
         val moved = try process.run("mv", [tmp, path.join([dir, name])]);
         if (row != null) {
             val r = row;
-            val side = try fs.writeText(path.join([dir, base + "." + fileHash(path.join([dir, name])) + ".metrics.txt"]), metricsSidecar(r.metrics));
+            val side = try fs.writeText(path.join([dir, base
+                + "."
+                + fileHash(path.join([dir, name]))
+                + ".metrics.txt"]), metricsSidecar(r.metrics));
         }
-        faces.push(#(f.style, f.weight, "/_onze/static/" + build.buildId + "/fonts/" + name, f.unicodeRange));
+        faces.push(#(f.style, f.weight, "/_onze/static/"
+            + build.buildId
+            + "/fonts/"
+            + name, f.unicodeRange));
     }
     val adjusted = if (opts.adjustFontFallback) adjustedFor(family) else "";
     return assemble(family, faces, opts.display, opts.preload, opts.variable, opts.fallback, adjusted);
@@ -222,13 +295,25 @@ fn adjustedFor(family: string) -> string {
 
 fn curlText(url: string) -> @Result<string, string> {
     val r = try process.run("curl", ["-fsSL", "-A", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36", url]);
-    if (r.status != 0) throw "curl " + url + " exited " + r.status.toString() + ": " + (r.stderr + r.stdout).trim();
+    if (r.status != 0)
+        throw "curl "
+            + url
+            + " exited "
+            + r.status.toString()
+            + ": "
+            + (r.stderr + r.stdout).trim();
     return r.stdout;
 }
 
 fn curlFile(url: string, dest: string) -> @Result<void, string> {
     val r = try process.run("curl", ["-fsSL", "-o", dest, url]);
-    if (r.status != 0) throw "curl " + url + " exited " + r.status.toString() + ": " + (r.stderr + r.stdout).trim();
+    if (r.status != 0)
+        throw "curl "
+            + url
+            + " exited "
+            + r.status.toString()
+            + ": "
+            + (r.stderr + r.stdout).trim();
     return;
 }
 
@@ -246,25 +331,51 @@ pub fn googleFont(family: string, opts: GoogleFontOptions, buildId: string, outD
 // answers a face's metrics, `null` when no probe is available — then the face
 // is unadjusted and `logged` receives one line naming the family.
 pub fn localFont(family: string, opts: LocalFontOptions, root: string, buildId: string, outDir: string, probe: fn(file: string) -> ?FontMetrics, logged: fn(line: string) -> i32) -> @Result<Font, string> {
-    if (displays().contains(opts.display) == false) throw "display \"" + opts.display + "\" is not one of " + displays().join(", ");
+    if (displays().contains(opts.display) == false)
+        throw "display \""
+            + opts.display
+            + "\" is not one of "
+            + displays().join(", ");
     val dir = path.join([outDir, "static", buildId, "fonts"]);
     val made = process.run("mkdir", ["-p", dir]);
     var faces: Array<#(string, string, string, string)> = [];
     var metrics: ?FontMetrics = null;
     for (opts.sources) { s ->
         val normalized = path.normalize(path.join([root, s.path]));
-        val inside = normalized.startsWith(path.normalize(root) + "/") && s.path.contains("..") == false;
-        if (inside == false) throw "local font source " + s.path + " is outside the project root";
-        if (fs.exists(normalized) == false) throw "local font source " + s.path + " does not exist";
-        val italicSuffix = if (s.style == "italic") { "-italic" } else { "" };
-        val name = slugOfFamily(family) + "-" + s.weight + italicSuffix + "." + fileHash(normalized) + ".woff2";
+        val inside = normalized.startsWith(path.normalize(root) + "/")
+            && s.path.contains("..") == false;
+        if (inside == false)
+            throw "local font source "
+                + s.path
+                + " is outside the project root";
+        if (fs.exists(normalized) == false)
+            throw "local font source " + s.path + " does not exist";
+        val italicSuffix = if (s.style == "italic") "-italic" else "";
+        val name = slugOfFamily(family)
+            + "-"
+            + s.weight
+            + italicSuffix
+            + "."
+            + fileHash(normalized)
+            + ".woff2";
         val copied = try process.run("cp", [normalized, path.join([dir, name])]);
         if (metrics == null) metrics = probe(normalized);
-        faces.push(#(s.style, s.weight, "/_onze/static/" + buildId + "/fonts/" + name, ""));
+        faces.push(#(s.style, s.weight, "/_onze/static/"
+            + buildId
+            + "/fonts/"
+            + name, ""));
     }
-    val adjusted = if (opts.adjustFontFallback == false) "" else if (metrics == null) "" else fallbackFace(family, "Arial", metrics, (metricsOf("Arial") ?? MetricsRow(family: "", category: "", metrics: FontMetrics(unitsPerEm: 1, ascent: 0, descent: 0, lineGap: 0, avgCharWidth: 1), localFallback: "")).metrics);
+    val adjusted = if (opts.adjustFontFallback == false)
+        ""
+    else if (metrics == null)
+        ""
+    else
+        fallbackFace(family, "Arial", metrics, (metricsOf("Arial") ?? MetricsRow(family: "", category: "", metrics: FontMetrics(unitsPerEm: 1, ascent: 0, descent: 0, lineGap: 0, avgCharWidth: 1), localFallback: "")).metrics);
     val degraded = opts.adjustFontFallback && metrics == null;
-    if (degraded) logged("font " + family + ": no metrics probe available - the fallback is unadjusted and layout shift mitigation is off for this family");
+    if (degraded)
+        logged("font "
+            + family
+            + ": no metrics probe available - the fallback is unadjusted and layout shift mitigation is off for this family");
     return assemble(family, faces, opts.display, opts.preload, opts.variable, opts.fallback, adjusted);
 }
 
@@ -282,6 +393,9 @@ pub fn fontHead(fonts: Array<Font>) -> string {
             if (rules.contains(r) == false) rules.push(r);
         }
     }
-    val style = if (rules.length == 0) "" else "<style>" + rules.join("") + "</style>";
+    val style = if (rules.length == 0)
+        ""
+    else
+        "<style>" + rules.join("") + "</style>";
     return tags.append([style]).filter({ s -> s != "" }).join("\n");
 }

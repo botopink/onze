@@ -54,13 +54,22 @@ pub fn defaultImageConfig() -> ImageConfig {
 pub fn validateConfig(cfg: ImageConfig) -> Array<string> {
     var out: string[] = [];
     for (cfg.remotePatterns) { p ->
-        if (p.hostname == "*" || p.hostname == "") out.push("images: remotePatterns hostname \"" + p.hostname + "\" would allow any host — name the host");
+        if (p.hostname == "*" || p.hostname == "")
+            out.push("images: remotePatterns hostname \""
+                + p.hostname
+                + "\" would allow any host — name the host");
         val proto = p.protocol == "https" || p.protocol == "http";
-        if (proto == false) out.push("images: remotePatterns protocol \"" + p.protocol + "\" is not https or http");
+        if (proto == false)
+            out.push("images: remotePatterns protocol \""
+                + p.protocol
+                + "\" is not https or http");
     }
     for (cfg.formats) { f ->
         val known = f == "image/webp" || f == "image/avif";
-        if (known == false) out.push("images: format \"" + f + "\" is not image/webp or image/avif");
+        if (known == false)
+            out.push("images: format \""
+                + f
+                + "\" is not image/webp or image/avif");
     }
     return out;
 }
@@ -68,13 +77,23 @@ pub fn validateConfig(cfg: ImageConfig) -> Array<string> {
 // The problems of a props record; `[]` when it renders.
 pub fn validateProps(p: ImageProps) -> Array<string> {
     var out: string[] = [];
-    if (p.quality < 1 || p.quality > 100) out.push("Image " + p.src + ": quality " + p.quality.toString() + " is outside 1..100");
+    if (p.quality < 1 || p.quality > 100)
+        out.push("Image "
+            + p.src
+            + ": quality "
+            + p.quality.toString()
+            + " is outside 1..100");
     val blurless = p.placeholder == "blur" && p.blurDataURL == "";
-    if (blurless) out.push("Image " + p.src + ": placeholder \"blur\" needs a blurDataURL");
+    if (blurless)
+        out.push("Image "
+            + p.src
+            + ": placeholder \"blur\" needs a blurDataURL");
     val both = p.fill && (p.width != 0 || p.height != 0);
-    if (both) out.push("Image " + p.src + ": fill and width/height are exclusive");
+    if (both)
+        out.push("Image " + p.src + ": fill and width/height are exclusive");
     val eagerLazy = p.priority && p.loading == "lazy";
-    if (eagerLazy) out.push("Image " + p.src + ": priority with loading \"lazy\"");
+    if (eagerLazy)
+        out.push("Image " + p.src + ": priority with loading \"lazy\"");
     return out;
 }
 
@@ -84,14 +103,11 @@ pub fn normalizeUrlPath(p: string) -> ?string {
     var escaped = false;
     for (p.split("/")) { seg ->
         if (seg == "..") {
-            if (parts.length == 0) {
-                escaped = true;
-            } else {
+            if (parts.length == 0)
+                escaped = true
+            else
                 parts = parts.take(parts.length - 1);
-            }
-        } else if (seg != "." && seg != "") {
-            parts.push(seg);
-        }
+        } else if (seg != "." && seg != "") parts.push(seg);
     }
     if (escaped) return null;
     return "/" + parts.join("/");
@@ -116,34 +132,52 @@ fn splitUrl(src: string) -> ?#(string, string, string, string) {
     val pathPart = if (slash < 0) "/" else rest.slice(slash, rest.length());
     val colon = authority.indexOf(":");
     val host = if (colon < 0) authority else authority.slice(0, colon);
-    val port = if (colon < 0) "" else authority.slice(colon + 1, authority.length());
+    val port = if (colon < 0)
+        ""
+    else
+        authority.slice(colon + 1, authority.length());
     return #(protocol, host, port, pathPart.split("?").at(0) ?? pathPart);
 }
 
 // The accepted source, or the refusal naming it.
 pub fn validateSource(cfg: ImageConfig, publicDir: string, src: string) -> @Result<string, string> {
-    if (src.startsWith("data:") || src.startsWith("file:")) throw "Image: " + src.slice(0, 5) + " sources are refused (" + src.slice(0, 24) + "…)";
+    if (src.startsWith("data:") || src.startsWith("file:"))
+        throw "Image: "
+            + src.slice(0, 5)
+            + " sources are refused ("
+            + src.slice(0, 24)
+            + "…)";
     if (src.startsWith("/")) {
         val norm = normalizeUrlPath(src);
         if (norm == null) throw "Image: " + src + " escapes " + publicDir;
         return norm;
     }
     val parts = splitUrl(src);
-    if (parts == null) throw "Image: " + src + " is neither a /-rooted public path nor an absolute URL";
+    if (parts == null)
+        throw "Image: "
+            + src
+            + " is neither a /-rooted public path nor an absolute URL";
     val none: #(string, string, string, string) = #("", "", "", "");
     val u = parts;
     val cleanPath = normalizeUrlPath(u._3);
     if (cleanPath == null) throw "Image: " + src + " escapes its host's root";
     val clean = cleanPath;
     val ok = cfg.remotePatterns.any({ p -> p.protocol == u._0 && hostMatches(p.hostname, u._1) && p.port == u._2 && clean.startsWith(p.pathPrefix) });
-    val portSuffix = if (u._2 == "") { "" } else { ":" + u._2 };
-    if (ok == false) throw "Image: host " + u._1 + portSuffix + " not in remotePatterns (" + src + ")";
+    val portSuffix = if (u._2 == "") "" else ":" + u._2;
+    if (ok == false)
+        throw "Image: host "
+            + u._1
+            + portSuffix
+            + " not in remotePatterns ("
+            + src
+            + ")";
     return u._0 + "://" + u._1 + portSuffix + clean;
 }
 
 // The handler URL for one width.
 pub fn optimizedUrl(src: string, width: i32, quality: i32, format: string) -> string {
-    return "/_onze/image?" + encoding.formStringify([#("src", src), #("w", width.toString()), #("q", quality.toString()), #("f", format)]);
+    return "/_onze/image?"
+        + encoding.formStringify([#("src", src), #("w", width.toString()), #("q", quality.toString()), #("f", format)]);
 }
 
 // The configured width the handler serves for `w`: the smallest device width
@@ -165,8 +199,14 @@ fn widthsFor(cfg: ImageConfig, p: ImageProps) -> Array<i32> {
 pub fn srcsetOf(cfg: ImageConfig, p: ImageProps, src: string) -> string {
     val format = cfg.formats.at(0) ?? "image/webp";
     val responsive = p.sizes != "" || p.fill;
-    if (responsive) return widthsFor(cfg, p).map({ w -> optimizedUrl(src, w, p.quality, format) + " " + w.toString() + "w" }).join(", ");
-    return optimizedUrl(src, servedWidth(cfg, p.width), p.quality, format) + " 1x, " + optimizedUrl(src, servedWidth(cfg, p.width * 2), p.quality, format) + " 2x";
+    if (responsive)
+        return widthsFor(cfg, p)
+            .map({ w -> optimizedUrl(src, w, p.quality, format) + " " + w.toString() + "w" })
+            .join(", ");
+    return optimizedUrl(src, servedWidth(cfg, p.width), p.quality, format)
+        + " 1x, "
+        + optimizedUrl(src, servedWidth(cfg, p.width * 2), p.quality, format)
+        + " 2x";
 }
 
 #[@External.Node("""((globalThis.__onzeRefusedImages = (globalThis.__onzeRefusedImages || []).concat([$0])), 0)""")]
@@ -206,21 +246,22 @@ pub fn Image(p: ImageProps, cfg: ImageConfig, publicDir: string) -> Element {
     }
     val src = checked.unwrapOr(p.src);
     val format = cfg.formats.at(0) ?? "image/webp";
-    val mainWidth = if (p.fill) servedWidth(cfg, 1920) else servedWidth(cfg, p.width);
+    val mainWidth = if (p.fill)
+        servedWidth(cfg, 1920)
+    else
+        servedWidth(cfg, p.width);
     val main = optimizedUrl(src, mainWidth, p.quality, format);
     val blur = p.placeholder == "blur";
     var attrs: Array<#(string, string)> = [#("alt", p.alt)];
     if (blur) {
         attrs.push(#("src", p.blurDataURL));
         attrs.push(#("data-src", main));
-    } else {
-        attrs.push(#("src", main));
-    }
+    } else attrs.push(#("src", main));
     attrs.push(#("srcset", srcsetOf(cfg, p, src)));
     if (p.sizes != "") attrs.push(#("sizes", p.sizes));
-    if (p.fill) {
-        attrs.push(#("style", "position:absolute;inset:0;width:100%;height:100%;object-fit:cover"));
-    } else {
+    if (p.fill)
+        attrs.push(#("style", "position:absolute;inset:0;width:100%;height:100%;object-fit:cover"))
+    else {
         attrs.push(#("width", p.width.toString()));
         attrs.push(#("height", p.height.toString()));
     }

@@ -23,10 +23,14 @@ fn errorOf(r: @Result<StyleModule, string>) -> string {
 test "css module: scoped names ---- blog.module.css" {
     val m = try compileStyleModule("app/blog/blog.module.css", blog());
     try assertAs(@src(), "css module", [
-        "== hash", m.hash,
-        "== " + generatedPath(".onze", m.sourcePath), generateStyleModuleSource(m).trimEnd(),
-        "== rewritten css", m.css,
-        "== reported", reportOf(m).join("\n"),
+        "== hash",
+        m.hash,
+        "== " + generatedPath(".onze", m.sourcePath),
+        generateStyleModuleSource(m).trimEnd(),
+        "== rewritten css",
+        m.css,
+        "== reported",
+        reportOf(m).join("\n"),
     ].join("\n"));
 }
 
@@ -56,5 +60,6 @@ test "css module: the generated names and the rewritten CSS are the same set" {
 }
 
 test "css module: </style is refused, naming the file" {
-    assert errorOf(compileStyleModule("app/x.module.css", ".a { content: \"</STYLE>\"; }")) == "app/x.module.css: contains \"</style\", which would end the <style> element it is written into";
+    assert errorOf(compileStyleModule("app/x.module.css", ".a { content: \"</STYLE>\"; }"))
+        == "app/x.module.css: contains \"</style\", which would end the <style> element it is written into";
 }

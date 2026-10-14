@@ -45,7 +45,8 @@ val __routes = jhRegisterRoutes(@TypeInfo.all(with: page), @TypeInfo.all(with: l
 
 fn scratch() -> string {
     val root = env.read("BOTOPINK_TEST_TMPDIR") ?? "";
-    assert root != "", "BOTOPINK_TEST_TMPDIR is not set: run this suite under `botopink test`";
+    assert root
+        != "", "BOTOPINK_TEST_TMPDIR is not set: run this suite under `botopink test`";
     return path.join([root, "onze-server"]);
 }
 
@@ -87,14 +88,21 @@ declare fn rawGet(port: i32, pathname: string) -> string;
 // ── the pieces ──────────────────────────────────────────────────────────────
 
 test "server: rakun's parameter wire and the cookie header, as pairs" {
-    assert paramPairs("slug\thello-world\nid\t7").map({ kv -> kv._0 + "=" + kv._1 }).join(",") == "slug=hello-world,id=7";
+    assert paramPairs("slug\thello-world\nid\t7")
+        .map({ kv -> kv._0 + "=" + kv._1 })
+        .join(",")
+        == "slug=hello-world,id=7";
     assert paramPairs("").length == 0;
-    assert cookiePairs("session=abc; theme=dark").map({ kv -> kv._0 + "=" + kv._1 }).join(",") == "session=abc,theme=dark";
+    assert cookiePairs("session=abc; theme=dark")
+        .map({ kv -> kv._0 + "=" + kv._1 })
+        .join(",")
+        == "session=abc,theme=dark";
 }
 
 test "server: jhonstart's records by kind and pattern" {
     val rows = uiRecords("L|/||\nP|/||\nP|/blog/[slug]||");
-    assert rows.map({ r -> r._0 + " " + r._1 }).join(",") == "L /,P /,P /blog/[slug]";
+    assert rows.map({ r -> r._0 + " " + r._1 }).join(",")
+        == "L /,P /,P /blog/[slug]";
 }
 
 test "server: an asset root is front 82's record, field for field" {
